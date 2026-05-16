@@ -586,7 +586,7 @@ window.addEventListener('offline',updateOnlineStatus);
 updateOnlineStatus();
 
 // ─── INSTALL PROMPT ───────────────────────────────────────────────────────────
-let deferredPrompt=null;
+
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();deferredPrompt=e;
   setTimeout(()=>{if(!localStorage.getItem('installDismissed'))document.getElementById('installBanner').classList.add('show');},3000);
@@ -596,9 +596,19 @@ function installApp(){
   document.getElementById('installBanner').classList.add('hidden');localStorage.setItem('installDismissed','1');
 }
 
+
+
+// ─── GLOBAL ERROR CATCH ───────────────────────────────────────────────────────
+window.onerror=function(msg,src,line,col,err){
+  var d=document.createElement('div');
+  d.style.cssText='position:fixed;top:0;left:0;right:0;background:#b85c5c;color:#fff;padding:12px;font-family:monospace;font-size:11px;z-index:9999;white-space:pre-wrap;';
+  d.textContent='JS Error (line '+line+'): '+msg;
+  document.body.appendChild(d);
+};
+
 // ─── STATE ────────────────────────────────────────────────────────────────────
-let mode='rapid',isAuto=false,flour='Tipo',yeast='IDY',maltOn=false;
-let oven='steel',mixer='spiral',useCelsius=false,theme='artisan';
+var mode='rapid',isAuto=false,flour='Tipo',yeast='IDY',maltOn=false;
+var oven='steel',mixer='spiral',useCelsius=false,theme='artisan';
 
 const initD=new Date();initD.setHours(initD.getHours()+36,0,0,0);
 document.getElementById('targetBake').value=new Date(initD.getTime()-initD.getTimezoneOffset()*60000).toISOString().slice(0,16);
