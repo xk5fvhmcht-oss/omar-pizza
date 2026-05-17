@@ -342,7 +342,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.0.5 · science-verified · PWA</div>
+    <div class="version-badge">v1.0.6 · science-verified · PWA</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -573,7 +573,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
         <button class="journal-save-btn" onclick="saveBake()">save bake</button>
         <div class="journal-entries" id="journalEntries"></div>
       </div>
-      <div class="print-footer">Omar Pizza · Neapolitan Calculator · science-verified · v1.0.5</div>
+      <div class="print-footer">Omar Pizza · Neapolitan Calculator · science-verified · v1.0.6</div>
     </div>
   </div>
 
@@ -817,10 +817,10 @@ function calcDDT(rT,frictionF,isSour){
 }
 
 function calcBigaWaterTempF(bigaRoomTF){
-  // Giorilli formula: Twater = 55°C − (Tflour + Troom), assuming flour = room temp
-  var rTc=(bigaRoomTF-32)*5/9;
-  var wTc=55-(2*rTc);
-  return wTc*9/5+32;
+  // 3-factor DDT targeting 75°F biga dough temp
+  // bigaWaterTemp = (75 × 3) − (roomTemp + flourTemp + frictionF)
+  // flour temp assumed = room temp, friction for short rough mix = 5°F
+  return 220 - (2 * bigaRoomTF);
 }
 
 function calcIce(totalWaterG,targetF,rT){
@@ -1183,9 +1183,9 @@ function _update(){
   var ddtHTML='';
   if(isBiga){
     var bigaWTF=calcBigaWaterTempF(bigaRoomT);
-    ddtHTML+=`<div class="ddt-title">✦ biga water temperature · Giorilli formula</div>`;
-    ddtHTML+=`<div>biga water at <span class="ddt-temp">${fmtTemp(bigaWTF)}</span> <em style="color:var(--ink3);font-size:0.88rem">· keeps biga dough at target temp</em></div>`;
-    ddtHTML+=`<div style="font-size:0.78rem;color:var(--ink3);margin-top:3px;">formula: 55°C − (flour temp + room temp) · assumes flour = room temp</div>`;
+    ddtHTML+=`<div class="ddt-title">✦ biga water temperature · 3-factor DDT · target 75°F</div>`;
+    ddtHTML+=`<div>biga water at <span class="ddt-temp">${fmtTemp(bigaWTF)}</span> <em style="color:var(--ink3);font-size:0.88rem">· brings biga dough to 75°F target</em></div>`;
+    ddtHTML+=`<div style="font-size:0.78rem;color:var(--ink3);margin-top:3px;">formula: (75×3) − (room temp + flour temp + 5°F friction) · flour assumed = room temp</div>`;
     ddtHTML+=`<div style="height:1px;background:var(--border);margin:10px 0;"></div>`;
     ddtHTML+=`<div class="ddt-title">✦ final dough desired temperature · 77°F · 3-factor</div>`;
     var finalWaterF=calcDDT(rT,frictionF,false);
