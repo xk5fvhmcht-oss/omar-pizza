@@ -390,6 +390,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
         <button class="mixer-btn" id="mixerKA" onclick="setMixer('ka')"><span class="emoji">🍶</span>KitchenAid</button>
         <button class="mixer-btn on" id="mixerSpiral" onclick="setMixer('spiral')"><span class="emoji">🌀</span>Ooni Halo<br><small>spiral</small></button>
       </div>
+      <div id="sourMixerNote" style="display:none;font-family:var(--label-font);font-size:0.88rem;color:var(--teal);background:var(--teal-f);border:1px solid rgba(45,125,114,0.2);border-radius:var(--btn-radius);padding:7px 12px;margin-bottom:8px;margin-top:6px;">🍋 sourdough · hand mix only — stand mixers overdevelop sourdough pizza dough</div>
       <div class="mixer-rec" id="mixerRec"></div>
       <div class="mixer-warn" id="mixerWarn"></div>
     </div>
@@ -666,7 +667,12 @@ function loadState(){
     if(s.yeast)yeast=s.yeast;
     if(s.maltOn!==undefined)maltOn=s.maltOn;
     if(s.oven)oven=s.oven;
-    if(s.mixer)mixer=s.mixer;
+    if(s.mixer){
+      if(s.mixer==='hand'&&s.mode!=='sour')mixer='spiral';
+      else mixer=s.mixer;
+    }
+
+
     if(s.useCelsius!==undefined)useCelsius=s.useCelsius;
     if(s.theme){theme=s.theme;document.documentElement.setAttribute('data-theme',theme);}
     var clamp=(id,v)=>{var sl=document.getElementById(id);if(v)sl.value=Math.min(parseFloat(sl.max),Math.max(parseFloat(sl.min),parseFloat(v)));};
@@ -917,6 +923,7 @@ function _update(){
   ['Hand','KA','Spiral'].forEach(mx=>document.getElementById('mixer'+mx).classList.toggle('on',mixer===mx.toLowerCase()));
   document.getElementById('mixerKA').classList.toggle('locked',isSour);
   document.getElementById('mixerSpiral').classList.toggle('locked',isSour);
+  document.getElementById('sourMixerNote').style.display=isSour?'block':'none';
 
   // Show/hide sections per mode
   document.getElementById('sourInocWrap').style.display=isSour?'':'none';
@@ -993,17 +1000,22 @@ function _update(){
   var rec=mixerRecommendation(totalMass);
   var recEl=document.getElementById('mixerRec');
   var warnEl=document.getElementById('mixerWarn');
-  recEl.textContent=`✦ ${totalMass}g total — ${rec.reason}`;
-  recEl.style.display='block';
-  var isMatch=rec.mixer===mixer;
-  recEl.style.color=isMatch?'var(--teal)':'var(--ink3)';
-  recEl.style.background=isMatch?'var(--teal-f)':'transparent';
-  recEl.style.border=isMatch?'1px solid rgba(45,125,114,0.2)':'1px solid var(--border)';
-  warnEl.className='mixer-warn';warnEl.style.display='none';
-  if(mixer==='spiral'&&totalMass<MIXER_LIMITS.spiral.min){var need=Math.ceil(MIXER_LIMITS.spiral.min/size);warnEl.className='mixer-warn hard';warnEl.style.display='block';warnEl.textContent=`⚠ Ooni Halo Pro min: 1kg — need at least ${need} balls at ${size}g`;}
-  else if(mixer==='spiral'&&totalMass>MIXER_LIMITS.spiral.max){warnEl.className='mixer-warn hard';warnEl.style.display='block';warnEl.textContent='⚠ Ooni Halo Pro max: 5kg — split into two batches';}
-  else if(mixer==='ka'&&totalMass<MIXER_LIMITS.ka.min){warnEl.className='mixer-warn soft';warnEl.style.display='block';warnEl.textContent='→ below 400g the KitchenAid hook won\'t grip well — hand mix preferred';}
-  else if(mixer==='ka'&&totalMass>MIXER_LIMITS.ka.max){warnEl.className='mixer-warn soft';warnEl.style.display='block';warnEl.textContent='→ above 1.8kg exceeds KitchenAid limit — consider Ooni Halo Pro';}
+  if(isSour){
+    recEl.style.display='none';
+    warnEl.style.display='none';
+  } else {
+    recEl.textContent=`✦ ${totalMass}g total — ${rec.reason}`;
+    recEl.style.display='block';
+    var isMatch=rec.mixer===mixer;
+    recEl.style.color=isMatch?'var(--teal)':'var(--ink3)';
+    recEl.style.background=isMatch?'var(--teal-f)':'transparent';
+    recEl.style.border=isMatch?'1px solid rgba(45,125,114,0.2)':'1px solid var(--border)';
+    warnEl.className='mixer-warn';warnEl.style.display='none';
+    if(mixer==='spiral'&&totalMass<MIXER_LIMITS.spiral.min){var need=Math.ceil(MIXER_LIMITS.spiral.min/size);warnEl.className='mixer-warn hard';warnEl.style.display='block';warnEl.textContent=`⚠ Ooni Halo Pro min: 1kg — need at least ${need} balls at ${size}g`;}
+    else if(mixer==='spiral'&&totalMass>MIXER_LIMITS.spiral.max){warnEl.className='mixer-warn hard';warnEl.style.display='block';warnEl.textContent='⚠ Ooni Halo Pro max: 5kg — split into two batches';}
+    else if(mixer==='ka'&&totalMass<MIXER_LIMITS.ka.min){warnEl.className='mixer-warn soft';warnEl.style.display='block';warnEl.textContent='→ below 400g the KitchenAid hook won\'t grip well — hand mix preferred';}
+    else if(mixer==='ka'&&totalMass>MIXER_LIMITS.ka.max){warnEl.className='mixer-warn soft';warnEl.style.display='block';warnEl.textContent='→ above 1.8kg exceeds KitchenAid limit — consider Ooni Halo Pro';}
+  }
 
   // Room temp info box
   var roomTempInfo=document.getElementById('roomTempInfo');
