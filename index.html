@@ -342,7 +342,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.0.7 · science-verified · PWA</div>
+    <div class="version-badge">v1.0.8 · science-verified · PWA</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -573,7 +573,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
         <button class="journal-save-btn" onclick="saveBake()">save bake</button>
         <div class="journal-entries" id="journalEntries"></div>
       </div>
-      <div class="print-footer">Omar Pizza · Neapolitan Calculator · science-verified · v1.0.7</div>
+      <div class="print-footer">Omar Pizza · Neapolitan Calculator · science-verified · v1.0.8</div>
     </div>
   </div>
 
@@ -1297,24 +1297,28 @@ function _update(){
   var schedHTML=events.map((ev,i)=>{
     var timeStr='';
     var countdown='';
+    var isPast=ev.t!==null&&ev.t.getTime()<now;
     if(ev.t!==null){
-      timeStr=`<span class="tl-time">${fmt(ev.t)}</span>`;
+      timeStr=`<span class="tl-time" style="${isPast?'text-decoration:line-through;opacity:0.4;':''}">${fmt(ev.t)}</span>`;
       var diff=ev.t.getTime()-now;
-      if(Math.abs(diff)<86400000*3){
-        var hrs=Math.round(diff/3600000);
+      var hrs=Math.round(diff/3600000);
+      if(isPast&&hrs<-1){
+        var agoH=Math.abs(hrs);
+        countdown=`<span class="tl-countdown" style="background:var(--border);color:var(--ink3);">${agoH}h ago</span>`;
+      } else if(Math.abs(diff)<86400000*3){
         if(hrs>0)countdown=`<span class="tl-countdown">${hrs}h from now</span>`;
-        else if(hrs>-2)countdown=`<span class="tl-countdown soon">now</span>`;
+        else countdown=`<span class="tl-countdown soon">now</span>`;
       }
     } else {
       timeStr=`<span class="tl-time" style="font-size:0.78rem;color:var(--ink3);">when ready</span>`;
     }
     var noteClass=ev.nc?`tl-note ${ev.nc}`:'tl-note';
-    return `<li class="tl-item${ev.isBake?' bake':''}">
-      <div class="tl-dot">${ev.emoji}</div>
-      <div style="flex:1;min-width:0;">
+    return `<li class="tl-item${ev.isBake?' bake':''}${isPast?' past':''}">
+      <div class="tl-dot" style="${isPast?'opacity:0.35;':''}">${ev.emoji}</div>
+      <div style="flex:1;min-width:0;${isPast?'opacity:0.5;':''}">
         ${timeStr}${countdown}
         <span class="tl-label">${ev.label}</span>
-        ${ev.note?`<span class="${noteClass}">${ev.note}</span>`:''}
+        ${ev.note&&!isPast?`<span class="${noteClass}">${ev.note}</span>`:''}
       </div>
     </li>`;
   }).join('');
