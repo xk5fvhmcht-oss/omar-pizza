@@ -220,6 +220,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 input[type=range]::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.15);}
 #tempSlider,#bigaRoomTempSlider{background:linear-gradient(to right,#7ec8e3,#ffe083,#ff7043);}
 #fTempSlider,#bigaFridgeTempSlider{background:linear-gradient(to right,#a8d8ea,#7ec8e3);}
+#bigaRoomHSlider{background:linear-gradient(to right,#e8c99a,#c17b3a);}
+#bigaFridgeHSlider{background:linear-gradient(to right,#a8d8ea,#5b9bd5);}
+#bigaPctSlider{background:linear-gradient(to right,#e8c99a,#c17b3a);}
+#bigaHydSlider{background:linear-gradient(to right,#a8d8ea,#7ec8e3);}
+#bulkSlider,#countSlider{background:linear-gradient(to right,#e8c99a,#c17b3a);}
+#hydSlider{background:linear-gradient(to right,#a8d8ea,#5b9bd5);}
+#fTimeSlider{background:linear-gradient(to right,#a8d8ea,#5b9bd5);}
+#sizeSlider{background:linear-gradient(to right,#e8c99a,#c17b3a);}
+#inocSlider{background:linear-gradient(to right,#c5e8c9,#2d7d72);}
 input[type=datetime-local]{width:100%;padding:10px 14px;border-radius:var(--btn-radius);border:var(--card-border);background:var(--bg);color:var(--ink);font-family:var(--num-font);font-size:0.82rem;margin-bottom:18px;outline:none;transition:border-color 0.2s;}
 input[type=datetime-local]:focus{border-color:var(--accent);}
 .auto-btn{width:100%;padding:10px;border-radius:var(--btn-radius);border:1.5px dashed var(--border);background:transparent;color:var(--ink2);cursor:pointer;font-family:var(--label-font);font-size:1rem;transition:all 0.2s;margin-top:6px;}
@@ -333,7 +342,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.0.1 · science-verified · PWA</div>
+    <div class="version-badge">v1.0.2 · science-verified · PWA</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -464,7 +473,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
         <div class="subsection" style="border-color:var(--accent-lt);">
           <div class="subsection-title">🍕 biga fermentation</div>
           <div class="info-box pizza" id="bigaInfoBox">
-            Mix biga flour + biga water + yeast until just combined — shaggy and rough is correct, do not develop gluten. Dissolve yeast in the biga water first. Mix by hand or spiral mixer at slow speed for 3–4 min. Target biga dough temp shown below. Place in a lightly oiled tall container. Cover with perforated cling film — the biga needs to breathe. A ripe biga will be domed, just starting to show a centre dip, stringy and webbed when pulled apart, with a strong fermented aroma.
+            Mix biga flour + biga water + yeast until just combined — shaggy and rough is correct, do not develop gluten. Dissolve yeast in the biga water first. Mix by hand or spiral mixer at slow speed for 3–4 min. <strong>Target biga water temperature: <span id="bigaWaterTempDisplay" style="color:var(--accent);">—</span></strong> · Place in a lightly oiled tall container. Cover with perforated cling film — the biga needs to breathe. A ripe biga will be domed, just starting to show a centre dip, stringy and webbed when pulled apart, with a strong fermented aroma.
           </div>
           <div class="slider-wrap">
             <div class="slider-head"><span class="slider-name">biga room temp hours</span><span class="slider-val" id="bigaRoomHVal">4h</span></div>
@@ -564,7 +573,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
         <button class="journal-save-btn" onclick="saveBake()">save bake</button>
         <div class="journal-entries" id="journalEntries"></div>
       </div>
-      <div class="print-footer">Omar Pizza · Neapolitan Calculator · science-verified · v1.0</div>
+      <div class="print-footer">Omar Pizza · Neapolitan Calculator · science-verified · v1.0.2</div>
     </div>
   </div>
 
@@ -942,13 +951,18 @@ function _update(){
   document.getElementById('bulkLabel').textContent=isBiga||isSour?'final dough bulk':'bulk fermentation';
   document.getElementById('fridgeLabel').textContent=isBiga||isSour?'ball cold retard':'ball cold retard';
 
-  // Malt toggle
+  if(isBiga){
+    var bigaWaterTempDisplay=document.getElementById('bigaWaterTempDisplay');
+    if(bigaWaterTempDisplay)bigaWaterTempDisplay.textContent=fmtTemp(calcBigaWaterTempF(bigaRoomT));
+  }
   document.getElementById('maltToggle').classList.toggle('on',maltOn);
   var maltGozneyWarn=document.getElementById('maltGozneyWarn');
   maltGozneyWarn.style.display=(maltOn&&oven==='gozney')?'block':'none';
 
   // Yeast type buttons
-  ['Fresh','ADY','IDY'].forEach(y=>document.getElementById('yeast'+y).classList.toggle('on',yeast===y));
+  document.getElementById('yeastFresh').classList.toggle('on',yeast==='fresh');
+  document.getElementById('yeastADY').classList.toggle('on',yeast==='ADY');
+  document.getElementById('yeastIDY').classList.toggle('on',yeast==='IDY');
 
   // Autolyse button
   var btn=document.getElementById('autoBtn');
