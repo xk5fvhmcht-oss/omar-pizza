@@ -610,13 +610,13 @@ window.onerror=function(msg,src,line,col,err){
 var mode='rapid',isAuto=false,flour='Tipo',yeast='IDY',maltOn=false;
 var oven='steel',mixer='spiral',useCelsius=false,theme='artisan';
 
-const initD=new Date();initD.setHours(initD.getHours()+36,0,0,0);
+var initD=new Date();initD.setHours(initD.getHours()+36,0,0,0);
 document.getElementById('targetBake').value=new Date(initD.getTime()-initD.getTimezoneOffset()*60000).toISOString().slice(0,16);
 
 // Floaters
 ['🍕','🌾','✦','◦','·','∘'].forEach(em=>{
-  for(let j=0;j<3;j++){
-    const el=document.createElement('div');el.className='floater';el.textContent=em;
+  for(var j=0;j<3;j++){
+    var el=document.createElement('div');el.className='floater';el.textContent=em;
     el.style.cssText=`left:${Math.random()*100}%;font-size:${1+Math.random()*2}rem;animation-duration:${18+Math.random()*24}s;animation-delay:${-Math.random()*30}s`;
     document.getElementById('floaters').appendChild(el);
   }
@@ -626,14 +626,14 @@ document.querySelectorAll('input[type=range],input[type=datetime-local]').forEac
 
 // Biga temp sliders nudge main dough sliders
 document.getElementById('bigaRoomTempSlider').addEventListener('input',function(){
-  const mt=document.getElementById('tempSlider');
-  const diff=parseInt(this.value)-parseInt(mt.value);
+  var mt=document.getElementById('tempSlider');
+  var diff=parseInt(this.value)-parseInt(mt.value);
   if(Math.abs(diff)>0&&Math.abs(diff)<=6)mt.value=this.value;
   update();saveState();
 });
 document.getElementById('bigaFridgeTempSlider').addEventListener('input',function(){
-  const ft=document.getElementById('fTempSlider');
-  const diff=parseInt(this.value)-parseInt(ft.value);
+  var ft=document.getElementById('fTempSlider');
+  var diff=parseInt(this.value)-parseInt(ft.value);
   if(Math.abs(diff)>0&&Math.abs(diff)<=4)ft.value=this.value;
   update();saveState();
 });
@@ -659,7 +659,7 @@ function saveState(){
 }
 function loadState(){
   try{
-    const s=JSON.parse(localStorage.getItem('omarPizzaState')||'{}');
+    var s=JSON.parse(localStorage.getItem('omarPizzaState')||'{}');
     if(s.mode)mode=s.mode;
     if(s.isAuto!==undefined)isAuto=s.isAuto;
     if(s.flour)flour=s.flour;
@@ -669,7 +669,7 @@ function loadState(){
     if(s.mixer)mixer=s.mixer;
     if(s.useCelsius!==undefined)useCelsius=s.useCelsius;
     if(s.theme){theme=s.theme;document.documentElement.setAttribute('data-theme',theme);}
-    const clamp=(id,v)=>{const sl=document.getElementById(id);if(v)sl.value=Math.min(parseFloat(sl.max),Math.max(parseFloat(sl.min),parseFloat(v)));};
+    var clamp=(id,v)=>{var sl=document.getElementById(id);if(v)sl.value=Math.min(parseFloat(sl.max),Math.max(parseFloat(sl.min),parseFloat(v)));};
     clamp('hydSlider',s.hyd);clamp('countSlider',s.count);clamp('sizeSlider',s.size);
     clamp('bulkSlider',s.bulk);clamp('fTimeSlider',s.fTime);clamp('tempSlider',s.rT);
     clamp('fTempSlider',s.fT);clamp('inocSlider',s.inoc);clamp('bigaPctSlider',s.bigaPct);
@@ -688,7 +688,7 @@ function toggleTheme(){
   updateThemeText();saveState();
 }
 function updateThemeText(){
-  const isPro=theme==='pro';
+  var isPro=theme==='pro';
   document.getElementById('headerEyebrow').textContent=isPro?'a Neapolitan calculator, refined':'✦ a Neapolitan calculator, with feeling ✦';
   document.getElementById('headerSub').textContent=isPro?'precision mode — same warmth, less decoration':'I thought carefully about every gram.';
   document.getElementById('card4Title').textContent=isPro?'Fermentation phases':'The slow magic';
@@ -697,43 +697,43 @@ function updateThemeText(){
 
 // ─── CONFIGURATION ────────────────────────────────────────────────────────────
 // Hydration defaults: oven × flour
-const HYD_DEFAULTS={
+var HYD_DEFAULTS={
   steel: {Tipo:65, Bread:66},
   gozney:{Tipo:62, Bread:64},
 };
 
 // Recipe baker's percentages
-const RECIPE={
+var RECIPE={
   salt:0.028, // 2.8% — AVPN range 2.5–3%
 };
-const MALT_PCT=0.005;   // 0.5% diastatic malt
-const MALT_BOOST=1.18;  // fermentation activity multiplier when malt on
+var MALT_PCT=0.005;   // 0.5% diastatic malt
+var MALT_BOOST=1.18;  // fermentation activity multiplier when malt on
 
 // Oven config
-const OVEN_CFG={
+var OVEN_CFG={
   steel: {preheatMins:60, bakeNote:'5–7 min · rotate at 3 min · look for leopard spotting on cornicione'},
   gozney:{preheatMins:40, bakeNote:'60–90 sec total · watch every 15 sec · turn at 45 sec'},
 };
 
 // Mixer friction factors (°F) — sourced from King Arthur Baking + real-world back-calc
-const MIXER_CFG={
+var MIXER_CFG={
   hand:  {frictionF:9,  mixMins:[10,15], autoDefault:true,  autoLock:null,          minG:0,    maxG:Infinity},
   ka:    {frictionF:23, mixMins:[8,10],  autoDefault:true,  autoLock:null,          minG:400,  maxG:1800},
   spiral:{frictionF:20, mixMins:[10,13], autoDefault:false, autoLock:'suggest-off', minG:1000, maxG:5000},
 };
 
 // Activity thresholds
-const ACTIVITY_UNDER=1.8;
-const ACTIVITY_OVER =9.0;
-const BLOOM_MINS=10;
-const MIXER_LIMITS={hand:{min:0,max:Infinity},ka:{min:400,max:1800},spiral:{min:1000,max:5000}};
+var ACTIVITY_UNDER=1.8;
+var ACTIVITY_OVER =9.0;
+var BLOOM_MINS=10;
+var MIXER_LIMITS={hand:{min:0,max:Infinity},ka:{min:400,max:1800},spiral:{min:1000,max:5000}};
 
 // Biga calibration — C=157, validated against Giorilli standard (0.33% IDY at 18h/64°F → within 6%)
-const BIGA_C=157;
-const BIGA_TARGET=3.5;
+var BIGA_C=157;
+var BIGA_TARGET=3.5;
 
 // Wisdom quotes — rotating
-const WISDOMS=[
+var WISDOMS=[
   'The biga remembers what you forget — time is the ingredient.',
   'A perfect cornicione is not made at the oven. It is made the day before.',
   'Flour, water, salt, yeast. Four ingredients. A lifetime of learning.',
@@ -765,33 +765,33 @@ function bigaHydFactor(bigaHyd){
 function calcBigaYeastIDY(bigaFlourG,bigaRoomH,bigaFridgeH,bigaRoomT,bigaFridgeT,bigaHyd){
   // Solve for IDY grams to reach BIGA_TARGET activity
   // C=157 calibrated against Giorilli: 0.33% IDY at 18h/64°F
-  const q10r=Math.pow(2,(bigaRoomT-77)/18);
-  const q10f=Math.pow(2,(bigaFridgeT-77)/18);
-  const suppF=bigaFridgeSuppression(bigaFridgeT);
-  const hydF=bigaHydFactor(bigaHyd);
-  const denom=BIGA_C*(bigaRoomH*q10r+bigaFridgeH*suppF*q10f)*hydF;
+  var q10r=Math.pow(2,(bigaRoomT-77)/18);
+  var q10f=Math.pow(2,(bigaFridgeT-77)/18);
+  var suppF=bigaFridgeSuppression(bigaFridgeT);
+  var hydF=bigaHydFactor(bigaHyd);
+  var denom=BIGA_C*(bigaRoomH*q10r+bigaFridgeH*suppF*q10f)*hydF;
   if(denom<=0)return bigaFlourG*0.003;
-  const yPct=Math.min(0.005,Math.max(0.0003,BIGA_TARGET/denom));
+  var yPct=Math.min(0.005,Math.max(0.0003,BIGA_TARGET/denom));
   return bigaFlourG*yPct;
 }
 
 function calcActivity(bH,rT,fH,fT,autolyseOn,inocPct,isSour,maltOn){
-  const q10r=Math.pow(2,(rT-77)/18);
-  const q10f=Math.pow(2,(fT-77)/18);
-  let eb=bH;
-  if(isSour&&inocPct<0.08){const lagH=0.5+(0.08-inocPct)*(2.5/0.08);eb=Math.max(0,bH-lagH);}
-  let bulk=eb*q10r*0.90;
+  var q10r=Math.pow(2,(rT-77)/18);
+  var q10f=Math.pow(2,(fT-77)/18);
+  var eb=bH;
+  if(isSour&&inocPct<0.08){var lagH=0.5+(0.08-inocPct)*(2.5/0.08);eb=Math.max(0,bH-lagH);}
+  var bulk=eb*q10r*0.90;
   if(autolyseOn&&eb>0)bulk+=Math.min(0.5,eb)*q10r*0.12;
-  let act=bulk+fH*fridgeSuppression(fT)*q10f;
+  var act=bulk+fH*fridgeSuppression(fT)*q10f;
   if(maltOn)act*=MALT_BOOST;
   return act;
 }
 
 function calcGlide(totalMass,count,rT,fT,fH){
   if(fH===0)return 0;
-  const mp=Math.max(1,totalMass/Math.max(1,count));
-  const tau=5.0*Math.pow(mp,0.4);
-  const delta=rT-fT;
+  var mp=Math.max(1,totalMass/Math.max(1,count));
+  var tau=5.0*Math.pow(mp,0.4);
+  var delta=rT-fT;
   if(delta<=10)return 0;
   return Math.max(0,Math.round(tau*Math.log(delta/10)/5)*5);
 }
@@ -802,14 +802,14 @@ function calcDDT(rT,frictionF,isSour){
 
 function calcBigaWaterTempF(bigaRoomTF){
   // Giorilli formula: Twater = 55°C − (Tflour + Troom), assuming flour = room temp
-  const rTc=(bigaRoomTF-32)*5/9;
-  const wTc=55-(2*rTc);
+  var rTc=(bigaRoomTF-32)*5/9;
+  var wTc=55-(2*rTc);
   return wTc*9/5+32;
 }
 
 function calcIce(totalWaterG,targetF,rT){
   if(targetF>=50||targetF>=rT-2)return null;
-  const iceG=Math.max(0,totalWaterG*(rT-targetF)/(144+targetF-32));
+  var iceG=Math.max(0,totalWaterG*(rT-targetF)/(144+targetF-32));
   if(iceG<1)return null;
   return{iceG:Math.round(iceG),waterG:Math.round(totalWaterG-iceG)};
 }
@@ -840,15 +840,15 @@ function yeastLabel(type){
 function fmt(dt){return dt.toLocaleString([],{weekday:'short',hour:'2-digit',minute:'2-digit'});}
 function fmtTemp(f){return useCelsius?((f-32)*5/9).toFixed(1)+' °C':Math.round(f)+' °F';}
 function fmtHours(h){
-  const hrs=Math.floor(h);const mins=Math.round((h-hrs)*60);
+  var hrs=Math.floor(h);var mins=Math.round((h-hrs)*60);
   if(hrs===0)return mins+'min';if(mins===0)return hrs+'h';return hrs+'h '+mins+'min';
 }
-function popVal(id){const el=document.getElementById(id);if(!el)return;el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');}
-function setVal(id,text){const el=document.getElementById(id);if(el&&el.textContent!==String(text)){el.textContent=text;popVal(id);}}
+function popVal(id){var el=document.getElementById(id);if(!el)return;el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');}
+function setVal(id,text){var el=document.getElementById(id);if(el&&el.textContent!==String(text)){el.textContent=text;popVal(id);}}
 function snapHyd(){
-  const d=HYD_DEFAULTS[oven]||HYD_DEFAULTS.steel;
-  const v=d[flour]||65;
-  const sl=document.getElementById('hydSlider');
+  var d=HYD_DEFAULTS[oven]||HYD_DEFAULTS.steel;
+  var v=d[flour]||65;
+  var sl=document.getElementById('hydSlider');
   sl.value=Math.min(parseFloat(sl.max),Math.max(parseFloat(sl.min),v));
 }
 
@@ -862,7 +862,7 @@ function setMode(m){
 }
 function setOven(o){oven=o;snapHyd();update();saveState();}
 function setMixer(mx){
-  mixer=mx;const cfg=MIXER_CFG[mx];
+  mixer=mx;var cfg=MIXER_CFG[mx];
   if(cfg.autoLock==='off')isAuto=false;
   else if(cfg.autoLock==='suggest-off')isAuto=false;
   else isAuto=cfg.autoDefault;
@@ -871,7 +871,7 @@ function setMixer(mx){
 function setFlour(f){flour=f;snapHyd();update();saveState();}
 function setYeast(y){yeast=y;update();saveState();}
 function toggleAuto(){
-  const cfg=MIXER_CFG[mixer];
+  var cfg=MIXER_CFG[mixer];
   if(mode!=='sour'&&cfg.autoLock!=='off'){isAuto=!isAuto;update();saveState();}
 }
 function toggleMalt(){maltOn=!maltOn;update();saveState();}
@@ -880,8 +880,8 @@ function toggleCelsius(){useCelsius=!useCelsius;update();saveState();}
 
 // ─── INGREDIENT ROWS ──────────────────────────────────────────────────────────
 function ingRow(emoji,label,grams,dec,note){
-  const w=dec?grams.toFixed(dec):Math.round(grams);
-  const noteHtml=note?`<span style="font-family:var(--num-font);font-size:0.7rem;color:var(--ink3);font-style:normal;margin-left:4px;">${note}</span>`:'';
+  var w=dec?grams.toFixed(dec):Math.round(grams);
+  var noteHtml=note?`<span style="font-family:var(--num-font);font-size:0.7rem;color:var(--ink3);font-style:normal;margin-left:4px;">${note}</span>`:'';
   return `<div class="recipe-item"><span class="ing-name"><span class="ing-emoji">${emoji}</span>${label}${noteHtml}</span><span class="ing-weight">${w} g</span></div>`;
 }
 function ingRowRange(emoji,label,gLow,gHigh){
@@ -894,10 +894,10 @@ function sectionTitle(text){
 // ─── MAIN UPDATE ──────────────────────────────────────────────────────────────
 function update(){try{_update();}catch(e){console.error('Omar Pizza update error:',e);}}
 function _update(){
-  const isSour=mode==='sour';
-  const isBiga=mode==='biga';
-  const isRapid=mode==='rapid';
-  const isPro=theme==='pro';
+  var isSour=mode==='sour';
+  var isBiga=mode==='biga';
+  var isRapid=mode==='rapid';
+  var isPro=theme==='pro';
 
   // Button states
   ['Rapid','Slow','Sour','Biga'].forEach(m=>document.getElementById('mode'+m).classList.toggle('on',mode===m.toLowerCase()));
@@ -926,7 +926,7 @@ function _update(){
   document.getElementById('sourSuggestWrap').style.display=isSour?'':'none';
 
   // Fridge box — show for slow/sour/biga, hide for rapid
-  const fridgeBoxEl=document.getElementById('fridgeBox');
+  var fridgeBoxEl=document.getElementById('fridgeBox');
   fridgeBoxEl.style.opacity=isRapid?'0.3':'1';
   fridgeBoxEl.style.pointerEvents=isRapid?'none':'';
 
@@ -936,37 +936,37 @@ function _update(){
 
   // Malt toggle
   document.getElementById('maltToggle').classList.toggle('on',maltOn);
-  const maltGozneyWarn=document.getElementById('maltGozneyWarn');
+  var maltGozneyWarn=document.getElementById('maltGozneyWarn');
   maltGozneyWarn.style.display=(maltOn&&oven==='gozney')?'block':'none';
 
   // Yeast type buttons
   ['Fresh','ADY','IDY'].forEach(y=>document.getElementById('yeast'+y).classList.toggle('on',yeast===y));
 
   // Autolyse button
-  const btn=document.getElementById('autoBtn');
-  const mcfg=MIXER_CFG[mixer]||MIXER_CFG.hand;
+  var btn=document.getElementById('autoBtn');
+  var mcfg=MIXER_CFG[mixer]||MIXER_CFG.hand;
   if(isSour){btn.textContent=isPro?'autolyse always on · (sourdough)':'✦ autolyse always on · (sourdough locked)';btn.className='auto-btn on locked';}
   else if(isBiga){btn.textContent='✦ autolyse handled by biga · not needed';btn.className='auto-btn locked';}
   else if(mcfg.autoLock==='off'){btn.textContent='✦ autolyse not needed — spiral develops gluten fast';btn.className='auto-btn locked';}
   else if(mcfg.autoLock==='suggest-off'){btn.textContent=isAuto?'✦ autolyse · on (spiral rarely needs it — your call)':'✦ autolyse · off';btn.className='auto-btn'+(isAuto?' on':'');}
-  else{const hn=(!isPro&&mixer==='hand')?' · (saves your arms — do it)':'';btn.textContent=isAuto?`✦ 30-minute autolyse · on${hn}`:'✦ 30-minute autolyse · off';btn.className='auto-btn'+(isAuto?' on':'');}
+  else{var hn=(!isPro&&mixer==='hand')?' · (saves your arms — do it)':'';btn.textContent=isAuto?`✦ 30-minute autolyse · on${hn}`:'✦ 30-minute autolyse · off';btn.className='auto-btn'+(isAuto?' on':'');}
 
   // Read sliders
-  const count=+document.getElementById('countSlider').value;
-  const size =+document.getElementById('sizeSlider').value;
-  const hyd  =+document.getElementById('hydSlider').value/100;
-  const bH   =+document.getElementById('bulkSlider').value;
-  const fH   =+document.getElementById('fTimeSlider').value;
-  const rT   =+document.getElementById('tempSlider').value;
-  const fT   =+document.getElementById('fTempSlider').value;
-  const inoc =+document.getElementById('inocSlider').value/100;
-  const bigaPct=+document.getElementById('bigaPctSlider').value/100;
-  const bigaHyd=+document.getElementById('bigaHydSlider').value/100;
-  const bigaRoomH=+document.getElementById('bigaRoomHSlider').value;
-  const bigaFridgeH=+document.getElementById('bigaFridgeHSlider').value;
-  const bigaRoomT=+document.getElementById('bigaRoomTempSlider').value;
-  const bigaFridgeT=+document.getElementById('bigaFridgeTempSlider').value;
-  const totalMass=count*size;
+  var count=+document.getElementById('countSlider').value;
+  var size =+document.getElementById('sizeSlider').value;
+  var hyd  =+document.getElementById('hydSlider').value/100;
+  var bH   =+document.getElementById('bulkSlider').value;
+  var fH   =+document.getElementById('fTimeSlider').value;
+  var rT   =+document.getElementById('tempSlider').value;
+  var fT   =+document.getElementById('fTempSlider').value;
+  var inoc =+document.getElementById('inocSlider').value/100;
+  var bigaPct=+document.getElementById('bigaPctSlider').value/100;
+  var bigaHyd=+document.getElementById('bigaHydSlider').value/100;
+  var bigaRoomH=+document.getElementById('bigaRoomHSlider').value;
+  var bigaFridgeH=+document.getElementById('bigaFridgeHSlider').value;
+  var bigaRoomT=+document.getElementById('bigaRoomTempSlider').value;
+  var bigaFridgeT=+document.getElementById('bigaFridgeTempSlider').value;
+  var totalMass=count*size;
 
   setVal('countVal',count);setVal('sizeVal',size+' g');
   setVal('hydVal',(+document.getElementById('hydSlider').value).toFixed(1)+'%');
@@ -980,33 +980,33 @@ function _update(){
   setVal('bigaRoomTempVal',fmtTemp(bigaRoomT));
   setVal('bigaFridgeTempVal',fmtTemp(bigaFridgeT));
 
-  const tub=document.getElementById('tempUnitBtn');
+  var tub=document.getElementById('tempUnitBtn');
   if(tub)tub.textContent=useCelsius?'→ °F':'→ °C';
 
   // Quick size pills
   [230,250,270].forEach(s=>{
-    const el=[...document.querySelectorAll('.pill')].find(b=>b.textContent.includes(s+'g'));
+    var el=[...document.querySelectorAll('.pill')].find(b=>b.textContent.includes(s+'g'));
     if(el)el.classList.toggle('on',size===s);
   });
 
   // Mixer recommendation
-  const rec=mixerRecommendation(totalMass);
-  const recEl=document.getElementById('mixerRec');
-  const warnEl=document.getElementById('mixerWarn');
+  var rec=mixerRecommendation(totalMass);
+  var recEl=document.getElementById('mixerRec');
+  var warnEl=document.getElementById('mixerWarn');
   recEl.textContent=`✦ ${totalMass}g total — ${rec.reason}`;
   recEl.style.display='block';
-  const isMatch=rec.mixer===mixer;
+  var isMatch=rec.mixer===mixer;
   recEl.style.color=isMatch?'var(--teal)':'var(--ink3)';
   recEl.style.background=isMatch?'var(--teal-f)':'transparent';
   recEl.style.border=isMatch?'1px solid rgba(45,125,114,0.2)':'1px solid var(--border)';
   warnEl.className='mixer-warn';warnEl.style.display='none';
-  if(mixer==='spiral'&&totalMass<MIXER_LIMITS.spiral.min){const need=Math.ceil(MIXER_LIMITS.spiral.min/size);warnEl.className='mixer-warn hard';warnEl.style.display='block';warnEl.textContent=`⚠ Ooni Halo Pro min: 1kg — need at least ${need} balls at ${size}g`;}
+  if(mixer==='spiral'&&totalMass<MIXER_LIMITS.spiral.min){var need=Math.ceil(MIXER_LIMITS.spiral.min/size);warnEl.className='mixer-warn hard';warnEl.style.display='block';warnEl.textContent=`⚠ Ooni Halo Pro min: 1kg — need at least ${need} balls at ${size}g`;}
   else if(mixer==='spiral'&&totalMass>MIXER_LIMITS.spiral.max){warnEl.className='mixer-warn hard';warnEl.style.display='block';warnEl.textContent='⚠ Ooni Halo Pro max: 5kg — split into two batches';}
   else if(mixer==='ka'&&totalMass<MIXER_LIMITS.ka.min){warnEl.className='mixer-warn soft';warnEl.style.display='block';warnEl.textContent='→ below 400g the KitchenAid hook won\'t grip well — hand mix preferred';}
   else if(mixer==='ka'&&totalMass>MIXER_LIMITS.ka.max){warnEl.className='mixer-warn soft';warnEl.style.display='block';warnEl.textContent='→ above 1.8kg exceeds KitchenAid limit — consider Ooni Halo Pro';}
 
   // Room temp info box
-  const roomTempInfo=document.getElementById('roomTempInfo');
+  var roomTempInfo=document.getElementById('roomTempInfo');
   if(rT<65)roomTempInfo.className='info-box';
   else if(rT<77)roomTempInfo.className='info-box';
   else roomTempInfo.className='info-box warm';
@@ -1015,7 +1015,7 @@ function _update(){
   else if(rT<80)roomTempInfo.textContent='✦ warm kitchen — watch your dough, it moves faster than the clock suggests.';
   else roomTempInfo.textContent='🌡️ hot kitchen — consider splitting bulk or using colder water. At 85°F+ the dough moves very fast.';
 
-  const fridgeTempInfo=document.getElementById('fridgeTempInfo');
+  var fridgeTempInfo=document.getElementById('fridgeTempInfo');
   if(fT<=36)fridgeTempInfo.className='info-box';
   else if(fT<=40)fridgeTempInfo.className='info-box';
   else fridgeTempInfo.className='info-box warm';
@@ -1024,17 +1024,17 @@ function _update(){
   else fridgeTempInfo.textContent='🌡️ at 43°F+ your fridge is fermenting more than retarding — watch your balls carefully.';
 
   // ─── FERMENTATION ACTIVITY ────────────────────────────────────────────────
-  const autolyseEffective=isAuto&&!isBiga&&MIXER_CFG[mixer]?.autoLock!=='off';
-  const activity=calcActivity(bH,rT,fH,fT,autolyseEffective,inoc,isSour,maltOn);
+  var autolyseEffective=isAuto&&!isBiga&&MIXER_CFG[mixer]?.autoLock!=='off';
+  var activity=calcActivity(bH,rT,fH,fT,autolyseEffective,inoc,isSour,maltOn);
   setVal('actVal',activity.toFixed(2));
-  const pct=Math.min(100,(activity/ACTIVITY_OVER)*100);
-  const bar=document.getElementById('actBar');
+  var pct=Math.min(100,(activity/ACTIVITY_OVER)*100);
+  var bar=document.getElementById('actBar');
   bar.style.width=pct+'%';
   if(activity<ACTIVITY_UNDER)bar.style.background='#7ec8e3';
   else if(activity>ACTIVITY_OVER)bar.style.background='#ff7043';
-  else{const t=(activity-ACTIVITY_UNDER)/(ACTIVITY_OVER-ACTIVITY_UNDER);bar.style.background=`hsl(${Math.round(160-t*120)},60%,55%)`;}
+  else{var t=(activity-ACTIVITY_UNDER)/(ACTIVITY_OVER-ACTIVITY_UNDER);bar.style.background=`hsl(${Math.round(160-t*120)},60%,55%)`;}
 
-  const warn=document.getElementById('warnBox');
+  var warn=document.getElementById('warnBox');
   warn.className='warn-box';
   if(activity<ACTIVITY_UNDER){warn.className='warn-box under';warn.textContent='🧊 underproofed risk — more bulk time or warmth needed for good oven spring';}
   else if(activity>ACTIVITY_OVER){warn.className='warn-box over';warn.textContent='🫠 very active dough — risk of overproofing and gluten breakdown';}
@@ -1042,29 +1042,29 @@ function _update(){
   else if(fT>=43){warn.className='warn-box over';warn.textContent='🌡️ at 43°F+ your fridge is fermenting as much as retarding — watch your dough';}
 
   // ─── RECIPE MATH ──────────────────────────────────────────────────────────
-  const needsBloom=!isSour&&!isBiga&&yeast==='ADY';
-  const fb=flourBase(totalMass,hyd);
-  const mcfg=MIXER_CFG[mixer]||MIXER_CFG.hand;
-  let html='';
+  var needsBloom=!isSour&&!isBiga&&yeast==='ADY';
+  var fb=flourBase(totalMass,hyd);
+  var mcfg=MIXER_CFG[mixer]||MIXER_CFG.hand;
+  var html='';
 
   if(isBiga){
     // ── BIGA RECIPE ──
-    const bigaFlour=fb*bigaPct;
-    const bigaWater=bigaFlour*bigaHyd;
-    const finalFlour=fb-bigaFlour;
-    const totalWater=fb*hyd;
-    const finalWater=totalWater-bigaWater;
-    const saltG=fb*RECIPE.salt;
-    const maltG=maltOn?fb*MALT_PCT:0;
-    const reservedWater=finalWater*0.10; // 10% reserved for salt addition
+    var bigaFlour=fb*bigaPct;
+    var bigaWater=bigaFlour*bigaHyd;
+    var finalFlour=fb-bigaFlour;
+    var totalWater=fb*hyd;
+    var finalWater=totalWater-bigaWater;
+    var saltG=fb*RECIPE.salt;
+    var maltG=maltOn?fb*MALT_PCT:0;
+    var reservedWater=finalWater*0.10; // 10% reserved for salt addition
 
     // Biga yeast
-    const bigaIDY=calcBigaYeastIDY(bigaFlour,bigaRoomH,bigaFridgeH,bigaRoomT,bigaFridgeT,bigaHyd);
-    const bigaYeastG=yeastConvert(bigaIDY,yeast);
+    var bigaIDY=calcBigaYeastIDY(bigaFlour,bigaRoomH,bigaFridgeH,bigaRoomT,bigaFridgeT,bigaHyd);
+    var bigaYeastG=yeastConvert(bigaIDY,yeast);
 
     // Final dough yeast — small boost (15% of biga yeast amount, minimum 0.1g)
-    const finalIDY=Math.max(0.1/yeastConvert(1,yeast),bigaIDY*0.15);
-    const finalYeastG=yeastConvert(finalIDY,yeast);
+    var finalIDY=Math.max(0.1/yeastConvert(1,yeast),bigaIDY*0.15);
+    var finalYeastG=yeastConvert(finalIDY,yeast);
 
     html+=sectionTitle('🍕 biga');
     html+=ingRow('🌾','Tipo 00 flour (biga)',bigaFlour);
@@ -1082,12 +1082,12 @@ function _update(){
 
   } else if(isSour){
     // ── SOURDOUGH RECIPE ──
-    const sW=fb*inoc;
-    const fF=fb-(sW/2);
-    const fW=Math.max(0,(fb*hyd)-(sW/2));
-    const saltG=fb*RECIPE.salt;
-    const maltG=maltOn?fb*MALT_PCT:0;
-    const reservedW=fW*0.10;
+    var sW=fb*inoc;
+    var fF=fb-(sW/2);
+    var fW=Math.max(0,(fb*hyd)-(sW/2));
+    var saltG=fb*RECIPE.salt;
+    var maltG=maltOn?fb*MALT_PCT:0;
+    var reservedW=fW*0.10;
 
     html+=ingRow('🍋','sourdough starter (peak)',sW);
     html+=ingRow('💧','water',fW-reservedW,'','hold out ~'+Math.round(reservedW)+'g for salt');
@@ -1098,20 +1098,20 @@ function _update(){
 
   } else {
     // ── YEASTED RECIPE (rapid / slow) ──
-    const fW=fb*hyd;
-    const saltG=fb*RECIPE.salt;
-    const maltG=maltOn?fb*MALT_PCT:0;
-    const reservedW=fW*0.10;
+    var fW=fb*hyd;
+    var saltG=fb*RECIPE.salt;
+    var maltG=maltOn?fb*MALT_PCT:0;
+    var reservedW=fW*0.10;
 
     // Yeast calc — inherited from template, calibrated for pizza
-    const refActivity=3.6;
-    const basePct=(0.35/100)*(refActivity/Math.max(0.01,activity));
-    const retardPenalty=fH>0?Math.max(0.15,1/Math.sqrt(1+fH/12)):1;
-    let yPct=Math.min(0.02,Math.max(0.0005,basePct*retardPenalty));
+    var refActivity=3.6;
+    var basePct=(0.35/100)*(refActivity/Math.max(0.01,activity));
+    var retardPenalty=fH>0?Math.max(0.15,1/Math.sqrt(1+fH/12)):1;
+    var yPct=Math.min(0.02,Math.max(0.0005,basePct*retardPenalty));
     if(yeast==='IDY')yPct*=0.75;
     if(maltOn)yPct/=MALT_BOOST;
-    const yG=fb*yPct;
-    const yConv=yeastConvert(yG,yeast);
+    var yG=fb*yPct;
+    var yConv=yeastConvert(yG,yeast);
 
     if(needsBloom){
       html+=ingRowRange('🌿',yeastLabel(yeast),Math.max(0.1,yConv-0.1),yConv+0.1);
@@ -1130,14 +1130,14 @@ function _update(){
   document.getElementById('massSumm').innerHTML=`<strong>${totalMass} g</strong> total · ${count} × ${size} g`;
 
   // ─── DDT / WATER TEMP ─────────────────────────────────────────────────────
-  const frictionF=mcfg.frictionF;
-  const waterTempF=isBiga?calcBigaWaterTempF(bigaRoomT):calcDDT(rT,frictionF,isSour);
-  const totalWaterForIce=isSour?Math.max(0,(fb*hyd)-(fb*inoc/2)):fb*hyd;
-  const ice=calcIce(totalWaterForIce,waterTempF,rT);
-  const mr=mcfg.mixMins;
-  const DDT_TARGET=isSour?76:77;
+  var frictionF=mcfg.frictionF;
+  var waterTempF=isBiga?calcBigaWaterTempF(bigaRoomT):calcDDT(rT,frictionF,isSour);
+  var totalWaterForIce=isSour?Math.max(0,(fb*hyd)-(fb*inoc/2)):fb*hyd;
+  var ice=calcIce(totalWaterForIce,waterTempF,rT);
+  var mr=mcfg.mixMins;
+  var DDT_TARGET=isSour?76:77;
 
-  let methodNote='';
+  var methodNote='';
   if(isBiga){
     methodNote='pull biga from fridge · cut into pieces · dissolve yeast in DDT water · add biga pieces to mixer — break down in water · add flour (with malt if using) · hydrate, reserve ~10% water · sprinkle salt over dough · follow with reserved water · finish mixing · bench rest 20–30 min · ball · cold retard';
   } else if(isSour){
@@ -1148,19 +1148,19 @@ function _update(){
     methodNote=needsBloom?'bloom yeast in ~30g warm water at 105–110°F · combine all · add salt after flour hydrates · add reserved water · knead':'combine all · add salt after flour hydrates · add reserved water · knead · '+mr[0]+'–'+mr[1]+' min';
   }
 
-  const methodHTML=`<div style="margin-bottom:12px;padding:8px 12px;background:var(--sub);border-left:3px solid var(--accent-lt);border-radius:0 8px 8px 0;font-family:var(--label-font);font-size:0.88rem;color:var(--ink2);line-height:1.5;">${methodNote}</div>`;
+  var methodHTML=`<div style="margin-bottom:12px;padding:8px 12px;background:var(--sub);border-left:3px solid var(--accent-lt);border-radius:0 8px 8px 0;font-family:var(--label-font);font-size:0.88rem;color:var(--ink2);line-height:1.5;">${methodNote}</div>`;
 
-  let ddtHTML='';
+  var ddtHTML='';
   if(isBiga){
-    const bigaWTF=calcBigaWaterTempF(bigaRoomT);
+    var bigaWTF=calcBigaWaterTempF(bigaRoomT);
     ddtHTML+=`<div class="ddt-title">✦ biga water temperature · Giorilli formula</div>`;
     ddtHTML+=`<div>biga water at <span class="ddt-temp">${fmtTemp(bigaWTF)}</span> <em style="color:var(--ink3);font-size:0.88rem">· keeps biga dough at target temp</em></div>`;
     ddtHTML+=`<div style="font-size:0.78rem;color:var(--ink3);margin-top:3px;">formula: 55°C − (flour temp + room temp) · assumes flour = room temp</div>`;
     ddtHTML+=`<div style="height:1px;background:var(--border);margin:10px 0;"></div>`;
     ddtHTML+=`<div class="ddt-title">✦ final dough desired temperature · 77°F · 3-factor</div>`;
-    const finalWaterF=calcDDT(rT,frictionF,false);
+    var finalWaterF=calcDDT(rT,frictionF,false);
     ddtHTML+=`<div>final dough water at <span class="ddt-temp">${fmtTemp(finalWaterF)}</span></div>`;
-    const iceF=calcIce(fb*hyd*(1-bigaPct*bigaHyd),finalWaterF,rT);
+    var iceF=calcIce(fb*hyd*(1-bigaPct*bigaHyd),finalWaterF,rT);
     if(iceF)ddtHTML+=`<div class="ice-line">🧊 ${iceF.waterG} g cold water + ${iceF.iceG} g ice</div>`;
     ddtHTML+=`<div style="font-size:0.78rem;color:var(--ink3);margin-top:5px;">mix: ${mr[0]}–${mr[1]} min · friction: ${frictionF}°F</div>`;
   } else {
@@ -1180,40 +1180,40 @@ function _update(){
   document.getElementById('ddtBox').innerHTML=methodHTML+ddtHTML;
 
   // ─── TIMELINE ─────────────────────────────────────────────────────────────
-  const target=new Date(document.getElementById('targetBake').value);
-  const tBake=target.getTime();
-  const oCfg=OVEN_CFG[oven];
-  const tPreheat=new Date(tBake-oCfg.preheatMins*60000);
+  var target=new Date(document.getElementById('targetBake').value);
+  var tBake=target.getTime();
+  var oCfg=OVEN_CFG[oven];
+  var tPreheat=new Date(tBake-oCfg.preheatMins*60000);
 
   // Shape window: 3 min per ball + 10 min rest, minimum 25 min
-  const shapeMins=Math.max(25,count*3+10);
-  const tShape=new Date(tBake-shapeMins*60000);
+  var shapeMins=Math.max(25,count*3+10);
+  var tShape=new Date(tBake-shapeMins*60000);
 
-  const glide=calcGlide(totalMass,count,rT,fT,fH);
-  const tPull=new Date(tShape.getTime()-glide*60000);
-  const tFridge=new Date(tPull.getTime()-fH*3600000);
+  var glide=calcGlide(totalMass,count,rT,fT,fH);
+  var tPull=new Date(tShape.getTime()-glide*60000);
+  var tFridge=new Date(tPull.getTime()-fH*3600000);
 
-  const preheatNote=oven==='steel'
+  var preheatNote=oven==='steel'
     ?`place steel on top rack · crank to 550°F · ${oCfg.preheatMins} min minimum — steel must be fully saturated`
-    :`target 700–850°F · let floor stabilise ${oCfg.preheatMins} min · measure with IR thermometer`;
+    :`target 700–850°F · var floor stabilise ${oCfg.preheatMins} min · measure with IR thermometer`;
 
-  const shapeNote=`stretch each ball by hand — slap & pull or knuckle stretch · aim for even thickness, thin centre · cornicione from the edge`;
-  const bakeNote=`${oCfg.bakeNote} · ${count} pizzas`;
+  var shapeNote=`stretch each ball by hand — slap & pull or knuckle stretch · aim for even thickness, thin centre · cornicione from the edge`;
+  var bakeNote=`${oCfg.bakeNote} · ${count} pizzas`;
 
-  const events=[];
+  var events=[];
 
   if(isBiga){
     // Biga timeline
-    const tBigaMix=new Date(tFridge.getTime()-(bH)*3600000-30*60000-(bigaRoomH+bigaFridgeH)*3600000);
-    const tBigaFridge=new Date(tBigaMix.getTime()+bigaRoomH*3600000);
-    const tBigaPull=new Date(tBigaFridge.getTime()+bigaFridgeH*3600000);
-    const tFinalMix=new Date(tBigaPull.getTime()+20*60000); // 20 min to temper biga slightly
-    const tBench=new Date(tFinalMix.getTime()+(mr[1]||13)*60000);
-    const tBall=new Date(tBench.getTime()+25*60000); // bench rest 20-30 min, use 25
+    var tBigaMix=new Date(tFridge.getTime()-(bH)*3600000-30*60000-(bigaRoomH+bigaFridgeH)*3600000);
+    var tBigaFridge=new Date(tBigaMix.getTime()+bigaRoomH*3600000);
+    var tBigaPull=new Date(tBigaFridge.getTime()+bigaFridgeH*3600000);
+    var tFinalMix=new Date(tBigaPull.getTime()+20*60000); // 20 min to temper biga slightly
+    var tBench=new Date(tFinalMix.getTime()+(mr[1]||13)*60000);
+    var tBall=new Date(tBench.getTime()+25*60000); // bench rest 20-30 min, use 25
 
     events.push({t:tBigaMix,emoji:'🍕',label:'mix biga',note:`dissolve ${yeastLabel(yeast)} in biga water · add flour · mix until just combined — shaggy is correct · target biga water temp shown in recipe · place in oiled container, cover with perforated film`,nc:'highlight',extra:''});
     events.push({t:tBigaFridge,emoji:'🌡️',label:'biga to fridge',note:`after ${fmtHours(bigaRoomH)} at room temp — biga goes into fridge · it should show early signs of activity`,nc:'preheat-note',extra:''});
-    events.push({t:tBigaPull,emoji:'🍕',label:'pull biga',note:`biga should be domed, showing centre dip, stringy when pulled · cut into pieces and let it come to room temp 15–20 min before mixing final dough`,nc:'highlight',extra:''});
+    events.push({t:tBigaPull,emoji:'🍕',label:'pull biga',note:`biga should be domed, showing centre dip, stringy when pulled · cut into pieces and var it come to room temp 15–20 min before mixing final dough`,nc:'highlight',extra:''});
     events.push({t:tFinalMix,emoji:'🥣',label:'mix final dough',note:`dissolve yeast in DDT water · add biga pieces — break down in water · add flour${maltOn?' (with diastatic malt mixed in)':''} · hydrate · sprinkle salt · follow with reserved water · finish mixing`,nc:'highlight',extra:''});
     events.push({t:tBench,emoji:'⏳',label:'bench rest',note:'cover dough · rest 20–30 min · gluten relaxes — the dough goes from elastic and tight to soft and cooperative',nc:'',extra:''});
     events.push({t:tBall,emoji:'🔴',label:'ball',note:'divide and shape into tight balls · pinch seam firmly underneath · place in oiled containers · seal and refrigerate',nc:'',extra:''});
@@ -1225,7 +1225,7 @@ function _update(){
 
   } else if(isSour){
     // Sourdough timeline — suggestions only, no hard times except fridge
-    const tBall=new Date(tFridge.getTime());
+    var tBall=new Date(tFridge.getTime());
     events.push({t:null,emoji:'🍋',label:'feed starter',note:'pull from fridge · feed and wait for peak · dome + bubbles throughout · float test optional but not definitive',nc:'sour-note',extra:'',isSuggestion:true});
     events.push({t:null,emoji:'🥣',label:'autolyse + mix',note:'autolyse flour + most water 30–60 min · add starter · mix well · add salt dissolved in reserved water',nc:'highlight',extra:'',isSuggestion:true});
     events.push({t:null,emoji:'🔄',label:'stretch & fold',note:'3–4 sets · 30 min apart · dough is ready when smooth, holds shape, passes windowpane test',nc:'sour-note',extra:'',isSuggestion:true});
@@ -1237,9 +1237,9 @@ function _update(){
 
   } else {
     // Rapid / Slow timeline
-    const tMix=new Date(tFridge.getTime()-bH*3600000-(autolyseEffective?30*60000:0)-(needsBloom?BLOOM_MINS*60000:0));
-    const tBloom=new Date(tMix.getTime()-(needsBloom?BLOOM_MINS*60000:0));
-    const tBall=new Date(tFridge.getTime()-25*60000); // 25 min bench after mix before balling
+    var tMix=new Date(tFridge.getTime()-bH*3600000-(autolyseEffective?30*60000:0)-(needsBloom?BLOOM_MINS*60000:0));
+    var tBloom=new Date(tMix.getTime()-(needsBloom?BLOOM_MINS*60000:0));
+    var tBall=new Date(tFridge.getTime()-25*60000); // 25 min bench after mix before balling
 
     events.push({t:tPreheat,emoji:'🔥',label:'preheat oven',note:preheatNote,nc:'preheat-note',extra:''});
     if(needsBloom)events.push({t:tBloom,emoji:'🌸',label:'bloom the yeast',note:'dissolve ADY in ~30g warm water at 105–110°F · foamy in 5–10 min · no foam after 10 min = dead yeast, start fresh',nc:'bloom-note',extra:''});
@@ -1262,22 +1262,22 @@ function _update(){
     return a.t-b.t;
   });
 
-  const now=Date.now();
-  const schedHTML=events.map((ev,i)=>{
-    let timeStr='';
-    let countdown='';
+  var now=Date.now();
+  var schedHTML=events.map((ev,i)=>{
+    var timeStr='';
+    var countdown='';
     if(ev.t!==null){
       timeStr=`<span class="tl-time">${fmt(ev.t)}</span>`;
-      const diff=ev.t.getTime()-now;
+      var diff=ev.t.getTime()-now;
       if(Math.abs(diff)<86400000*3){
-        const hrs=Math.round(diff/3600000);
+        var hrs=Math.round(diff/3600000);
         if(hrs>0)countdown=`<span class="tl-countdown">${hrs}h from now</span>`;
         else if(hrs>-2)countdown=`<span class="tl-countdown soon">now</span>`;
       }
     } else {
       timeStr=`<span class="tl-time" style="font-size:0.78rem;color:var(--ink3);">when ready</span>`;
     }
-    const noteClass=ev.nc?`tl-note ${ev.nc}`:'tl-note';
+    var noteClass=ev.nc?`tl-note ${ev.nc}`:'tl-note';
     return `<li class="tl-item${ev.isBake?' bake':''}">
       <div class="tl-dot">${ev.emoji}</div>
       <div style="flex:1;min-width:0;">
@@ -1291,7 +1291,7 @@ function _update(){
   document.getElementById('schedule').innerHTML=schedHTML;
 
   // Wisdom quote — rotate based on day
-  const wIdx=new Date().getDate()%WISDOMS.length;
+  var wIdx=new Date().getDate()%WISDOMS.length;
   document.getElementById('wisdom').textContent=WISDOMS[wIdx];
 
   // Pro status bar
@@ -1309,10 +1309,10 @@ function _update(){
 
 // ─── DOUGH TEMP CHECK ─────────────────────────────────────────────────────────
 function checkDoughTemp(){
-  const v=parseFloat(document.getElementById('doughTempInput').value);
-  const resp=document.getElementById('doughTempResponse');
-  const isSour=mode==='sour';
-  const target=isSour?76:77;
+  var v=parseFloat(document.getElementById('doughTempInput').value);
+  var resp=document.getElementById('doughTempResponse');
+  var isSour=mode==='sour';
+  var target=isSour?76:77;
   if(isNaN(v)||v<60){resp.style.display='none';return;}
   resp.style.display='block';
   if(v>=target-2&&v<=target+2){resp.className='dough-temp-response good';resp.textContent=`✦ perfect — dough is at ${v}°F, right on target. Proceed with confidence.`;}
@@ -1323,14 +1323,14 @@ function checkDoughTemp(){
 // ─── JOURNAL ──────────────────────────────────────────────────────────────────
 function toggleJournal(){document.getElementById('journalPanel').classList.toggle('open');renderJournal();}
 function saveBake(){
-  const notes=document.getElementById('journalNotes').value.trim();
+  var notes=document.getElementById('journalNotes').value.trim();
   if(!notes)return;
-  const count=+document.getElementById('countSlider').value;
-  const size=+document.getElementById('sizeSlider').value;
-  const hyd=+document.getElementById('hydSlider').value;
-  const entry={date:new Date().toLocaleString(),params:`${count}×${size}g · ${hyd}% hyd · ${mode} · ${flour} · ${oven}${maltOn?' · malt':''}`,notes};
+  var count=+document.getElementById('countSlider').value;
+  var size=+document.getElementById('sizeSlider').value;
+  var hyd=+document.getElementById('hydSlider').value;
+  var entry={date:new Date().toLocaleString(),params:`${count}×${size}g · ${hyd}% hyd · ${mode} · ${flour} · ${oven}${maltOn?' · malt':''}`,notes};
   try{
-    const entries=JSON.parse(localStorage.getItem('omarPizzaJournal')||'[]');
+    var entries=JSON.parse(localStorage.getItem('omarPizzaJournal')||'[]');
     entries.unshift(entry);
     if(entries.length>20)entries.pop();
     localStorage.setItem('omarPizzaJournal',JSON.stringify(entries));
@@ -1340,8 +1340,8 @@ function saveBake(){
 }
 function renderJournal(){
   try{
-    const entries=JSON.parse(localStorage.getItem('omarPizzaJournal')||'[]');
-    const container=document.getElementById('journalEntries');
+    var entries=JSON.parse(localStorage.getItem('omarPizzaJournal')||'[]');
+    var container=document.getElementById('journalEntries');
     if(!entries.length){container.innerHTML='<div style="font-family:var(--num-font);font-size:0.72rem;color:var(--ink3);text-align:center;padding:12px;">no bakes saved yet</div>';return;}
     container.innerHTML=entries.map((e,i)=>`
       <div class="journal-entry">
@@ -1356,7 +1356,7 @@ function renderJournal(){
 }
 function deleteEntry(i){
   try{
-    const entries=JSON.parse(localStorage.getItem('omarPizzaJournal')||'[]');
+    var entries=JSON.parse(localStorage.getItem('omarPizzaJournal')||'[]');
     entries.splice(i,1);
     localStorage.setItem('omarPizzaJournal',JSON.stringify(entries));
     renderJournal();
