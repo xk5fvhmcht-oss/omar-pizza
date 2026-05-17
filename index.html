@@ -926,9 +926,9 @@ function _update(){
   document.getElementById('sourSuggestWrap').style.display=isSour?'':'none';
 
   // Fridge box — show for slow/sour/biga, hide for rapid
-  const fb=document.getElementById('fridgeBox');
-  fb.style.opacity=isRapid?'0.3':'1';
-  fb.style.pointerEvents=isRapid?'none':'';
+  const fridgeBoxEl=document.getElementById('fridgeBox');
+  fridgeBoxEl.style.opacity=isRapid?'0.3':'1';
+  fridgeBoxEl.style.pointerEvents=isRapid?'none':'';
 
   // Bulk fermentation label
   document.getElementById('bulkLabel').textContent=isBiga||isSour?'final dough bulk':'bulk fermentation';
