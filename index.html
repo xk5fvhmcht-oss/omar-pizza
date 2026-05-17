@@ -404,7 +404,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.2.2 · science-verified · PWA</div>
+    <div class="version-badge">v1.3.3 · science-verified · PWA</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -416,7 +416,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
       <input type="datetime-local" id="targetBake">
 
       <!-- SMART SCHEDULE -->
-      <div class="smart-schedule-wrap" id="ssWrap" style="display:none;">
+      <div class="smart-schedule-wrap" id="ssWrap">
         <div class="smart-schedule-toggle" id="ssToggle" onclick="toggleSmartSchedule()">
           <div class="ss-label">
             <span class="ss-title">🎉 Smart Schedule</span>
@@ -424,6 +424,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
           </div>
           <div class="ss-switch"></div>
         </div>
+        <div id="ssStatus" style="font-family:var(--num-font);font-size:0.72rem;color:var(--ink3);padding:4px 2px;letter-spacing:0.03em;display:none;"></div>
         <div class="ss-prompt" id="ssPrompt">Set your kitchen and fridge temperatures below — we'll handle the timing.</div>
         <div class="ss-error" id="ssError"></div>
         <div class="ss-manual" id="ssManual">⟳ MANUAL OVERRIDE — smart schedule off</div>
@@ -618,6 +619,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
         <div class="ferment-label"><span>fermentation activity</span><span id="actVal">—</span></div>
         <div class="ferment-meter"><div class="ferment-bar" id="actBar"></div></div>
         <div class="ferment-label"><span style="color:#7ec8e3">under</span><span>ideal zone</span><span style="color:#ff7043">over</span></div>
+        <div class="info-box" id="actInfoBox" style="margin-top:8px;font-size:0.85rem;"></div>
       </div>
       <div class="warn-box" id="warnBox"></div>
     </div>
@@ -714,6 +716,10 @@ document.querySelectorAll('input[type=range],input[type=datetime-local]').forEac
     if(smartSchedule&&durationIds.indexOf(el.id)>=0){
       ssDisableManual();
     } else {
+      // Re-run Smart Schedule if bake time changes while active
+      if(smartSchedule&&el.id==='targetBake'){
+        runSmartSchedule();
+      }
       update();saveState();
     }
   });
@@ -983,23 +989,47 @@ function toggleCelsius(){useCelsius=!useCelsius;update();saveState();}
 
 // ─── SMART SCHEDULE ───────────────────────────────────────────────────────────
 function toggleSmartSchedule(){
+  // If turning ON — validate date first before changing anything
+  if(!smartSchedule){
+    var rawVal=document.getElementById('targetBake').value;
+    if(!rawVal){
+      document.getElementById('ssError').textContent='⚠ Set your bake time first.';
+      document.getElementById('ssError').classList.add('show');
+      return;
+    }
+    var parts=rawVal.split('T');
+    var dp=parts[0].split('-');
+    var tp=(parts[1]||'19:00').split(':');
+    var testDate=new Date(parseInt(dp[0]),parseInt(dp[1])-1,parseInt(dp[2]),parseInt(tp[0]),parseInt(tp[1]),0,0);
+    var dow=testDate.getDay();
+    if(dow!==0&&dow!==6){
+      document.getElementById('ssError').textContent='⚠ Smart Schedule works for weekend parties only — set your bake to a Saturday or Sunday.';
+      document.getElementById('ssError').classList.add('show');
+      document.getElementById('ssPrompt').classList.remove('show');
+      document.getElementById('calStrip').classList.remove('show');
+      return;
+    }
+  }
+
   smartSchedule=!smartSchedule;
   ssManualOverride=false;
+  document.getElementById('ssError').classList.remove('show');
+
   if(smartSchedule){
-    // Switch away from rapid
     if(mode==='rapid'){mode='biga';}
-    // Apply party theme
     theme='party';
     document.documentElement.setAttribute('data-theme','party');
     document.getElementById('themeColor').content='#1e2a3a';
     updateFloaters();
     runSmartSchedule();
   } else {
-    // Revert to previous theme
     theme='artisan';
     document.documentElement.setAttribute('data-theme','artisan');
     document.getElementById('themeColor').content='#fdf8f0';
     updateFloaters();
+    document.getElementById('ssPrompt').classList.remove('show');
+    document.getElementById('calStrip').classList.remove('show');
+    document.getElementById('ssManual').classList.remove('show');
   }
   update();saveState();
 }
@@ -1030,7 +1060,13 @@ function updateFloaters(){
 }
 
 function runSmartSchedule(){
-  var target=new Date(document.getElementById('targetBake').value);
+  var rawVal=document.getElementById('targetBake').value;
+  if(!rawVal){showSSError('Set your bake time first.');return;}
+  // Parse datetime-local as local time — avoids UTC interpretation in Safari
+  var parts=rawVal.split('T');
+  var dp=parts[0].split('-');
+  var tp=(parts[1]||'19:00').split(':');
+  var target=new Date(parseInt(dp[0]),parseInt(dp[1])-1,parseInt(dp[2]),parseInt(tp[0]),parseInt(tp[1]),0,0);
   if(isNaN(target.getTime())){showSSError('Set your bake time first.');return;}
 
   var dow=target.getDay(); // 0=Sun, 6=Sat
@@ -1061,64 +1097,78 @@ function runSmartSchedule(){
   var calDay2Name,calDay2Task,calDay2Label,calDay2Time;
   var calDay3Name=dayName(target),calDay3Time=fmtTime(target);
 
+  // ── CONSTRAINTS ──────────────────────────────────────────────────────────
+  var WORK_FREE_FROM=18.0;   // 6pm — available after work on weekdays
+  var WORK_LEAVE_BY=8.5;     // 8:30am — last moment for sourdough feed
+  var BEDTIME=22.0;          // 10pm — no tasks after this
+  var WEEKEND_FREE_FROM=10.0;// 10am — weekends start later
+  var MIX_HOUR=19.0;         // 7pm — standard mix anchor
+  var FRIDGE_HOUR=20.5;      // 8:30pm — balls into fridge anchor
+  var BIGA_MIX_HOUR=19.0;    // 7pm — biga mix anchor
+  var BIGA_FRIDGE_HOUR=21.0; // 9pm — biga into fridge anchor
+
+  // ── CALCULATE tPull using same formula as timeline ────────────────────────
+  var ss_count=+document.getElementById('countSlider').value;
+  var ss_size=+document.getElementById('sizeSlider').value;
+  var ss_rT=+document.getElementById('tempSlider').value;
+  var ss_fT=+document.getElementById('fTempSlider').value;
+  var ss_shapeMins=Math.max(25,ss_count*3+10);
+  var ss_glide=calcGlide(ss_count*ss_size,ss_count,ss_rT,ss_fT,20);
+  var ss_tPull=new Date(target.getTime()-(ss_shapeMins+ss_glide)*60000);
+
+  // Declare all scheduling variables upfront
+  var ss_t1,ss_t2,ss_t3,ss_t4,ss_fridgeAnchor,ss_rH,ss_fH2,ss_bH,ss_fH;
+
+  // ── FIND VALID FRIDGE ANCHOR ──────────────────────────────────────────────
+  // Try day-1 first, fall back to day-2 if retard < 8h minimum
+  ss_fridgeAnchor=dayAt(1,FRIDGE_HOUR);
+  ss_fH=Math.round((ss_tPull-ss_fridgeAnchor)/3600000);
+  if(ss_fH<8){
+    // Not enough retard time — shift fridge anchor one day earlier
+    ss_fridgeAnchor=dayAt(2,FRIDGE_HOUR);
+    ss_fH=Math.round((ss_tPull-ss_fridgeAnchor)/3600000);
+  }
+  ss_fH=Math.min(72,Math.max(8,ss_fH)); // clamp 8–72h
+
+  // ── MODE-SPECIFIC SCHEDULING ──────────────────────────────────────────────
   if(mode==='biga'){
-    // Saturday bake: Thu eve biga → Fri eve mix → Sat bake
-    // Sunday bake:   Fri eve biga → Sat eve mix → Sun bake
-  var EVENING_MIX=19.0;    // 7:00pm — mix time
-  var EVENING_FRIDGE=21.0; // 9:00pm — into fridge
-  var MORNING_FEED=7.5;    // 7:30am — feed starter before leaving
-
-  if(mode==='biga'){
-    // Saturday bake: Thu 7pm biga → Thu 9pm fridge → Fri 7pm mix → Fri 8:30pm ball+fridge → Sat bake
-    // Sunday bake:   Fri 7pm biga → Fri 9pm fridge → Sat 7pm mix → Sat 8:30pm ball+fridge → Sun bake
-    var bigaMixTime=dayAt(2,EVENING_MIX);
-    var bigaFridgeTime=dayAt(2,EVENING_FRIDGE);
-    var bigaPullTime=dayAt(1,EVENING_MIX-0.5); // 6:30pm pull
-    var finalMixTime=dayAt(1,EVENING_MIX);
-    var fridgeTime=dayAt(1,EVENING_FRIDGE-0.5); // 8:30pm
-
-    var bigaRoomH=Math.round((bigaFridgeTime-bigaMixTime)/3600000*2)/2;
-    var bigaFridgeH=Math.round((bigaPullTime-bigaFridgeTime)/3600000);
-    var bulkH=0.5;
-    var fH=Math.round((target-fridgeTime)/3600000);
-
-    setSliderSS('bigaRoomHSlider',bigaRoomH);
-    setSliderSS('bigaFridgeHSlider',Math.max(0,bigaFridgeH));
-    setSliderSS('bulkSlider',bulkH);
-    setSliderSS('fTimeSlider',Math.max(0,fH));
-
-    calDay1Name=dayName(bigaMixTime);calDay1Task='🍕';calDay1Label='mix biga';calDay1Time=fmtTime(bigaMixTime);
-    calDay2Name=dayName(finalMixTime);calDay2Task='🥣';calDay2Label='mix dough';calDay2Time=fmtTime(finalMixTime);
+    // Biga mix and fridge: 2 evenings before bake day
+    // If fridge anchor shifted to day-2, biga goes 3 evenings back
+    var ss_bigaOffset=(ss_fridgeAnchor.getDate()===dayAt(2,0).getDate())?3:2;
+    ss_t1=dayAt(ss_bigaOffset,BIGA_MIX_HOUR);    // biga mix 7pm
+    ss_t2=dayAt(ss_bigaOffset,BIGA_FRIDGE_HOUR); // biga fridge 9pm
+    ss_t3=dayAt(ss_bigaOffset-1,MIX_HOUR-0.5);  // pull biga 6:30pm
+    ss_t4=dayAt(ss_bigaOffset-1,MIX_HOUR);       // final mix 7pm
+    ss_rH=Math.round((ss_t2-ss_t1)/3600000*2)/2; // biga room hours
+    ss_fH2=Math.round((ss_t3-ss_t2)/3600000);    // biga fridge hours
+    ss_bH=0.5;                                    // bench rest only
+    setSliderSS('bigaRoomHSlider',ss_rH);
+    setSliderSS('bigaFridgeHSlider',Math.max(0,ss_fH2));
+    setSliderSS('bulkSlider',ss_bH);
+    setSliderSS('fTimeSlider',ss_fH);
+    calDay1Name=dayName(ss_t1);calDay1Task='🍕';calDay1Label='mix biga';calDay1Time=fmtTime(ss_t1);
+    calDay2Name=dayName(ss_t4);calDay2Task='🥣';calDay2Label='mix dough';calDay2Time=fmtTime(ss_t4);
 
   } else if(mode==='slow'){
-    // Saturday bake: Fri 7pm mix → Fri 8:30pm ball+fridge → Sat bake
-    // Sunday bake:   Sat 7pm mix → Sat 8:30pm ball+fridge → Sun bake
-    var mixTime=dayAt(1,EVENING_MIX);
-    var fridgeTime=dayAt(1,EVENING_FRIDGE-0.5);
-    var bulkH=0.75;
-    var fH=Math.round((target-fridgeTime)/3600000);
-
-    setSliderSS('bulkSlider',bulkH);
-    setSliderSS('fTimeSlider',Math.max(0,fH));
-
-    calDay1Name=dayName(mixTime);calDay1Task='🥣';calDay1Label='mix dough';calDay1Time=fmtTime(mixTime);
-    calDay2Name=dayName(fridgeTime);calDay2Task='🔴';calDay2Label='ball + fridge';calDay2Time=fmtTime(fridgeTime);
+    // Mix evening before bake day
+    ss_t1=dayAt(1,MIX_HOUR);
+    ss_bH=0.75;
+    setSliderSS('bulkSlider',ss_bH);
+    setSliderSS('fTimeSlider',ss_fH);
+    calDay1Name=dayName(ss_t1);calDay1Task='🥣';calDay1Label='mix dough';calDay1Time=fmtTime(ss_t1);
+    calDay2Name=dayName(ss_fridgeAnchor);calDay2Task='🔴';calDay2Label='ball + fridge';calDay2Time=fmtTime(ss_fridgeAnchor);
 
   } else if(mode==='sour'){
-    // Saturday bake: Fri 7:30am feed → Fri 7pm mix → Fri 9pm ball+fridge → Sat bake
-    // Sunday bake:   Sat 7:30am feed → Sat 7pm mix → Sat 9pm ball+fridge → Sun bake
-    var feedTime=dayAt(1,MORNING_FEED);
-    var mixTime=dayAt(1,EVENING_MIX);
-    var fridgeTime=dayAt(1,EVENING_FRIDGE);
-    var bulkH=1.5;
-    var fH=Math.round((target-fridgeTime)/3600000);
-
-    setSliderSS('bulkSlider',bulkH);
-    setSliderSS('fTimeSlider',Math.max(0,fH));
+    // Feed before work, mix evening — same day as fridge anchor
+    var ss_feedDay=(ss_fridgeAnchor.getDate()===dayAt(2,0).getDate())?2:1;
+    ss_t1=dayAt(ss_feedDay,WORK_LEAVE_BY);  // 8:30am feed
+    ss_t2=dayAt(ss_feedDay,MIX_HOUR);       // 7pm mix
+    ss_bH=1.5;
+    setSliderSS('bulkSlider',ss_bH);
+    setSliderSS('fTimeSlider',ss_fH);
     setSliderSS('inocSlider',15);
-
-    calDay1Name=dayName(feedTime);calDay1Task='🍋';calDay1Label='feed starter';calDay1Time=fmtTime(feedTime);
-    calDay2Name=dayName(mixTime);calDay2Task='🥣';calDay2Label='mix + ball';calDay2Time=fmtTime(mixTime);
+    calDay1Name=dayName(ss_t1);calDay1Task='🍋';calDay1Label='feed starter';calDay1Time=fmtTime(ss_t1);
+    calDay2Name=dayName(ss_t2);calDay2Task='🥣';calDay2Label='mix + ball';calDay2Time=fmtTime(ss_t2);
   }
 
   // Update calendar strip
@@ -1180,11 +1230,38 @@ function _update(){
   var isRapid=mode==='rapid';
   var isPro=theme==='pro';
 
-  // Smart Schedule toggle — show for slow/sour/biga, hide for rapid
-  var ssWrap=document.getElementById('ssWrap');
-  ssWrap.style.display=(mode==='rapid')?'none':'block';
+  // Smart Schedule toggle — always visible, three states
   var ssToggleEl=document.getElementById('ssToggle');
+  var ssStatusEl=document.getElementById('ssStatus');
+  var ssIsRapid=mode==='rapid';
+
+  // Check if bake date is a weekend
+  var ssRawVal=document.getElementById('targetBake').value;
+  var ssIsWeekend=false;
+  if(ssRawVal){
+    var ssParts=ssRawVal.split('T');var ssDp=ssParts[0].split('-');var ssTp=(ssParts[1]||'19:00').split(':');
+    var ssTestDate=new Date(parseInt(ssDp[0]),parseInt(ssDp[1])-1,parseInt(ssDp[2]),parseInt(ssTp[0]),parseInt(ssTp[1]),0,0);
+    var ssDow=ssTestDate.getDay();
+    ssIsWeekend=(ssDow===0||ssDow===6);
+  }
+
+  var ssUnlocked=!ssIsRapid&&ssIsWeekend&&!smartSchedule;
   ssToggleEl.classList.toggle('on',smartSchedule);
+  ssToggleEl.style.opacity=(ssIsRapid||(!ssIsWeekend&&!smartSchedule))?'0.4':'1';
+  ssToggleEl.style.pointerEvents=smartSchedule?'auto':(ssIsRapid||!ssIsWeekend)?'none':'auto';
+  ssToggleEl.style.cursor=(ssIsRapid||(!ssIsWeekend&&!smartSchedule))?'default':'pointer';
+
+  if(smartSchedule){
+    ssStatusEl.style.display='none';
+  } else if(ssIsRapid){
+    ssStatusEl.style.display='block';
+    ssStatusEl.textContent='⚡ switch to slow, sourdough, or biga to unlock';
+  } else if(!ssIsWeekend){
+    ssStatusEl.style.display='block';
+    ssStatusEl.textContent='📅 set a Saturday or Sunday bake to unlock';
+  } else {
+    ssStatusEl.style.display='none';
+  }
 
   // Rapid lock when Smart Schedule is on
   document.getElementById('modeRapid').classList.toggle('locked',smartSchedule);
@@ -1367,6 +1444,24 @@ function _update(){
   else if(activity>ACTIVITY_OVER)bar.style.background='#ff7043';
   else{var t=(activity-ACTIVITY_UNDER)/(ACTIVITY_OVER-ACTIVITY_UNDER);bar.style.background=`hsl(${Math.round(160-t*120)},60%,55%)`;}
 
+  // Activity info box
+  var actBox=document.getElementById('actInfoBox');
+  var actMsg,actCls;
+  if(activity<ACTIVITY_UNDER){
+    actCls='info-box hot';actMsg='🧊 underproofed risk · activity '+activity.toFixed(2)+' — extend fermentation time or increase temperature';
+  } else if(activity<=6.5){
+    actCls='info-box';actMsg='✦ ideal zone · activity '+activity.toFixed(2)+' — fermentation is on track';
+  } else if(activity<=8.0){
+    actCls='info-box warm';actMsg='🌡️ active dough · activity '+activity.toFixed(2)+' — monitor closely, it\'s moving fast';
+  } else if(activity<=ACTIVITY_OVER){
+    actCls='info-box warm';actMsg='⚠️ very active · activity '+activity.toFixed(2)+' — risk of overproofing, act soon';
+  } else {
+    actCls='info-box hot';actMsg='🫠 overproofed risk · activity '+activity.toFixed(2)+' — gluten breakdown likely';
+  }
+  actBox.className=actCls;
+  actBox.textContent=actMsg;
+  actBox.style.display='block';
+
   var warn=document.getElementById('warnBox');
   warn.className='warn-box';
   if(activity<ACTIVITY_UNDER){warn.className='warn-box under';warn.textContent='🧊 underproofed risk — more bulk time or warmth needed for good oven spring';}
@@ -1513,7 +1608,10 @@ function _update(){
   document.getElementById('ddtBox').innerHTML=methodHTML+ddtHTML;
 
   // ─── TIMELINE ─────────────────────────────────────────────────────────────
-  var target=new Date(document.getElementById('targetBake').value);
+  var _tRaw=document.getElementById('targetBake').value;
+  var _tParts=_tRaw?_tRaw.split('T'):['2026-01-01','19:00'];
+  var _tDp=_tParts[0].split('-');var _tTp=(_tParts[1]||'19:00').split(':');
+  var target=new Date(parseInt(_tDp[0]),parseInt(_tDp[1])-1,parseInt(_tDp[2]),parseInt(_tTp[0]),parseInt(_tTp[1]),0,0);
   var tBake=target.getTime();
   var oCfg=OVEN_CFG[oven];
   var tPreheat=new Date(tBake-oCfg.preheatMins*60000);
@@ -1759,7 +1857,10 @@ function printCard(){
   var bulk =document.getElementById('bulkVal').textContent;
   var fTime=document.getElementById('fTimeVal').textContent;
   var tgt  =document.getElementById('targetBake').value;
-  var tFmt =new Date(tgt).toLocaleString([],{weekday:'long',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  var _pParts=tgt?tgt.split('T'):['2026-01-01','19:00'];
+  var _pDp=_pParts[0].split('-');var _pTp=(_pParts[1]||'19:00').split(':');
+  var _pDate=new Date(parseInt(_pDp[0]),parseInt(_pDp[1])-1,parseInt(_pDp[2]),parseInt(_pTp[0]),parseInt(_pTp[1]),0,0);
+  var tFmt=_pDate.toLocaleString([],{weekday:'long',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
   var oLabel={steel:'Home Steel 550°F',gozney:'Gozney Dome'}[oven];
   var mLabel={hand:'Hand mix',ka:'KitchenAid',spiral:'Ooni Halo Spiral'}[mixer];
   var isPro=theme==='pro';
@@ -1853,7 +1954,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.2.2 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.3.3 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
