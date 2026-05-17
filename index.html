@@ -328,7 +328,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.0.9 · science-verified · PWA</div>
+    <div class="version-badge">v1.1.0 · science-verified · PWA</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -843,6 +843,7 @@ function fmtHours(h){
   var hrs=Math.floor(h);var mins=Math.round((h-hrs)*60);
   if(hrs===0)return mins+'min';if(mins===0)return hrs+'h';return hrs+'h '+mins+'min';
 }
+function fmtApprox(h){return fmtHours(Math.round(h*4)/4);}
 function popVal(id){var el=document.getElementById(id);if(!el)return;el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');}
 function setVal(id,text){var el=document.getElementById(id);if(el&&el.textContent!==String(text)){el.textContent=text;popVal(id);}}
 function snapHyd(){
@@ -1018,15 +1019,17 @@ function _update(){
     else if(mixer==='ka'&&totalMass>MIXER_LIMITS.ka.max){warnEl.className='mixer-warn soft';warnEl.style.display='block';warnEl.textContent='→ above 1.8kg exceeds KitchenAid limit — consider Ooni Halo Pro';}
   }
 
-  // Room temp info box
+  // Room temp info box — dynamic Q10-based suggestions
   var roomTempInfo=document.getElementById('roomTempInfo');
-  if(rT<65)roomTempInfo.className='info-box';
-  else if(rT<77)roomTempInfo.className='info-box';
-  else roomTempInfo.className='info-box warm';
-  if(rT<65)roomTempInfo.textContent='🧊 cool kitchen — fermentation will be slow. More bulk time or warmer water will compensate.';
-  else if(rT<72)roomTempInfo.textContent='✦ good range for Neapolitan — controlled, even fermentation.';
-  else if(rT<80)roomTempInfo.textContent='✦ warm kitchen — watch your dough, it moves faster than the clock suggests.';
-  else roomTempInfo.textContent='🌡️ hot kitchen — consider splitting bulk or using colder water. At 85°F+ the dough moves very fast.';
+  var q10rt=Math.pow(2,(rT-77)/18);
+  var roomMsg,roomCls;
+  if(rT<=65){roomCls='';roomMsg='🧊 cool kitchen — fermentation at '+(q10rt*100).toFixed(0)+'% of reference speed. Consider extending bulk to around '+fmtApprox(bH*1.3)+' or moving dough somewhere warmer.';}
+  else if(rT<=72){roomCls='';roomMsg='✦ good range for Neapolitan — controlled, even fermentation.';}
+  else if(rT<=77){roomCls='warm';roomMsg='✦ warm kitchen — fermentation slightly faster than standard. Check dough around '+fmtApprox(bH*0.85)+' — it may be ready early.';}
+  else if(rT<=82){roomCls='warm';roomMsg='🌡️ hot kitchen — fermentation at '+(q10rt*100).toFixed(0)+'% of reference speed. Consider reducing bulk to around '+fmtApprox(bH*0.7)+' and monitoring closely.';}
+  else{roomCls='warm';roomMsg='🌡️ very hot kitchen — short bulk, watch constantly. Consider around '+fmtApprox(bH*0.5)+' bulk maximum, then straight to cold retard.';}
+  roomTempInfo.className='info-box'+(roomCls?' '+roomCls:'');
+  roomTempInfo.textContent=roomMsg;
 
   var fridgeTempInfo=document.getElementById('fridgeTempInfo');
   if(fT<=36)fridgeTempInfo.className='info-box';
@@ -1330,29 +1333,51 @@ function _update(){
 
 // ─── DOUGH TEMP CHECK ─────────────────────────────────────────────────────────
 function checkDoughTemp(){
-  var v=parseFloat(document.getElementById('doughTempInput').value);
+  var val=parseFloat(document.getElementById('doughTempInput').value);
   var resp=document.getElementById('doughTempResponse');
   var isSour=mode==='sour';
   var target=isSour?76:77;
-  if(isNaN(v)||v<60){resp.style.display='none';return;}
+  if(!val||isNaN(val)){resp.style.display='none';return;}
   resp.style.display='block';
-  if(v>=target-2&&v<=target+2){resp.className='dough-temp-response good';resp.textContent=`✦ perfect — dough is at ${v}°F, right on target. Proceed with confidence.`;}
-  else if(v<target-2){resp.className='dough-temp-response rest';resp.textContent=`${v}°F is ${Math.round(target-v)}°F below target. Bulk fermentation will be slower — add 15–30 min or move to a warmer spot.`;}
-  else{resp.className='dough-temp-response stop';resp.textContent=`${v}°F is ${Math.round(v-target)}°F above target. Fermentation will move fast — watch the dough closely and consider a shorter bulk.`;}
+  var diff=val-target;
+  if(diff<=-3){resp.className='dough-temp-response good';resp.textContent=val+'°F — '+Math.abs(diff)+'°F below target. Continue mixing — you have thermal headroom.';}
+  else if(diff<=-1){resp.className='dough-temp-response good';resp.textContent=val+'°F — just below target. Almost there. Another minute or two of mixing.';}
+  else if(diff<=1){resp.className='dough-temp-response good';resp.textContent=val+'°F — right on target. Stop mixing. Dough is at the ideal temperature.';}
+  else if(diff<=3){resp.className='dough-temp-response rest';resp.textContent=val+'°F — '+diff+'°F above target. Stop now. Rest uncovered 5–10 min before continuing.';}
+  else{resp.className='dough-temp-response stop';resp.textContent=val+'°F — '+diff+'°F above target. Stop immediately. Rest in fridge 10–15 min. Over-warm dough weakens gluten.';}
 }
 
 // ─── JOURNAL ──────────────────────────────────────────────────────────────────
 function toggleJournal(){document.getElementById('journalPanel').classList.toggle('open');renderJournal();}
 function saveBake(){
   var notes=document.getElementById('journalNotes').value.trim();
-  if(!notes)return;
-  var count=+document.getElementById('countSlider').value;
-  var size=+document.getElementById('sizeSlider').value;
-  var hyd=+document.getElementById('hydSlider').value;
-  var entry={date:new Date().toLocaleString(),params:`${count}×${size}g · ${hyd}% hyd · ${mode} · ${flour} · ${oven}${maltOn?' · malt':''}`,notes};
+  var snap={
+    id:Date.now(),date:new Date().toLocaleString(),
+    mode:mode,flour:flour,yeast:yeast,oven:oven,mixer:mixer,maltOn:maltOn,
+    count:document.getElementById('countSlider').value,
+    size:document.getElementById('sizeSlider').value,
+    hyd:document.getElementById('hydSlider').value,
+    bulk:document.getElementById('bulkSlider').value,
+    fTime:document.getElementById('fTimeSlider').value,
+    rT:document.getElementById('tempSlider').value,
+    fT:document.getElementById('fTempSlider').value,
+    inoc:document.getElementById('inocSlider').value,
+    bigaPct:document.getElementById('bigaPctSlider').value,
+    bigaHyd:document.getElementById('bigaHydSlider').value,
+    bigaRoomH:document.getElementById('bigaRoomHSlider').value,
+    bigaFridgeH:document.getElementById('bigaFridgeHSlider').value,
+    bigaRoomT:document.getElementById('bigaRoomTempSlider').value,
+    bigaFridgeT:document.getElementById('bigaFridgeTempSlider').value,
+    hydLabel:document.getElementById('hydVal').textContent,
+    bulkLabel:document.getElementById('bulkVal').textContent,
+    fTimeLabel:document.getElementById('fTimeVal').textContent,
+    rTLabel:document.getElementById('tempVal').textContent,
+    fTLabel:document.getElementById('fTempVal').textContent,
+    notes:notes,
+  };
   try{
     var entries=JSON.parse(localStorage.getItem('omarPizzaJournal')||'[]');
-    entries.unshift(entry);
+    entries.unshift(snap);
     if(entries.length>20)entries.pop();
     localStorage.setItem('omarPizzaJournal',JSON.stringify(entries));
     document.getElementById('journalNotes').value='';
@@ -1363,23 +1388,42 @@ function renderJournal(){
   try{
     var entries=JSON.parse(localStorage.getItem('omarPizzaJournal')||'[]');
     var container=document.getElementById('journalEntries');
-    if(!entries.length){container.innerHTML='<div style="font-family:var(--num-font);font-size:0.72rem;color:var(--ink3);text-align:center;padding:12px;">no bakes saved yet</div>';return;}
-    container.innerHTML=entries.map((e,i)=>`
-      <div class="journal-entry">
-        <div class="journal-entry-date">${e.date}</div>
-        <div class="journal-entry-params">${e.params}</div>
-        <div class="journal-entry-notes">${e.notes}</div>
-        <div class="journal-entry-actions">
-          <button class="journal-action-btn del" onclick="deleteEntry(${i})">delete</button>
-        </div>
-      </div>`).join('');
+    if(!entries.length){container.innerHTML='<div style="font-family:var(--num-font);font-size:0.78rem;color:var(--ink3);text-align:center;padding:12px;">no bakes saved yet</div>';return;}
+    container.innerHTML=entries.map(function(e){
+      var params=e.count+'×'+e.size+'g · '+(e.hydLabel||e.hyd+'%')+' · '+e.mode+' · '+(e.bulkLabel||e.bulk+'h bulk')+' · '+(e.fTimeLabel||e.fTime+'h retard')+' · '+(e.rTLabel||e.rT+'°F room')+' · '+(e.fTLabel||e.fT+'°F fridge')+(e.maltOn?' · malt':'');
+      return '<div class="journal-entry">'+
+        '<div class="journal-entry-date">'+e.date+'</div>'+
+        '<div class="journal-entry-params">'+params+'</div>'+
+        (e.notes?'<div class="journal-entry-notes">'+e.notes+'</div>':'')+
+        '<div class="journal-entry-actions">'+
+          '<button class="journal-action-btn" onclick="loadBake('+e.id+')">reload settings</button>'+
+          '<button class="journal-action-btn del" onclick="deleteEntry('+e.id+')">delete</button>'+
+        '</div>'+
+      '</div>';
+    }).join('');
   }catch(e){}
 }
-function deleteEntry(i){
+function loadBake(id){
   try{
     var entries=JSON.parse(localStorage.getItem('omarPizzaJournal')||'[]');
-    entries.splice(i,1);
-    localStorage.setItem('omarPizzaJournal',JSON.stringify(entries));
+    var e=entries.find(function(x){return x.id===id;});
+    if(!e)return;
+    mode=e.mode;flour=e.flour;yeast=e.yeast||'IDY';oven=e.oven;mixer=e.mixer||'spiral';maltOn=e.maltOn||false;
+    var clamp=function(sid,v){var sl=document.getElementById(sid);if(v!==undefined&&v!==null)sl.value=Math.min(parseFloat(sl.max),Math.max(parseFloat(sl.min),parseFloat(v)));};
+    clamp('countSlider',e.count);clamp('sizeSlider',e.size);clamp('hydSlider',e.hyd);
+    clamp('bulkSlider',e.bulk);clamp('fTimeSlider',e.fTime);
+    clamp('tempSlider',e.rT);clamp('fTempSlider',e.fT);clamp('inocSlider',e.inoc);
+    clamp('bigaPctSlider',e.bigaPct);clamp('bigaHydSlider',e.bigaHyd);
+    clamp('bigaRoomHSlider',e.bigaRoomH);clamp('bigaFridgeHSlider',e.bigaFridgeH);
+    clamp('bigaRoomTempSlider',e.bigaRoomT);clamp('bigaFridgeTempSlider',e.bigaFridgeT);
+    update();saveState();
+    document.getElementById('journalPanel').classList.remove('open');
+  }catch(err){}
+}
+function deleteEntry(id){
+  try{
+    var entries=JSON.parse(localStorage.getItem('omarPizzaJournal')||'[]');
+    localStorage.setItem('omarPizzaJournal',JSON.stringify(entries.filter(function(x){return x.id!==id;})));
     renderJournal();
   }catch(e){}
 }
@@ -1493,7 +1537,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.0.9 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.1.0 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
