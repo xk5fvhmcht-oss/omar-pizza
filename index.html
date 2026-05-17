@@ -49,7 +49,83 @@
   --card-hover-shadow:0 4px 20px rgba(30,26,20,0.08);
   --header-align:center;
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+/* ─── PARTY THEME ─────────────────────────────────────────────────────────── */
+[data-theme="party"] {
+  --bg:#1e2a3a;--card:#263447;--border:#3a4f66;
+  --ink:#f0ebe0;--ink2:#c8bfb0;--ink3:#8a9bb0;
+  --accent:#c17b3a;--accent-lt:#e8c99a;--accent-f:rgba(193,123,58,0.15);
+  --teal:#4aab9a;--teal-f:rgba(74,171,154,0.15);
+  --rose:#e07070;--rose-f:rgba(224,112,112,0.15);
+  --ice:#7ab3e0;--sub:#1a2535;
+  --body-font:'Fraunces',Georgia,serif;
+  --label-font:'Caveat',cursive;
+  --num-font:'DM Mono','Courier New',monospace;
+  --card-radius:16px;--btn-radius:10px;--pill-radius:20px;
+  --card-border:1.5px solid var(--border);
+  --card-hover-shadow:0 8px 30px rgba(0,0,0,0.3);
+  --header-align:center;
+}
+[data-theme="party"] body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:100;opacity:0.03;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");}
+[data-theme="party"] input[type=range]{background:var(--border);}
+[data-theme="party"] input[type=datetime-local]{background:var(--sub);color:var(--ink);border-color:var(--border);}
+[data-theme="party"] .mode-btn{background:var(--sub);color:var(--ink2);border-color:var(--border);}
+[data-theme="party"] .mode-btn.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+[data-theme="party"] .mode-btn.locked{opacity:0.25;pointer-events:none;}
+[data-theme="party"] .pill{background:var(--sub);color:var(--ink2);border-color:var(--border);}
+[data-theme="party"] .pill.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+[data-theme="party"] .mixer-btn{background:var(--sub);color:var(--ink2);border-color:var(--border);}
+[data-theme="party"] .mixer-btn.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+[data-theme="party"] .auto-btn{border-color:var(--border);color:var(--ink2);}
+[data-theme="party"] .auto-btn.on{background:var(--teal-f);border-color:var(--teal);color:var(--teal);}
+[data-theme="party"] .subsection{background:var(--sub);}
+[data-theme="party"] .malt-toggle-row{background:var(--sub);}
+[data-theme="party"] .theme-toggle{background:var(--card);border-color:var(--border);color:var(--ink2);}
+[data-theme="party"] .version-badge{background:var(--border);color:var(--ink3);}
+[data-theme="party"] .journal-btn{border-color:var(--border);color:var(--ink2);}
+[data-theme="party"] .journal-panel{background:var(--sub);}
+[data-theme="party"] .journal-entry{background:var(--card);}
+[data-theme="party"] .dough-temp-check{background:var(--sub);}
+[data-theme="party"] .info-box{background:rgba(74,171,154,0.1);border-left-color:var(--teal);}
+[data-theme="party"] .info-box.warm{background:var(--accent-f);border-left-color:var(--accent);}
+[data-theme="party"] .sourSuggestWrap .sour-suggestion{background:var(--sub);}
+
+/* Smart Schedule UI */
+.smart-schedule-wrap{margin-bottom:16px;}
+.smart-schedule-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:var(--btn-radius);border:var(--card-border);background:var(--sub);cursor:pointer;transition:all 0.25s;}
+.smart-schedule-toggle:hover{border-color:var(--accent-lt);}
+.smart-schedule-toggle.on{border-color:var(--accent);background:var(--accent-f);}
+[data-theme="party"] .smart-schedule-toggle{border-color:#4a7aaa;background:rgba(74,122,170,0.15);}
+[data-theme="party"] .smart-schedule-toggle.on{border-color:var(--accent);background:var(--accent-f);}
+.ss-label{display:flex;flex-direction:column;gap:2px;}
+.ss-title{font-family:var(--label-font);font-size:1rem;color:var(--ink);}
+.ss-sub{font-family:var(--num-font);font-size:0.7rem;color:var(--ink3);letter-spacing:0.04em;}
+.ss-switch{width:44px;height:22px;border-radius:11px;background:var(--border);position:relative;transition:background 0.3s;flex-shrink:0;}
+.ss-switch::after{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform 0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+.smart-schedule-toggle.on .ss-switch{background:var(--accent);}
+.smart-schedule-toggle.on .ss-switch::after{transform:translateX(22px);}
+
+/* Party prompt */
+.ss-prompt{display:none;margin-top:10px;padding:10px 14px;border-radius:var(--btn-radius);background:var(--accent-f);border-left:3px solid var(--accent);font-family:var(--label-font);font-size:0.92rem;color:var(--ink2);line-height:1.5;}
+[data-theme="artisan"] .ss-prompt{color:#7a4510;}
+.ss-prompt.show{display:block;}
+.ss-error{display:none;margin-top:10px;padding:10px 14px;border-radius:var(--btn-radius);background:var(--rose-f);border-left:3px solid var(--rose);font-family:var(--num-font);font-size:0.78rem;color:var(--rose);}
+.ss-error.show{display:block;}
+.ss-manual{display:none;margin-top:6px;font-family:var(--num-font);font-size:0.7rem;color:var(--ink3);text-align:center;letter-spacing:0.05em;}
+.ss-manual.show{display:block;}
+
+/* Calendar strip */
+.cal-strip{display:none;margin-top:14px;gap:6px;}
+.cal-strip.show{display:flex;}
+.cal-day{flex:1;background:var(--sub);border:var(--card-border);border-radius:var(--btn-radius);padding:10px 8px;text-align:center;}
+[data-theme="party"] .cal-day{background:rgba(255,255,255,0.06);border-color:#3a4f66;}
+.cal-day-name{font-family:var(--num-font);font-size:0.65rem;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;}
+.cal-day-task{font-size:1rem;margin-bottom:2px;}
+.cal-day-label{font-family:var(--label-font);font-size:0.78rem;color:var(--ink2);margin-bottom:3px;}
+.cal-day-time{font-family:var(--num-font);font-size:0.72rem;color:var(--accent);}
+.cal-day.active{border-color:var(--accent);background:var(--accent-f);}
+.cal-day.party{border-color:#4aab9a;background:rgba(74,171,154,0.1);}
+[data-theme="party"] .cal-day.active{border-color:var(--accent);background:rgba(193,123,58,0.15);}
+[data-theme="party"] .cal-day.party{border-color:#4aab9a;background:rgba(74,171,154,0.15);}
 body{font-family:var(--body-font);background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden;position:relative;transition:background 0.35s ease,color 0.35s ease;padding-bottom:env(safe-area-inset-bottom);}
 [data-theme="artisan"] body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:100;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");}
 [data-theme="pro"] body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:100;opacity:0.02;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");}
@@ -328,7 +404,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.1.0 · science-verified · PWA</div>
+    <div class="version-badge">v1.2.2 · science-verified · PWA</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -338,6 +414,25 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
       <div class="card-title"><span class="num">1</span> How many pizzas, and when?</div>
       <span class="section-label">target bake time</span>
       <input type="datetime-local" id="targetBake">
+
+      <!-- SMART SCHEDULE -->
+      <div class="smart-schedule-wrap" id="ssWrap" style="display:none;">
+        <div class="smart-schedule-toggle" id="ssToggle" onclick="toggleSmartSchedule()">
+          <div class="ss-label">
+            <span class="ss-title">🎉 Smart Schedule</span>
+            <span class="ss-sub">OPTIMIZED FOR A WEEKEND PARTY</span>
+          </div>
+          <div class="ss-switch"></div>
+        </div>
+        <div class="ss-prompt" id="ssPrompt">Set your kitchen and fridge temperatures below — we'll handle the timing.</div>
+        <div class="ss-error" id="ssError"></div>
+        <div class="ss-manual" id="ssManual">⟳ MANUAL OVERRIDE — smart schedule off</div>
+        <div class="cal-strip" id="calStrip">
+          <div class="cal-day" id="calDay1"><div class="cal-day-name" id="calDay1Name">—</div><div class="cal-day-task" id="calDay1Task">—</div><div class="cal-day-label" id="calDay1Label">—</div><div class="cal-day-time" id="calDay1Time">—</div></div>
+          <div class="cal-day" id="calDay2"><div class="cal-day-name" id="calDay2Name">—</div><div class="cal-day-task" id="calDay2Task">—</div><div class="cal-day-label" id="calDay2Label">—</div><div class="cal-day-time" id="calDay2Time">—</div></div>
+          <div class="cal-day party" id="calDay3"><div class="cal-day-name" id="calDay3Name">—</div><div class="cal-day-task" id="calDay3Task">🎉</div><div class="cal-day-label" id="calDay3Label">party</div><div class="cal-day-time" id="calDay3Time">—</div></div>
+        </div>
+      </div>
 
       <span class="section-label">quantity</span>
       <div class="slider-wrap" style="margin-bottom:10px;">
@@ -603,21 +698,26 @@ window.onerror=function(msg,src,line,col,err){
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 var mode='rapid',isAuto=false,flour='Tipo',yeast='IDY',maltOn=false;
+var smartSchedule=false,ssManualOverride=false;
 var oven='steel',mixer='spiral',useCelsius=false,theme='artisan';
 
 var initD=new Date();initD.setHours(initD.getHours()+36,0,0,0);
 document.getElementById('targetBake').value=new Date(initD.getTime()-initD.getTimezoneOffset()*60000).toISOString().slice(0,16);
 
-// Floaters
-['🍕','🌾','✦','◦','·','∘'].forEach(em=>{
-  for(var j=0;j<3;j++){
-    var el=document.createElement('div');el.className='floater';el.textContent=em;
-    el.style.cssText=`left:${Math.random()*100}%;font-size:${1+Math.random()*2}rem;animation-duration:${18+Math.random()*24}s;animation-delay:${-Math.random()*30}s`;
-    document.getElementById('floaters').appendChild(el);
-  }
-});
+// Floaters — initialized via updateFloaters()
+updateFloaters();
 
-document.querySelectorAll('input[type=range],input[type=datetime-local]').forEach(el=>el.addEventListener('input',()=>{update();saveState();}));
+document.querySelectorAll('input[type=range],input[type=datetime-local]').forEach(function(el){
+  el.addEventListener('input',function(){
+    // Duration sliders trigger manual override
+    var durationIds=['bulkSlider','fTimeSlider','bigaRoomHSlider','bigaFridgeHSlider','inocSlider'];
+    if(smartSchedule&&durationIds.indexOf(el.id)>=0){
+      ssDisableManual();
+    } else {
+      update();saveState();
+    }
+  });
+});
 
 // Biga temp sliders nudge main dough sliders
 document.getElementById('bigaRoomTempSlider').addEventListener('input',function(){
@@ -635,7 +735,7 @@ document.getElementById('bigaFridgeTempSlider').addEventListener('input',functio
 
 // ─── PERSIST STATE ────────────────────────────────────────────────────────────
 function saveState(){
-  try{localStorage.setItem('omarPizzaState',JSON.stringify({mode,isAuto,flour,yeast,maltOn,oven,mixer,useCelsius,theme,
+  try{localStorage.setItem('omarPizzaState',JSON.stringify({mode,isAuto,flour,yeast,maltOn,oven,mixer,useCelsius,theme,smartSchedule,
     hyd:document.getElementById('hydSlider').value,
     count:document.getElementById('countSlider').value,
     size:document.getElementById('sizeSlider').value,
@@ -669,6 +769,7 @@ function loadState(){
 
     if(s.useCelsius!==undefined)useCelsius=s.useCelsius;
     if(s.theme){theme=s.theme;document.documentElement.setAttribute('data-theme',theme);}
+    if(s.smartSchedule!==undefined)smartSchedule=s.smartSchedule;
     var clamp=(id,v)=>{var sl=document.getElementById(id);if(v)sl.value=Math.min(parseFloat(sl.max),Math.max(parseFloat(sl.min),parseFloat(v)));};
     clamp('hydSlider',s.hyd);clamp('countSlider',s.count);clamp('sizeSlider',s.size);
     clamp('bulkSlider',s.bulk);clamp('fTimeSlider',s.fTime);clamp('tempSlider',s.rT);
@@ -688,6 +789,7 @@ function toggleTheme(){
   updateThemeText();saveState();
 }
 function updateThemeText(){
+  if(smartSchedule)return; // party mode sets its own text
   var isPro=theme==='pro';
   document.getElementById('headerEyebrow').textContent=isPro?'a Neapolitan calculator, refined':'✦ a Neapolitan calculator, with feeling ✦';
   document.getElementById('headerSub').textContent=isPro?'precision mode — same warmth, less decoration':'I thought carefully about every gram.';
@@ -879,7 +981,185 @@ function toggleMalt(){maltOn=!maltOn;update();saveState();}
 function setQuick(v){document.getElementById('sizeSlider').value=v;update();saveState();}
 function toggleCelsius(){useCelsius=!useCelsius;update();saveState();}
 
-// ─── INGREDIENT ROWS ──────────────────────────────────────────────────────────
+// ─── SMART SCHEDULE ───────────────────────────────────────────────────────────
+function toggleSmartSchedule(){
+  smartSchedule=!smartSchedule;
+  ssManualOverride=false;
+  if(smartSchedule){
+    // Switch away from rapid
+    if(mode==='rapid'){mode='biga';}
+    // Apply party theme
+    theme='party';
+    document.documentElement.setAttribute('data-theme','party');
+    document.getElementById('themeColor').content='#1e2a3a';
+    updateFloaters();
+    runSmartSchedule();
+  } else {
+    // Revert to previous theme
+    theme='artisan';
+    document.documentElement.setAttribute('data-theme','artisan');
+    document.getElementById('themeColor').content='#fdf8f0';
+    updateFloaters();
+  }
+  update();saveState();
+}
+
+function ssDisableManual(){
+  // Called when baker nudges a duration slider while Smart Schedule is on
+  if(!smartSchedule)return;
+  smartSchedule=false;
+  ssManualOverride=true;
+  theme='artisan';
+  document.documentElement.setAttribute('data-theme','artisan');
+  document.getElementById('themeColor').content='#fdf8f0';
+  updateFloaters();
+  update();saveState();
+}
+
+function updateFloaters(){
+  var container=document.getElementById('floaters');
+  container.innerHTML='';
+  var emojis=smartSchedule?['🎉','🍕','✨','·','∘','✦']:['🍕','🌾','✦','◦','·','∘'];
+  emojis.forEach(function(em){
+    for(var j=0;j<3;j++){
+      var el=document.createElement('div');el.className='floater';el.textContent=em;
+      el.style.cssText='left:'+Math.random()*100+'%;font-size:'+(1+Math.random()*2)+'rem;animation-duration:'+(18+Math.random()*24)+'s;animation-delay:'+(-Math.random()*30)+'s';
+      container.appendChild(el);
+    }
+  });
+}
+
+function runSmartSchedule(){
+  var target=new Date(document.getElementById('targetBake').value);
+  if(isNaN(target.getTime())){showSSError('Set your bake time first.');return;}
+
+  var dow=target.getDay(); // 0=Sun, 6=Sat
+  if(dow!==0&&dow!==6){showSSError('Smart Schedule works for weekend parties only — set your bake to a Saturday or Sunday.');return;}
+
+  var isSunday=dow===0;
+  var bakeH=target.getHours()+(target.getMinutes()/60);
+
+  // Define key times (24h)
+  var BEDTIME=22;    // 10pm
+  var WAKETIME=7;    // 7am
+  var WORKSTART=9;   // 9am
+  var WORKEND=17;    // 5pm
+  var EVENING_START=18.5; // 6:30pm — after work, dinner, settled
+
+  // Helper: get Date for a specific day offset and hour
+  function dayAt(offsetDays,hour){
+    var d=new Date(target);
+    d.setDate(d.getDate()-offsetDays);
+    d.setHours(Math.floor(hour),Math.round((hour%1)*60),0,0);
+    return d;
+  }
+
+  function fmtTime(d){return d.toLocaleString([],{hour:'2-digit',minute:'2-digit'});}
+  function dayName(d){return d.toLocaleString([],{weekday:'short'}).toUpperCase();}
+
+  var calDay1Name,calDay1Task,calDay1Label,calDay1Time;
+  var calDay2Name,calDay2Task,calDay2Label,calDay2Time;
+  var calDay3Name=dayName(target),calDay3Time=fmtTime(target);
+
+  if(mode==='biga'){
+    // Saturday bake: Thu eve biga → Fri eve mix → Sat bake
+    // Sunday bake:   Fri eve biga → Sat eve mix → Sun bake
+  var EVENING_MIX=19.0;    // 7:00pm — mix time
+  var EVENING_FRIDGE=21.0; // 9:00pm — into fridge
+  var MORNING_FEED=7.5;    // 7:30am — feed starter before leaving
+
+  if(mode==='biga'){
+    // Saturday bake: Thu 7pm biga → Thu 9pm fridge → Fri 7pm mix → Fri 8:30pm ball+fridge → Sat bake
+    // Sunday bake:   Fri 7pm biga → Fri 9pm fridge → Sat 7pm mix → Sat 8:30pm ball+fridge → Sun bake
+    var bigaMixTime=dayAt(2,EVENING_MIX);
+    var bigaFridgeTime=dayAt(2,EVENING_FRIDGE);
+    var bigaPullTime=dayAt(1,EVENING_MIX-0.5); // 6:30pm pull
+    var finalMixTime=dayAt(1,EVENING_MIX);
+    var fridgeTime=dayAt(1,EVENING_FRIDGE-0.5); // 8:30pm
+
+    var bigaRoomH=Math.round((bigaFridgeTime-bigaMixTime)/3600000*2)/2;
+    var bigaFridgeH=Math.round((bigaPullTime-bigaFridgeTime)/3600000);
+    var bulkH=0.5;
+    var fH=Math.round((target-fridgeTime)/3600000);
+
+    setSliderSS('bigaRoomHSlider',bigaRoomH);
+    setSliderSS('bigaFridgeHSlider',Math.max(0,bigaFridgeH));
+    setSliderSS('bulkSlider',bulkH);
+    setSliderSS('fTimeSlider',Math.max(0,fH));
+
+    calDay1Name=dayName(bigaMixTime);calDay1Task='🍕';calDay1Label='mix biga';calDay1Time=fmtTime(bigaMixTime);
+    calDay2Name=dayName(finalMixTime);calDay2Task='🥣';calDay2Label='mix dough';calDay2Time=fmtTime(finalMixTime);
+
+  } else if(mode==='slow'){
+    // Saturday bake: Fri 7pm mix → Fri 8:30pm ball+fridge → Sat bake
+    // Sunday bake:   Sat 7pm mix → Sat 8:30pm ball+fridge → Sun bake
+    var mixTime=dayAt(1,EVENING_MIX);
+    var fridgeTime=dayAt(1,EVENING_FRIDGE-0.5);
+    var bulkH=0.75;
+    var fH=Math.round((target-fridgeTime)/3600000);
+
+    setSliderSS('bulkSlider',bulkH);
+    setSliderSS('fTimeSlider',Math.max(0,fH));
+
+    calDay1Name=dayName(mixTime);calDay1Task='🥣';calDay1Label='mix dough';calDay1Time=fmtTime(mixTime);
+    calDay2Name=dayName(fridgeTime);calDay2Task='🔴';calDay2Label='ball + fridge';calDay2Time=fmtTime(fridgeTime);
+
+  } else if(mode==='sour'){
+    // Saturday bake: Fri 7:30am feed → Fri 7pm mix → Fri 9pm ball+fridge → Sat bake
+    // Sunday bake:   Sat 7:30am feed → Sat 7pm mix → Sat 9pm ball+fridge → Sun bake
+    var feedTime=dayAt(1,MORNING_FEED);
+    var mixTime=dayAt(1,EVENING_MIX);
+    var fridgeTime=dayAt(1,EVENING_FRIDGE);
+    var bulkH=1.5;
+    var fH=Math.round((target-fridgeTime)/3600000);
+
+    setSliderSS('bulkSlider',bulkH);
+    setSliderSS('fTimeSlider',Math.max(0,fH));
+    setSliderSS('inocSlider',15);
+
+    calDay1Name=dayName(feedTime);calDay1Task='🍋';calDay1Label='feed starter';calDay1Time=fmtTime(feedTime);
+    calDay2Name=dayName(mixTime);calDay2Task='🥣';calDay2Label='mix + ball';calDay2Time=fmtTime(mixTime);
+  }
+
+  // Update calendar strip
+  document.getElementById('calDay1Name').textContent=calDay1Name;
+  document.getElementById('calDay1Task').textContent=calDay1Task;
+  document.getElementById('calDay1Label').textContent=calDay1Label;
+  document.getElementById('calDay1Time').textContent=calDay1Time;
+  document.getElementById('calDay2Name').textContent=calDay2Name;
+  document.getElementById('calDay2Task').textContent=calDay2Task;
+  document.getElementById('calDay2Label').textContent=calDay2Label;
+  document.getElementById('calDay2Time').textContent=calDay2Time;
+  document.getElementById('calDay3Name').textContent=calDay3Name;
+  document.getElementById('calDay3Time').textContent=fmtTime(target);
+
+  document.getElementById('calStrip').classList.add('show');
+  document.getElementById('ssPrompt').classList.add('show');
+  document.getElementById('ssError').classList.remove('show');
+  document.getElementById('ssManual').classList.remove('show');
+}
+
+function setSliderSS(id,val){
+  var sl=document.getElementById(id);
+  if(!sl)return;
+  sl.value=Math.min(parseFloat(sl.max),Math.max(parseFloat(sl.min),val));
+}
+
+function showSSError(msg){
+  smartSchedule=false;
+  ssManualOverride=false;
+  document.getElementById('ssToggle').classList.remove('on');
+  document.getElementById('ssError').textContent='⚠ '+msg;
+  document.getElementById('ssError').classList.add('show');
+  document.getElementById('ssPrompt').classList.remove('show');
+  document.getElementById('calStrip').classList.remove('show');
+  theme='artisan';
+  document.documentElement.setAttribute('data-theme','artisan');
+  document.getElementById('themeColor').content='#fdf8f0';
+  updateFloaters();
+}
+
+
 function ingRow(emoji,label,grams,dec,note){
   var w=dec?grams.toFixed(dec):Math.round(grams);
   var noteHtml=note?`<span style="font-family:var(--num-font);font-size:0.7rem;color:var(--ink3);font-style:normal;margin-left:4px;">${note}</span>`:'';
@@ -900,8 +1180,31 @@ function _update(){
   var isRapid=mode==='rapid';
   var isPro=theme==='pro';
 
+  // Smart Schedule toggle — show for slow/sour/biga, hide for rapid
+  var ssWrap=document.getElementById('ssWrap');
+  ssWrap.style.display=(mode==='rapid')?'none':'block';
+  var ssToggleEl=document.getElementById('ssToggle');
+  ssToggleEl.classList.toggle('on',smartSchedule);
+
+  // Rapid lock when Smart Schedule is on
+  document.getElementById('modeRapid').classList.toggle('locked',smartSchedule);
+
+  // Manual override badge
+  var ssManualEl=document.getElementById('ssManual');
+  ssManualEl.classList.toggle('show',ssManualOverride);
+  if(!smartSchedule&&!ssManualOverride){
+    document.getElementById('ssPrompt').classList.remove('show');
+    document.getElementById('calStrip').classList.remove('show');
+    document.getElementById('ssError').classList.remove('show');
+  }
+
+  // Theme toggle hidden in party mode
+  document.getElementById('themeBtn').style.display=smartSchedule?'none':'flex';
+  document.getElementById('headerEyebrow').textContent=smartSchedule?'🎉 weekend party mode · smart schedule':'✦ a Neapolitan calculator, with feeling ✦';
+  document.getElementById('headerSub').textContent=smartSchedule?'I planned your whole pizza weekend.':'I thought carefully about every gram.';
+
   // Button states
-  ['Rapid','Slow','Sour','Biga'].forEach(m=>document.getElementById('mode'+m).classList.toggle('on',mode===m.toLowerCase()));
+  ['Rapid','Slow','Sour','Biga'].forEach(function(m){document.getElementById('mode'+m).classList.toggle('on',mode===m.toLowerCase());});
   document.getElementById('ovenSteel').classList.toggle('on',oven==='steel');
   document.getElementById('ovenGozney').classList.toggle('on',oven==='gozney');
   ['Hand','KA','Spiral'].forEach(mx=>document.getElementById('mixer'+mx).classList.toggle('on',mixer===mx.toLowerCase()));
@@ -1043,6 +1346,19 @@ function _update(){
   var _mixerAutoLock=MIXER_CFG[mixer]?MIXER_CFG[mixer].autoLock:null;
   var autolyseEffective=isAuto&&!isBiga&&_mixerAutoLock!=='off';
   var activity=calcActivity(bH,rT,fH,fT,autolyseEffective,inoc,isSour,maltOn);
+
+  // Add biga pre-fermentation activity in biga mode
+  // Biga contributes real fermentation activity — meter must reflect this
+  if(isBiga){
+    var bigaQ10r=Math.pow(2,(bigaRoomT-77)/18);
+    var bigaQ10f=Math.pow(2,(bigaFridgeT-77)/18);
+    var bigaSuppF=bigaFridgeSuppression(bigaFridgeT);
+    var bigaHydF=bigaHydFactor(bigaHyd);
+    // Scale biga activity by biga portion — 50% biga contributes proportionally less to total dough
+    var bigaActivity=(bigaRoomH*bigaQ10r+bigaFridgeH*bigaSuppF*bigaQ10f)*bigaHydF*bigaPct*0.8;
+    activity+=bigaActivity;
+    if(maltOn)activity*=MALT_BOOST;
+  }
   setVal('actVal',activity.toFixed(2));
   var pct=Math.min(100,(activity/ACTIVITY_OVER)*100);
   var bar=document.getElementById('actBar');
@@ -1537,7 +1853,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.1.0 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.2.2 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
