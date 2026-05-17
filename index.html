@@ -1024,7 +1024,8 @@ function _update(){
   else fridgeTempInfo.textContent='🌡️ at 43°F+ your fridge is fermenting more than retarding — watch your balls carefully.';
 
   // ─── FERMENTATION ACTIVITY ────────────────────────────────────────────────
-  var autolyseEffective=isAuto&&!isBiga&&MIXER_CFG[mixer]?.autoLock!=='off';
+  var _mixerAutoLock=MIXER_CFG[mixer]?MIXER_CFG[mixer].autoLock:null;
+  var autolyseEffective=isAuto&&!isBiga&&_mixerAutoLock!=='off';
   var activity=calcActivity(bH,rT,fH,fT,autolyseEffective,inoc,isSour,maltOn);
   setVal('actVal',activity.toFixed(2));
   var pct=Math.min(100,(activity/ACTIVITY_OVER)*100);
@@ -1195,7 +1196,7 @@ function _update(){
 
   var preheatNote=oven==='steel'
     ?`place steel on top rack · crank to 550°F · ${oCfg.preheatMins} min minimum — steel must be fully saturated`
-    :`target 700–850°F · var floor stabilise ${oCfg.preheatMins} min · measure with IR thermometer`;
+    :`target 700–850°F · floor stabilise ${oCfg.preheatMins} min · measure with IR thermometer`;
 
   var shapeNote=`stretch each ball by hand — slap & pull or knuckle stretch · aim for even thickness, thin centre · cornicione from the edge`;
   var bakeNote=`${oCfg.bakeNote} · ${count} pizzas`;
@@ -1213,7 +1214,7 @@ function _update(){
 
     events.push({t:tBigaMix,emoji:'🍕',label:'mix biga',note:`dissolve ${yeastLabel(yeast)} in biga water · add flour · mix until just combined — shaggy is correct · target biga water temp shown in recipe · place in oiled container, cover with perforated film`,nc:'highlight',extra:''});
     events.push({t:tBigaFridge,emoji:'🌡️',label:'biga to fridge',note:`after ${fmtHours(bigaRoomH)} at room temp — biga goes into fridge · it should show early signs of activity`,nc:'preheat-note',extra:''});
-    events.push({t:tBigaPull,emoji:'🍕',label:'pull biga',note:`biga should be domed, showing centre dip, stringy when pulled · cut into pieces and var it come to room temp 15–20 min before mixing final dough`,nc:'highlight',extra:''});
+    events.push({t:tBigaPull,emoji:'🍕',label:'pull biga',note:`biga should be domed, showing centre dip, stringy when pulled · `,nc:'highlight',extra:''});
     events.push({t:tFinalMix,emoji:'🥣',label:'mix final dough',note:`dissolve yeast in DDT water · add biga pieces — break down in water · add flour${maltOn?' (with diastatic malt mixed in)':''} · hydrate · sprinkle salt · follow with reserved water · finish mixing`,nc:'highlight',extra:''});
     events.push({t:tBench,emoji:'⏳',label:'bench rest',note:'cover dough · rest 20–30 min · gluten relaxes — the dough goes from elastic and tight to soft and cooperative',nc:'',extra:''});
     events.push({t:tBall,emoji:'🔴',label:'ball',note:'divide and shape into tight balls · pinch seam firmly underneath · place in oiled containers · seal and refrigerate',nc:'',extra:''});
