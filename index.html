@@ -404,7 +404,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.3.3 · science-verified · PWA</div>
+    <div class="version-badge">v1.3.4 · science-verified · PWA</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -964,9 +964,22 @@ function snapHyd(){
 // ─── CONTROLS ─────────────────────────────────────────────────────────────────
 function setMode(m){
   mode=m;
-  if(m==='rapid')document.getElementById('fTimeSlider').value=0;
+  if(m==='rapid'){
+    document.getElementById('fTimeSlider').value=0;
+    // Turn off Smart Schedule if switching to rapid
+    if(smartSchedule){
+      smartSchedule=false;
+      ssManualOverride=false;
+      theme='artisan';
+      document.documentElement.setAttribute('data-theme','artisan');
+      document.getElementById('themeColor').content='#fdf8f0';
+      updateFloaters();
+    }
+  }
   if(m==='sour'){mixer='hand';isAuto=true;}
   if(m==='biga')flour='Tipo';
+  // Re-run Smart Schedule for new mode
+  if(smartSchedule&&m!=='rapid')runSmartSchedule();
   snapHyd();update();saveState();
 }
 function setOven(o){oven=o;snapHyd();update();saveState();}
@@ -1954,7 +1967,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.3.3 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.3.4 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
