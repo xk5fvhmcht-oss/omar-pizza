@@ -299,21 +299,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
 [data-theme="pro"] .sour-suggestion{font-family:var(--num-font);font-size:0.78rem;}
 
 /* ─── PRINT ───────────────────────────────────────────────────────────────── */
-@media print {
-  body{background:#fff;color:#000;}
-  .floaters,.theme-bar,#installBanner,#offlineBadge,.journal-btn,.journal-panel,.auto-btn,.warn-box,.ferment-meter,.ferment-label,#actVal,.dough-temp-check,.right-col .card:last-child,.pro-status{display:none!important;}
-  .page{display:block;padding:0;max-width:100%;}
-  .header{padding:10px 0;}
-  .card{box-shadow:none;border:1px solid #ddd;break-inside:avoid;margin-bottom:16px;}
-  * {background:transparent!important;color:#000!important;border-color:#ccc!important;}
-  .ing-weight,.slider-val,.version-badge{background:#eee!important;color:#000!important;}
-  .recipe-section-title{background:#eee!important;}
-  .tl-note.highlight,.tl-note.bloom-note,.tl-note.preheat-note,.tl-note.sour-note,.info-box,.sour-suggestion{background:#f5f5f5!important;border-left-color:#999!important;}
-  .ddt-temp{color:#000!important;font-weight:bold;}
-  .wisdom{border-left:2px solid #999!important;}
-  .print-footer{display:block!important;}
-}
-.print-footer{display:none;text-align:center;font-family:'DM Mono',monospace;font-size:0.65rem;color:#999;margin-top:20px;padding-top:10px;border-top:1px solid #eee;}
+
 </style>
 </head>
 <body>
@@ -342,7 +328,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.0.8 · science-verified · PWA</div>
+    <div class="version-badge">v1.0.9 · science-verified · PWA</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -573,8 +559,6 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
         <button class="journal-save-btn" onclick="saveBake()">save bake</button>
         <div class="journal-entries" id="journalEntries"></div>
       </div>
-      <div class="print-footer">Omar Pizza · Neapolitan Calculator · science-verified · v1.0.8</div>
-    </div>
   </div>
 
   <div class="pro-status" id="proStatus"></div>
@@ -1294,6 +1278,8 @@ function _update(){
   });
 
   var now=Date.now();
+  var hasPast=events.some(function(ev){return ev.t!==null&&ev.t.getTime()<now;});
+  var pastWarn=hasPast?'<div style="font-family:var(--num-font);font-size:0.78rem;background:var(--rose-f);color:var(--rose);border:1px solid rgba(255,92,92,0.25);border-radius:var(--btn-radius);padding:8px 12px;margin-bottom:14px;">⚠ some steps have already passed — move your bake time forward</div>':'';
   var schedHTML=events.map((ev,i)=>{
     var timeStr='';
     var countdown='';
@@ -1323,7 +1309,7 @@ function _update(){
     </li>`;
   }).join('');
 
-  document.getElementById('schedule').innerHTML=schedHTML;
+  document.getElementById('schedule').innerHTML=pastWarn+schedHTML;
 
   // Wisdom quote — rotate based on day
   var wIdx=new Date().getDate()%WISDOMS.length;
@@ -1399,7 +1385,154 @@ function deleteEntry(i){
 }
 
 // ─── PRINT ────────────────────────────────────────────────────────────────────
-function printCard(){window.print();}
+function printCard(){
+  var rHTML=document.getElementById('recipe').innerHTML;
+  var sHTML=document.getElementById('schedule').innerHTML;
+  var mHTML=document.getElementById('massSumm').innerHTML;
+  var wHTML=document.getElementById('wisdom').innerHTML;
+  var dHTML=document.getElementById('ddtBox').innerHTML;
+  var count=document.getElementById('countVal').textContent;
+  var size =document.getElementById('sizeVal').textContent;
+  var hyd  =document.getElementById('hydVal').textContent;
+  var rT   =document.getElementById('tempVal').textContent;
+  var fT   =document.getElementById('fTempVal').textContent;
+  var bulk =document.getElementById('bulkVal').textContent;
+  var fTime=document.getElementById('fTimeVal').textContent;
+  var tgt  =document.getElementById('targetBake').value;
+  var tFmt =new Date(tgt).toLocaleString([],{weekday:'long',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  var oLabel={steel:'Home Steel 550°F',gozney:'Gozney Dome'}[oven];
+  var mLabel={hand:'Hand mix',ka:'KitchenAid',spiral:'Ooni Halo Spiral'}[mixer];
+  var isPro=theme==='pro';
+  var border=isPro?'#d8cfc0':'#efe6d3';
+  var ink2=isPro?'#4a4030':'#5c4d38';
+  var ink3=isPro?'#8a7d68':'#9c8b72';
+  var accent=isPro?'#5c6bc0':'#c17b3a';
+  var bodyFont="'Fraunces',Georgia,serif";
+  var monoFont="'DM Mono','Courier New',monospace";
+  var handFont=isPro?"'Fraunces',Georgia,serif":"'Caveat',cursive";
+
+  var existing=document.getElementById('printCard');
+  if(existing)existing.remove();
+  var oldStyle=document.getElementById('printStyle');
+  if(oldStyle)oldStyle.remove();
+
+  var style=document.createElement('style');
+  style.id='printStyle';
+  style.textContent=`
+    @media print {
+      body > *:not(#printCard) { display: none !important; }
+      #printCard { display: block !important; }
+      #printCard, #printCard * { background: #fff !important; }
+      #printCard { color: #000 !important; position: static !important; padding: 0 !important; }
+      #printCard .close-btn { display: none; }
+      #printCard .param { background: #eee !important; color: #333 !important; }
+      #printCard .ddt-box { background: #f5f5f5 !important; border-color: #ddd !important; }
+      #printCard .wisdom { background: #f5f5f5 !important; border-color: #ddd !important; }
+      #printCard .tl-dot { background: #f5f5f5 !important; }
+      @page { margin: 1.5cm; }
+    }
+    #printCard {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #fff;
+      overflow-y: auto;
+      padding: 32px;
+      font-family: ${bodyFont};
+      color: #1a1a1a;
+    }
+    #printCard * { box-sizing: border-box; }
+    #printCard h1{font-size:${isPro?'1.8rem':'2.2rem'};font-style:${isPro?'normal':'italic'};font-weight:700;letter-spacing:-0.02em;margin-bottom:4px;}
+    #printCard h1 span{color:${accent};}
+    #printCard .ey{font-family:${isPro?monoFont:handFont};font-size:0.78rem;color:${accent};margin-bottom:6px;}
+    #printCard .meta{font-family:${monoFont};font-size:0.7rem;color:${ink3};margin-top:4px;margin-bottom:16px;letter-spacing:0.04em;}
+    #printCard .params{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+    #printCard .param{font-family:${monoFont};font-size:0.72rem;background:${border};color:${ink2};padding:3px 9px;border-radius:20px;}
+    #printCard .cols{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:18px;}
+    #printCard .sec{font-family:${isPro?monoFont:handFont};font-size:${isPro?'0.82rem':'1.1rem'};color:${accent};margin-bottom:8px;border-bottom:1px dashed ${border};padding-bottom:4px;}
+    #printCard .recipe-item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed ${border};font-size:0.88rem;color:${ink2};}
+    #printCard .recipe-item:last-child{border:none;}
+    #printCard .ing-name{display:flex;align-items:center;gap:6px;font-style:${isPro?'normal':'italic'};font-family:${bodyFont};}
+    #printCard .ing-emoji{${isPro?'display:none;':''}}
+    #printCard .ing-weight{font-family:${monoFont};font-size:0.82rem;${isPro?'color:'+accent+';':'background:'+border+';padding:2px 7px;border-radius:12px;'}}
+    #printCard .ddt-box{background:#f5f5f5;border:1px solid ${border};border-radius:8px;padding:10px 12px;margin-top:10px;font-family:${isPro?monoFont:handFont};font-size:0.85rem;color:${ink2};line-height:1.7;}
+    #printCard .ddt-title{font-family:${monoFont};font-size:0.65rem;color:${ink3};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px;}
+    #printCard .ddt-temp{color:${accent};font-weight:600;}
+    #printCard .ice-line{color:#5b9bd5;border-top:1px dashed ${border};margin-top:6px;padding-top:6px;font-size:0.8rem;}
+    #printCard .batch-total{font-family:${isPro?monoFont:handFont};font-size:1rem;color:${ink2};text-align:right;padding-top:8px;border-top:1.5px solid ${border};margin-top:6px;}
+    #printCard .batch-total strong{color:${accent};}
+    #printCard .tl-item{display:flex;gap:10px;margin-bottom:13px;align-items:flex-start;}
+    #printCard .tl-dot{width:20px;height:20px;border-radius:${isPro?'4px':'50%'};border:1.5px solid ${border};display:flex;align-items:center;justify-content:center;font-size:0.68rem;flex-shrink:0;background:#f5f5f5;}
+    #printCard .tl-item.bake .tl-dot{background:${accent};border-color:${accent};}
+    #printCard .tl-time{font-family:${monoFont};font-size:0.85rem;color:${accent};display:block;margin-bottom:1px;}
+    #printCard .tl-label{font-size:0.9rem;font-style:${isPro?'normal':'italic'};font-weight:500;font-family:${bodyFont};}
+    #printCard .tl-note{font-family:${isPro?monoFont:handFont};font-size:0.82rem;color:${ink3};margin-top:2px;display:block;line-height:1.4;}
+    #printCard .tl-note.highlight{background:rgba(45,125,114,0.08);border-left:2px solid #2d7d72;color:#2d7d72;padding:4px 7px;border-radius:0 5px 5px 0;margin-top:4px;}
+    #printCard .tl-note.bloom-note{background:rgba(184,92,92,0.08);border-left:2px solid #b85c5c;color:#b85c5c;padding:4px 7px;border-radius:0 5px 5px 0;margin-top:4px;}
+    #printCard .tl-note.preheat-note{background:rgba(193,123,58,0.08);border-left:2px solid ${accent};color:${isPro?accent:'#7a4510'};padding:4px 7px;border-radius:0 5px 5px 0;margin-top:4px;}
+    #printCard .tl-note.sour-note{background:rgba(45,125,114,0.06);border-left:2px solid #2d7d72;color:#2d7d72;padding:4px 7px;border-radius:0 5px 5px 0;margin-top:4px;}
+    #printCard .wisdom{font-family:${isPro?monoFont:handFont};font-size:0.92rem;color:${ink3};padding:10px 12px;background:#f5f5f5;border-left:3px solid ${isPro?border:'#e8c99a'};border-radius:0 8px 8px 0;margin-top:14px;line-height:1.5;}
+    #printCard .footer{font-family:${monoFont};font-size:0.62rem;color:${ink3};text-align:center;margin-top:22px;padding-top:12px;border-top:1px dashed ${border};}
+    #printCard .close-btn{position:fixed;top:16px;right:16px;background:${accent};color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10000;}
+    #printCard .recipe-section-title{font-family:${monoFont};font-size:0.72rem;background:${border};color:${ink2};padding:2px 8px;border-radius:12px;display:inline-block;margin:8px 0 4px;}
+  `;
+  document.head.appendChild(style);
+
+  var modeLabel={rapid:'Rapid',slow:'Slow cold retard',sour:'Sourdough',biga:'Biga'}[mode];
+  var bigaParams='';
+  if(mode==='biga'){
+    var bpv=document.getElementById('bigaPctVal').textContent;
+    var bhv=document.getElementById('bigaHydVal').textContent;
+    bigaParams='<span class="param">biga '+bpv+'</span><span class="param">biga hyd '+bhv+'</span>';
+  }
+
+  var div=document.createElement('div');
+  div.id='printCard';
+  div.innerHTML=`
+    <button class="close-btn" onclick="closePrint()" title="close">✕</button>
+    <div class="ey">✦ recipe card</div>
+    <h1>Omar <span>Pizza</span></h1>
+    <div class="meta">Neapolitan · ${tFmt} · v1.0.9 · science-verified</div>
+    <div class="params">
+      <span class="param">${count} balls</span>
+      <span class="param">${size} each</span>
+      <span class="param">hydration ${hyd}</span>
+      <span class="param">bulk ${bulk}</span>
+      <span class="param">retard ${fTime}</span>
+      <span class="param">room ${rT}</span>
+      <span class="param">fridge ${fT}</span>
+      <span class="param">${modeLabel}</span>
+      <span class="param">Tipo 00</span>
+      <span class="param">${oLabel}</span>
+      <span class="param">${mLabel}</span>
+      ${bigaParams}
+    </div>
+    <div class="cols">
+      <div>
+        <div class="sec">ingredients</div>${rHTML}
+        <div class="ddt-box">${dHTML}</div>
+        <div class="batch-total">${mHTML}</div>
+      </div>
+      <div>
+        <div class="sec">bake schedule</div>
+        <ul style="list-style:none;padding:0;">${sHTML}</ul>
+      </div>
+    </div>
+    <div class="wisdom">${wHTML}</div>
+    <div class="footer">Omar Pizza · Neapolitan Calculator · ${isPro?'precision':'artisan'} · printed ${new Date().toLocaleString()}</div>
+  `;
+  document.body.appendChild(div);
+  div.style.display='block';
+  setTimeout(function(){ window.print(); }, 400);
+}
+
+function closePrint(){
+  var div=document.getElementById('printCard');
+  if(div)div.remove();
+  var style=document.getElementById('printStyle');
+  if(style)style.remove();
+}
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadState();
