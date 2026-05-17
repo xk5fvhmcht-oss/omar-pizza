@@ -342,7 +342,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.0.2 · science-verified · PWA</div>
+    <div class="version-badge">v1.0.3 · science-verified · PWA</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -573,7 +573,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
         <button class="journal-save-btn" onclick="saveBake()">save bake</button>
         <div class="journal-entries" id="journalEntries"></div>
       </div>
-      <div class="print-footer">Omar Pizza · Neapolitan Calculator · science-verified · v1.0.2</div>
+      <div class="print-footer">Omar Pizza · Neapolitan Calculator · science-verified · v1.0.3</div>
     </div>
   </div>
 
@@ -1254,9 +1254,9 @@ function _update(){
   } else if(isSour){
     // Sourdough timeline — suggestions only, no hard times except fridge
     var tBall=new Date(tFridge.getTime());
-    events.push({t:null,emoji:'🍋',label:'feed starter',note:'pull from fridge · feed and wait for peak · dome + bubbles throughout · float test optional but not definitive',nc:'sour-note',extra:'',isSuggestion:true});
-    events.push({t:null,emoji:'🥣',label:'autolyse + mix',note:'autolyse flour + most water 30–60 min · add starter · mix well · add salt dissolved in reserved water',nc:'highlight',extra:'',isSuggestion:true});
-    events.push({t:null,emoji:'🔄',label:'stretch & fold',note:'3–4 sets · 30 min apart · dough is ready when smooth, holds shape, passes windowpane test',nc:'sour-note',extra:'',isSuggestion:true});
+    events.push({t:null,si:0,emoji:'🍋',label:'feed starter',note:'pull from fridge · feed and wait for peak · dome + bubbles throughout · float test optional but not definitive',nc:'sour-note',extra:'',isSuggestion:true});
+    events.push({t:null,si:1,emoji:'🥣',label:'autolyse + mix',note:'autolyse flour + most water 30–60 min · add starter · mix well · add salt dissolved in reserved water',nc:'highlight',extra:'',isSuggestion:true});
+    events.push({t:null,si:2,emoji:'🔄',label:'stretch & fold',note:'3–4 sets · 30 min apart · dough is ready when smooth, holds shape, passes windowpane test',nc:'sour-note',extra:'',isSuggestion:true});
     events.push({t:tBall,emoji:'🔴',label:'ball & refrigerate',note:'divide · shape tight balls · place in oiled sealed containers · cold retard builds flavour and extensibility',nc:'',extra:''});
     if(glide>0)events.push({t:tPull,emoji:'🌡️',label:'pull balls',note:`temper ${glide} min · finger press test — yields softly, slight warmth`,nc:'preheat-note',extra:''});
     events.push({t:tPreheat,emoji:'🔥',label:'preheat oven',note:preheatNote,nc:'preheat-note',extra:''});
@@ -1285,6 +1285,7 @@ function _update(){
 
   // Sort by time (suggestions have null time, go first)
   events.sort((a,b)=>{
+    if(a.t===null&&b.t===null)return (a.si||0)-(b.si||0);
     if(a.t===null)return -1;
     if(b.t===null)return 1;
     return a.t-b.t;
