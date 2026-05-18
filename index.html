@@ -385,7 +385,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.3.8 · science-verified · party edition</div>
+    <div class="version-badge">v1.3.9 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -1500,9 +1500,8 @@ function _update(){
     html+=`<div class="recipe-divider"></div>`;
     html+=sectionTitle('🥣 final dough');
     html+=ingRow('🌾','Tipo 00 flour',finalFlour);
-    html+=ingRow('💧','water',finalWater-reservedWater,'','hold out ~'+Math.round(reservedWater)+'g for salt');
-    html+=ingRow('🧂','sea salt',saltG);
-    html+=ingRow('💧','reserved water',reservedWater,'','add with salt at end');
+    html+=ingRow('💧','water (final dough)',finalWater,'','reserve ~'+Math.round(reservedWater)+'g for dissolving salt');
+    html+=ingRow('🧂','sea salt',saltG,'','sprinkle over dough · follow with reserved water');
     html+=ingRowRange('🌿',yeastLabel(yeast)+' (final dough)',Math.max(0.1,finalYeastG-0.1),finalYeastG+0.1);
     if(maltOn)html+=ingRow('🌾','diastatic malt',maltG,1,'mix into flour before adding');
 
@@ -1516,10 +1515,9 @@ function _update(){
     var reservedW=fW*0.10;
 
     html+=ingRow('🍋','sourdough starter (peak)',sW);
-    html+=ingRow('💧','water',fW-reservedW,'','hold out ~'+Math.round(reservedW)+'g for salt');
+    html+=ingRow('💧','water',fW,'','reserve ~'+Math.round(reservedW)+'g for dissolving salt');
     html+=ingRow('🌾','Tipo 00 flour',fF);
-    html+=ingRow('🧂','sea salt',saltG,'','add after autolyse, dissolved in reserved water');
-    html+=ingRow('💧','reserved water',reservedW);
+    html+=ingRow('🧂','sea salt',saltG,'','add after autolyse · dissolved in reserved water');
     if(maltOn)html+=ingRow('🌾','diastatic malt',maltG,1,'mix into flour before autolyse');
 
   } else {
@@ -1541,14 +1539,13 @@ function _update(){
 
     if(needsBloom){
       html+=ingRowRange('🌿',yeastLabel(yeast),Math.max(0.1,yConv-0.1),yConv+0.1);
-      html+=ingRow('💧','water',fW-reservedW,'','~30g warm for bloom · rest cold or tap');
+      html+=ingRow('💧','water',fW,'','~30g warm for bloom · reserve ~'+Math.round(reservedW)+'g for salt');
     } else {
       html+=ingRowRange('🌿',yeastLabel(yeast),Math.max(0.1,yConv-0.1),yConv+0.1);
-      html+=ingRow('💧','water',fW-reservedW,'','hold out ~'+Math.round(reservedW)+'g for salt');
+      html+=ingRow('💧','water',fW,'','reserve ~'+Math.round(reservedW)+'g for dissolving salt');
     }
     html+=ingRow('🌾',flour==='Tipo'?'Tipo 00 flour':'bread flour',fb);
-    html+=ingRow('🧂','sea salt',saltG,'','add after flour hydrates');
-    html+=ingRow('💧','reserved water',reservedW,'','add with salt');
+    html+=ingRow('🧂','sea salt',saltG,'','add after flour hydrates · dissolved in reserved water');
     if(maltOn)html+=ingRow('🌾','diastatic malt',maltG,1,'mix into flour before adding');
   }
 
@@ -1946,7 +1943,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.3.8 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.3.9 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
