@@ -51,45 +51,26 @@
 }
 /* ─── PARTY THEME ─────────────────────────────────────────────────────────── */
 [data-theme="party"] {
-  --bg:#1e2a3a;--card:#263447;--border:#3a4f66;
-  --ink:#f0ebe0;--ink2:#c8bfb0;--ink3:#8a9bb0;
-  --accent:#c17b3a;--accent-lt:#e8c99a;--accent-f:rgba(193,123,58,0.15);
-  --teal:#4aab9a;--teal-f:rgba(74,171,154,0.15);
-  --rose:#e07070;--rose-f:rgba(224,112,112,0.15);
-  --ice:#7ab3e0;--sub:#1a2535;
+  --bg:#fef9ee;--card:#fef3d4;--border:#f0d98a;
+  --ink:#2d2418;--ink2:#5c4d38;--ink3:#9c7a2a;
+  --accent:#c17b3a;--accent-lt:#e8c99a;--accent-f:rgba(193,123,58,0.12);
+  --teal:#2d7d72;--teal-f:rgba(45,125,114,0.12);
+  --rose:#b85c5c;--rose-f:rgba(184,92,92,0.12);
+  --ice:#5b9bd5;--sub:#fdf0c0;
   --body-font:'Fraunces',Georgia,serif;
   --label-font:'Caveat',cursive;
   --num-font:'DM Mono','Courier New',monospace;
   --card-radius:16px;--btn-radius:10px;--pill-radius:20px;
   --card-border:1.5px solid var(--border);
-  --card-hover-shadow:0 8px 30px rgba(0,0,0,0.3);
+  --card-hover-shadow:0 8px 30px rgba(193,123,58,0.15);
   --header-align:center;
 }
-[data-theme="party"] body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:100;opacity:0.03;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");}
-[data-theme="party"] input[type=range]{background:var(--border);}
-[data-theme="party"] input[type=datetime-local]{background:var(--sub);color:var(--ink);border-color:var(--border);}
-[data-theme="party"] .mode-btn{background:var(--sub);color:var(--ink2);border-color:var(--border);}
-[data-theme="party"] .mode-btn.on{background:var(--accent);color:#fff;border-color:var(--accent);}
-[data-theme="party"] .mode-btn.locked{opacity:0.25;pointer-events:none;}
-[data-theme="party"] .pill{background:var(--sub);color:var(--ink2);border-color:var(--border);}
-[data-theme="party"] .pill.on{background:var(--accent);color:#fff;border-color:var(--accent);}
-[data-theme="party"] .mixer-btn{background:var(--sub);color:var(--ink2);border-color:var(--border);}
-[data-theme="party"] .mixer-btn.on{background:var(--accent);color:#fff;border-color:var(--accent);}
-[data-theme="party"] .auto-btn{border-color:var(--border);color:var(--ink2);}
-[data-theme="party"] .auto-btn.on{background:var(--teal-f);border-color:var(--teal);color:var(--teal);}
-[data-theme="party"] .subsection{background:var(--sub);}
-[data-theme="party"] .malt-toggle-row{background:var(--sub);}
-[data-theme="party"] .theme-toggle{background:var(--card);border-color:var(--border);color:var(--ink2);}
-[data-theme="party"] .version-badge{background:var(--border);color:var(--ink3);}
-[data-theme="party"] .journal-btn{border-color:var(--border);color:var(--ink2);}
-[data-theme="party"] .journal-panel{background:var(--sub);}
-[data-theme="party"] .journal-entry{background:var(--card);}
-[data-theme="party"] .dough-temp-check{background:var(--sub);}
-[data-theme="party"] .info-box{background:rgba(74,171,154,0.1);border-left-color:var(--teal);}
-[data-theme="party"] .info-box.warm{background:var(--accent-f);border-left-color:var(--accent);}
-[data-theme="party"] .sourSuggestWrap .sour-suggestion{background:var(--sub);}
-
-/* Smart Schedule UI */
+[data-theme="party"] body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:100;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");}
+[data-theme="party"] .smart-schedule-toggle{border-color:var(--accent-lt);background:var(--accent-f);}
+[data-theme="party"] .smart-schedule-toggle.on{border-color:var(--accent);background:var(--accent-f);}
+[data-theme="party"] .cal-day{background:var(--sub);border-color:var(--border);}
+[data-theme="party"] .cal-day.active{border-color:var(--accent);background:var(--accent-f);}
+[data-theme="party"] .cal-day.party{border-color:var(--teal);background:var(--teal-f);}
 .smart-schedule-wrap{margin-bottom:16px;}
 .smart-schedule-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:var(--btn-radius);border:var(--card-border);background:var(--sub);cursor:pointer;transition:all 0.25s;}
 .smart-schedule-toggle:hover{border-color:var(--accent-lt);}
@@ -404,7 +385,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.3.4 · science-verified · PWA</div>
+    <div class="version-badge">v1.3.8 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -617,7 +598,11 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
 
       <div>
         <div class="ferment-label"><span>fermentation activity</span><span id="actVal">—</span></div>
-        <div class="ferment-meter"><div class="ferment-bar" id="actBar"></div></div>
+        <div class="ferment-meter" style="position:relative;">
+          <div class="ferment-bar" id="actBar"></div>
+          <div style="position:absolute;top:0;bottom:0;left:20%;width:1.5px;background:rgba(0,0,0,0.25);border-radius:1px;"></div>
+          <div style="position:absolute;top:0;bottom:0;left:72%;width:1.5px;background:rgba(0,0,0,0.25);border-radius:1px;"></div>
+        </div>
         <div class="ferment-label"><span style="color:#7ec8e3">under</span><span>ideal zone</span><span style="color:#ff7043">over</span></div>
         <div class="info-box" id="actInfoBox" style="margin-top:8px;font-size:0.85rem;"></div>
       </div>
@@ -1032,7 +1017,7 @@ function toggleSmartSchedule(){
     if(mode==='rapid'){mode='biga';}
     theme='party';
     document.documentElement.setAttribute('data-theme','party');
-    document.getElementById('themeColor').content='#1e2a3a';
+    document.getElementById('themeColor').content='#fef9ee';
     updateFloaters();
     runSmartSchedule();
   } else {
@@ -1125,7 +1110,7 @@ function runSmartSchedule(){
   var ss_size=+document.getElementById('sizeSlider').value;
   var ss_rT=+document.getElementById('tempSlider').value;
   var ss_fT=+document.getElementById('fTempSlider').value;
-  var ss_shapeMins=Math.max(25,ss_count*3+10);
+  var ss_shapeMins=0; // shape is concurrent with baking — no separate time needed
   var ss_glide=calcGlide(ss_count*ss_size,ss_count,ss_rT,ss_fT,20);
   var ss_tPull=new Date(target.getTime()-(ss_shapeMins+ss_glide)*60000);
 
@@ -1629,20 +1614,17 @@ function _update(){
   var oCfg=OVEN_CFG[oven];
   var tPreheat=new Date(tBake-oCfg.preheatMins*60000);
 
-  // Shape window: 3 min per ball + 10 min rest, minimum 25 min
-  var shapeMins=Math.max(25,count*3+10);
-  var tShape=new Date(tBake-shapeMins*60000);
-
   var glide=calcGlide(totalMass,count,rT,fT,fH);
-  var tPull=new Date(tShape.getTime()-glide*60000);
+  var tPull=new Date(tBake-glide*60000);
   var tFridge=new Date(tPull.getTime()-fH*3600000);
 
   var preheatNote=oven==='steel'
     ?`place steel on top rack · crank to 550°F · ${oCfg.preheatMins} min minimum — steel must be fully saturated`
     :`target 700–850°F · floor stabilise ${oCfg.preheatMins} min · measure with IR thermometer`;
 
-  var shapeNote=`stretch each ball by hand — slap & pull or knuckle stretch · aim for even thickness, thin centre · cornicione from the edge`;
-  var bakeNote=`${oCfg.bakeNote} · ${count} pizzas`;
+  var bakeNote=oven==='steel'
+    ?`stretch each ball by hand immediately before loading · thin centre, leave the cornicione · top and slide straight into the oven · 5–7 min · rotate at 3 min · watch for leopard spotting on the cornicione · now enjoy your party 🎉`
+    :`stretch each ball by hand immediately before loading · thin centre, leave the cornicione · top and slide straight into the oven · 60–90 sec per pizza · turn at 45 sec · watch for leopard spotting on the cornicione · now enjoy your party 🎉`;
 
   var events=[];
 
@@ -1664,8 +1646,7 @@ function _update(){
     events.push({t:tFridge,emoji:'❄️',label:'ball cold retard',note:'airtight containers · balls will expand · label with pull time',nc:'',extra:''});
     if(glide>0)events.push({t:tPull,emoji:'🌡️',label:'pull balls',note:`temper ${glide} min on counter · balls ready when they yield softly to a finger press and feel slightly warm`,nc:'preheat-note',extra:''});
     events.push({t:tPreheat,emoji:'🔥',label:'preheat oven',note:preheatNote,nc:'preheat-note',extra:''});
-    events.push({t:tShape,emoji:'👐',label:'shape',note:shapeNote,nc:'',extra:''});
-    events.push({t:target,emoji:'🍕',label:'bake',note:bakeNote,nc:'highlight',extra:'',isBake:true});
+    events.push({t:target,emoji:'🍕',label:'shape & bake',note:bakeNote,nc:'highlight',extra:'',isBake:true});
 
   } else if(isSour){
     // Sourdough timeline — suggestions only, no hard times except fridge
@@ -1676,8 +1657,7 @@ function _update(){
     events.push({t:tBall,emoji:'🔴',label:'ball & refrigerate',note:'divide · shape tight balls · place in oiled sealed containers · cold retard builds flavour and extensibility',nc:'',extra:''});
     if(glide>0)events.push({t:tPull,emoji:'🌡️',label:'pull balls',note:`temper ${glide} min · finger press test — yields softly, slight warmth`,nc:'preheat-note',extra:''});
     events.push({t:tPreheat,emoji:'🔥',label:'preheat oven',note:preheatNote,nc:'preheat-note',extra:''});
-    events.push({t:tShape,emoji:'👐',label:'shape',note:shapeNote,nc:'',extra:''});
-    events.push({t:target,emoji:'🍕',label:'bake',note:bakeNote,nc:'highlight',extra:'',isBake:true});
+    events.push({t:target,emoji:'🍕',label:'shape & bake',note:bakeNote,nc:'highlight',extra:'',isBake:true});
 
   } else {
     // Rapid / Slow timeline
@@ -1695,8 +1675,7 @@ function _update(){
     } else {
       events.push({t:tBall,emoji:'🔴',label:'ball',note:'bench rest 20–25 min · divide · shape tight balls · cover · rest another 30–60 min at room temp',nc:'',extra:''});
     }
-    events.push({t:tShape,emoji:'👐',label:'shape',note:shapeNote,nc:'',extra:''});
-    events.push({t:target,emoji:'🍕',label:'bake',note:bakeNote,nc:'highlight',extra:'',isBake:true});
+    events.push({t:target,emoji:'🍕',label:'shape & bake',note:bakeNote,nc:'highlight',extra:'',isBake:true});
   }
 
   // Sort by time (suggestions have null time, go first)
@@ -1967,7 +1946,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.3.4 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.3.8 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
