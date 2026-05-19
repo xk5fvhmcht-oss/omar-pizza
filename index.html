@@ -275,9 +275,9 @@ body{font-family:var(--body-font);background:var(--bg);color:var(--ink);min-heig
 input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:var(--border);outline:none;cursor:pointer;}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);border:2px solid var(--card);box-shadow:0 2px 8px rgba(0,0,0,0.15);cursor:grab;transition:transform 0.15s,box-shadow 0.15s;}
 input[type=range]::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.15);}
-#tempSlider,#bigaRoomTempSlider{background:linear-gradient(to right,#7ec8e3,#ffe083,#ff7043);}
-#fTempSlider,#bigaFridgeTempSlider{background:linear-gradient(to right,#a8d8ea,#7ec8e3);}
-#bigaRoomHSlider{background:linear-gradient(to right,#e8c99a,#c17b3a);}
+#tempSlider,#bigaRoomTempSlider,#poolishRoomTempSlider{background:linear-gradient(to right,#7ec8e3,#ffe083,#ff7043);}
+#fTempSlider,#bigaFridgeTempSlider,#poolishFridgeTempSlider{background:linear-gradient(to right,#a8d8ea,#7ec8e3);}
+#bigaRoomHSlider,#poolishRoomHSlider{background:linear-gradient(to right,#e8c99a,#c17b3a);}
 #bigaFridgeHSlider{background:linear-gradient(to right,#a8d8ea,#5b9bd5);}
 #bigaPctSlider{background:linear-gradient(to right,#e8c99a,#c17b3a);}
 #bigaHydSlider{background:linear-gradient(to right,#a8d8ea,#7ec8e3);}
@@ -385,7 +385,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.4.3 · science-verified · party edition</div>
+    <div class="version-badge">v1.4.9 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -439,6 +439,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
         <button class="mode-btn" id="modeSlow" onclick="setMode('slow')"><span class="emoji">🌙</span>Slow</button>
         <button class="mode-btn" id="modeSour" onclick="setMode('sour')"><span class="emoji">🍋</span>Sourdough</button>
         <button class="mode-btn" id="modeBiga" onclick="setMode('biga')"><span class="emoji">🍕</span>Biga</button>
+        <button class="mode-btn" id="modePoolish" onclick="setMode('poolish')"><span class="emoji">🌊</span>Poolish</button>
       </div>
     </div>
 
@@ -553,6 +554,47 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
           </div>
           <div class="info-box pizza" id="bigaInfoBox">
             Mix biga flour + biga water + yeast until just combined — shaggy and rough is correct, do not develop gluten. Dissolve yeast in the biga water first. Mix by hand or spiral mixer at slow speed for 3–4 min. <strong>Target biga water temperature: <span id="bigaWaterTempDisplay" style="color:var(--accent);">—</span></strong> · Place in a lightly oiled tall container. Cover with perforated cling film — the biga needs to breathe. A ripe biga will be domed, just starting to show a centre dip, stringy and webbed when pulled apart, with a strong fermented aroma.
+          </div>
+        </div>
+      </div>
+
+      <!-- POOLISH SETTINGS -->
+      <div id="poolishWrap" style="display:none;">
+        <div class="subsection">
+          <div class="slider-head"><span class="slider-name">poolish flour %</span><span class="slider-val" id="poolishPctVal">30%</span></div>
+          <input type="range" id="poolishPctSlider" min="20" max="50" step="5" value="30">
+          <div style="font-family:var(--num-font);font-size:0.7rem;color:var(--ink3);margin-top:6px;">% of total flour that goes into the poolish</div>
+        </div>
+
+        <!-- Honey toggle — mirrors malt toggle -->
+        <div class="malt-toggle-row" id="honeyToggle" onclick="toggleHoney()">
+          <span class="malt-label">🍯 honey · 2% of poolish flour</span>
+          <div class="malt-switch"></div>
+        </div>
+        <div id="honeyWarn" style="display:none;" class="info-box hot" style="margin-top:6px;"></div>
+
+        <div id="poolishFermentWrap">
+          <div class="subsection">
+            <div class="subsection-title">🌊 poolish fermentation</div>
+            <div class="slider-wrap">
+              <div class="slider-head"><span class="slider-name">poolish room temperature</span><span class="slider-val" id="poolishRoomTempVal">72 °F</span></div>
+              <input type="range" id="poolishRoomTempSlider" min="62" max="88" value="72" step="1">
+            </div>
+            <div class="slider-wrap">
+              <div class="slider-head"><span class="slider-name">poolish room temp hours</span><span class="slider-val" id="poolishRoomHVal">12h</span></div>
+              <input type="range" id="poolishRoomHSlider" min="2" max="24" step="0.5" value="12">
+            </div>
+            <div class="slider-wrap">
+              <div class="slider-head"><span class="slider-name">poolish fridge temperature</span><span class="slider-val" id="poolishFridgeTempVal">39 °F</span></div>
+              <input type="range" id="poolishFridgeTempSlider" min="34" max="45" value="39" step="1">
+            </div>
+            <div class="slider-wrap">
+              <div class="slider-head"><span class="slider-name">poolish fridge hours</span><span class="slider-val" id="poolishFridgeHVal">0h</span></div>
+              <input type="range" id="poolishFridgeHSlider" min="0" max="48" step="2" value="0">
+            </div>
+            <div class="info-box pizza" id="poolishInfoBox">
+              Mix poolish flour + water + yeast until smooth — no lumps. <strong>Target poolish water temperature: <span id="poolishWaterTempDisplay" style="color:var(--accent);">—</span></strong> · Cover with cling film and ferment until doubled in volume, domed on top, with bubbles throughout and a slightly tangy aroma. A ripe poolish will deflate slightly when tapped — use it immediately at this point.
+            </div>
           </div>
         </div>
       </div>
@@ -727,9 +769,26 @@ document.getElementById('bigaFridgeTempSlider').addEventListener('input',functio
   update();saveState();
 });
 
+// Poolish temp sliders nudge main dough sliders
+document.getElementById('poolishRoomTempSlider').addEventListener('input',function(){
+  var mt=document.getElementById('tempSlider');
+  var diff=parseInt(this.value)-parseInt(mt.value);
+  if(Math.abs(diff)>0&&Math.abs(diff)<=6)mt.value=this.value;
+  update();saveState();
+});
+document.getElementById('poolishFridgeTempSlider').addEventListener('input',function(){
+  var ft=document.getElementById('fTempSlider');
+  var diff=parseInt(this.value)-parseInt(ft.value);
+  if(Math.abs(diff)>0&&Math.abs(diff)<=4)ft.value=this.value;
+  update();saveState();
+});
+document.getElementById('poolishRoomHSlider').addEventListener('input',function(){update();saveState();});
+document.getElementById('poolishFridgeHSlider').addEventListener('input',function(){update();saveState();});
+document.getElementById('poolishPctSlider').addEventListener('input',function(){update();saveState();});
+
 // ─── PERSIST STATE ────────────────────────────────────────────────────────────
 function saveState(){
-  try{localStorage.setItem('omarPizzaState',JSON.stringify({mode,isAuto,flour,yeast,maltOn,oven,mixer,useCelsius,theme,smartSchedule,useNewFormula,
+  try{localStorage.setItem('omarPizzaState',JSON.stringify({mode,isAuto,flour,yeast,maltOn,honeyOn,oven,mixer,useCelsius,theme,smartSchedule,useNewFormula,
     hyd:document.getElementById('hydSlider').value,
     count:document.getElementById('countSlider').value,
     size:document.getElementById('sizeSlider').value,
@@ -744,6 +803,11 @@ function saveState(){
     bigaFridgeH:document.getElementById('bigaFridgeHSlider').value,
     bigaRoomT:document.getElementById('bigaRoomTempSlider').value,
     bigaFridgeT:document.getElementById('bigaFridgeTempSlider').value,
+    poolishPct:document.getElementById('poolishPctSlider').value,
+    poolishRoomH:document.getElementById('poolishRoomHSlider').value,
+    poolishFridgeH:document.getElementById('poolishFridgeHSlider').value,
+    poolishRoomT:document.getElementById('poolishRoomTempSlider').value,
+    poolishFridgeT:document.getElementById('poolishFridgeTempSlider').value,
   }));}catch(e){}
 }
 function loadState(){
@@ -754,13 +818,12 @@ function loadState(){
     if(s.flour)flour=s.flour;
     if(s.yeast)yeast=s.yeast;
     if(s.maltOn!==undefined)maltOn=s.maltOn;
+    if(s.honeyOn!==undefined)honeyOn=s.honeyOn;
     if(s.oven)oven=s.oven;
     if(s.mixer){
       if(s.mixer==='hand'&&s.mode!=='sour')mixer='spiral';
       else mixer=s.mixer;
     }
-
-
     if(s.useCelsius!==undefined)useCelsius=s.useCelsius;
     if(s.theme){theme=s.theme;document.documentElement.setAttribute('data-theme',theme);}
     if(s.smartSchedule!==undefined)smartSchedule=s.smartSchedule;
@@ -772,6 +835,9 @@ function loadState(){
     clamp('bigaHydSlider',s.bigaHyd);clamp('bigaRoomHSlider',s.bigaRoomH);
     clamp('bigaFridgeHSlider',s.bigaFridgeH);clamp('bigaRoomTempSlider',s.bigaRoomT);
     clamp('bigaFridgeTempSlider',s.bigaFridgeT);
+    clamp('poolishPctSlider',s.poolishPct);clamp('poolishRoomHSlider',s.poolishRoomH);
+    clamp('poolishFridgeHSlider',s.poolishFridgeH);clamp('poolishRoomTempSlider',s.poolishRoomT);
+    clamp('poolishFridgeTempSlider',s.poolishFridgeT);
   }catch(e){}
 }
 
@@ -844,6 +910,17 @@ var ACT_OVER_NEW  = 25.0;    // pizza-specific over threshold
 // Biga calibration — C=157, validated against Giorilli standard (0.33% IDY at 18h/64°F → within 6%)
 var BIGA_C=157;
 var BIGA_TARGET=3.5;
+
+// ─── POOLISH CONSTANTS ────────────────────────────────────────────────────────
+var POOLISH_A_REF  = 8.2;     // power law prefactor at 72°F — Q10 inverted (cooler=more yeast)
+var POOLISH_POWER  = -1.872;  // power law exponent
+var POOLISH_TARGET = 6.7;     // target activity (doubled volume)
+var POOLISH_C      = 1595;    // calibration constant
+var POOLISH_SUPP_F = 0.250;   // fridge suppression for poolish
+var HONEY_BOOST    = 1.15;    // activity multiplier (needs bake validation)
+var HONEY_PCT      = 0.02;    // 2% of poolish flour, fixed
+
+var honeyOn=false;
 
 // Wisdom quotes — rotating
 var WISDOMS=[
@@ -928,6 +1005,35 @@ function calcPizzaYeastIDY(bH,rT,fH,fT){
   return Math.min(0.020,Math.max(0.0002,y1*(1-blend)+y2*blend));
 }
 
+
+function calcPoolishYeastIDY(bH,rT,fH,fT,honeyOn){
+  var y;
+  if(fH>0){
+    // Model B: cold poolish — inverse formula
+    var q10r=Math.pow(2,(rT-77)/18);
+    var q10f=Math.pow(2,(fT-77)/18);
+    var act=bH*q10r+fH*POOLISH_SUPP_F*q10f;
+    y=POOLISH_TARGET/(POOLISH_C*Math.max(0.01,act));
+  } else {
+    // Model A: room temp only — power law
+    var A=POOLISH_A_REF*Math.pow(2,(72-rT)/18); // inverted — cooler = more yeast needed
+    y=A*Math.pow(Math.max(0.1,bH),POOLISH_POWER)/100;
+  }
+  if(honeyOn)y/=HONEY_BOOST;
+  return Math.min(0.020,Math.max(0.0002,y));
+}
+
+function toggleHoney(){
+  honeyOn=!honeyOn;
+  var el=document.getElementById('honeyToggle');
+  if(el)el.classList.toggle('on',honeyOn);
+  update();saveState();
+}
+
+function calcPoolishWaterTempF(poolishRoomTF){
+  // Same 3-factor DDT as biga water
+  return 220-(2*poolishRoomTF);
+}
 
 function calcGlide(totalMass,count,rT,fT,fH){
   if(fH===0)return 0;
@@ -1292,6 +1398,7 @@ function update(){try{_update();}catch(e){console.error('Omar Pizza update error
 function _update(){
   var isSour=mode==='sour';
   var isBiga=mode==='biga';
+  var isPoolish=mode==='poolish';
   var isRapid=mode==='rapid';
   var isPro=theme==='pro';
 
@@ -1362,17 +1469,17 @@ function _update(){
   }
 
   // Button states
-  ['Rapid','Slow','Sour','Biga'].forEach(function(m){document.getElementById('mode'+m).classList.toggle('on',mode===m.toLowerCase());});
+  ['Rapid','Slow','Sour','Biga','Poolish'].forEach(function(m){document.getElementById('mode'+m).classList.toggle('on',mode===m.toLowerCase());});
   document.getElementById('ovenSteel').classList.toggle('on',oven==='steel');
   document.getElementById('ovenGozney').classList.toggle('on',oven==='gozney');
   ['Hand','KA','Spiral'].forEach(mx=>document.getElementById('mixer'+mx).classList.toggle('on',mixer===mx.toLowerCase()));
 
   // Flour lock
-  if(isSour||isBiga)flour='Tipo';
+  if(isSour||isBiga||isPoolish)flour='Tipo';
   document.getElementById('flourTipo').classList.toggle('on',flour==='Tipo');
   document.getElementById('flourBread').classList.toggle('on',flour==='Bread');
-  document.getElementById('flourTipo').classList.toggle('locked',isSour||isBiga);
-  document.getElementById('flourBread').classList.toggle('locked',isSour||isBiga);
+  document.getElementById('flourTipo').classList.toggle('locked',isSour||isBiga||isPoolish);
+  document.getElementById('flourBread').classList.toggle('locked',isSour||isBiga||isPoolish);
 
   // Sourdough defaults to hand mix
   if(isSour&&mixer!=='hand'){mixer='hand';isAuto=true;}
@@ -1384,22 +1491,50 @@ function _update(){
   // Show/hide sections per mode
   document.getElementById('sourInocWrap').style.display=isSour?'':'none';
   document.getElementById('bigaChemWrap').style.display=isBiga?'':'none';
-  document.getElementById('yeastWrap').style.display=isSour?'none':'';
+  document.getElementById('poolishWrap').style.display=isPoolish?'':'none';
+  document.getElementById('yeastWrap').style.display=(isSour||isPoolish)?'none':'';
   document.getElementById('bigaFermentWrap').style.display=isBiga?'':'none';
   document.getElementById('sourSuggestWrap').style.display=isSour?'':'none';
 
-  // Fridge box — show for slow/sour/biga, hide for rapid
+  // Poolish fridge temp slider — show only when fridge hours > 0
+  var poolishFH=parseFloat(document.getElementById('poolishFridgeHSlider').value)||0;
+  document.getElementById('poolishFridgeTempSlider').parentNode.style.display=poolishFH>0?'':'none';
+
+  // Honey toggle state
+  document.getElementById('honeyToggle').classList.toggle('on',honeyOn);
+  var honeyWarnEl=document.getElementById('honeyWarn');
+  var poolishRoomH_raw=parseFloat(document.getElementById('poolishRoomHSlider').value)||12;
+  var poolishRoomT_raw=parseFloat(document.getElementById('poolishRoomTempSlider').value)||72;
+  if(isPoolish&&honeyOn){
+    if(poolishFH===0&&poolishRoomT_raw>=77){
+      honeyWarnEl.style.display='block';
+      honeyWarnEl.textContent='🍯 honey + hot kitchen + room temp poolish is risky — yeast may peak and collapse before you\'re ready. Use cold poolish with honey instead.';
+    } else if(poolishFH===0&&poolishRoomT_raw>=72&&poolishRoomH_raw>8){
+      honeyWarnEl.style.display='block';
+      honeyWarnEl.textContent='🍯 honey accelerates fermentation — monitor your poolish closely, it may peak earlier than expected. Get it in the fridge as soon as it domes.';
+    } else if(poolishFH>0){
+      honeyWarnEl.style.display='block';
+      honeyWarnEl.textContent='🍯 honey gives yeast a head start before the cold sets in — get poolish into the fridge within 1 hour of mixing.';
+    } else {
+      honeyWarnEl.style.display='none';
+    }
+  } else {
+    honeyWarnEl.style.display='none';
+  }
+
+  // Fridge box — show for slow/sour/biga/poolish, hide for rapid
   var fridgeBoxEl=document.getElementById('fridgeBox');
   fridgeBoxEl.style.opacity=isRapid?'0.3':'1';
   fridgeBoxEl.style.pointerEvents=isRapid?'none':'';
 
   // Bulk fermentation label
-  document.getElementById('bulkLabel').textContent=isBiga||isSour?'final dough bulk':'bulk fermentation';
-  document.getElementById('fridgeLabel').textContent=isBiga||isSour?'ball cold retard':'ball cold retard';
+  document.getElementById('bulkLabel').textContent=(isBiga||isSour||isPoolish)?'final dough bulk':'bulk fermentation';
+  document.getElementById('fridgeLabel').textContent=(isBiga||isSour||isPoolish)?'ball cold retard':'ball cold retard';
 
   document.getElementById('maltToggle').classList.toggle('on',maltOn);
+  document.getElementById('maltToggle').style.display=isBiga?'':'none';
   var maltGozneyWarn=document.getElementById('maltGozneyWarn');
-  maltGozneyWarn.style.display=(maltOn&&oven==='gozney')?'block':'none';
+  maltGozneyWarn.style.display=(maltOn&&oven==='gozney'&&isBiga)?'block':'none';
 
   // Yeast type buttons
   document.getElementById('yeastFresh').classList.toggle('on',yeast==='fresh');
@@ -1410,7 +1545,7 @@ function _update(){
   var btn=document.getElementById('autoBtn');
   var mcfg=MIXER_CFG[mixer]||MIXER_CFG.hand;
   if(isSour){btn.textContent=isPro?'autolyse always on · (sourdough)':'✦ autolyse always on · (sourdough locked)';btn.className='auto-btn on locked';}
-  else if(isBiga){btn.textContent='✦ autolyse handled by biga · not needed';btn.className='auto-btn locked';}
+  else if(isBiga||isPoolish){btn.textContent='✦ autolyse handled by poolish · not needed';btn.className='auto-btn locked';}
   else if(mcfg.autoLock==='off'){btn.textContent='✦ autolyse not needed — spiral develops gluten fast';btn.className='auto-btn locked';}
   else if(mcfg.autoLock==='suggest-off'){btn.textContent=isAuto?'✦ autolyse · on (spiral rarely needs it — your call)':'✦ autolyse · off';btn.className='auto-btn'+(isAuto?' on':'');}
   else{var hn=(!isPro&&mixer==='hand')?' · (saves your arms — do it)':'';btn.textContent=isAuto?`✦ 30-minute autolyse · on${hn}`:'✦ 30-minute autolyse · off';btn.className='auto-btn'+(isAuto?' on':'');}
@@ -1443,6 +1578,13 @@ function _update(){
   setVal('bigaFridgeHVal',bigaFridgeH===0?'none':fmtHours(bigaFridgeH));
   setVal('bigaRoomTempVal',fmtTemp(bigaRoomT));
   setVal('bigaFridgeTempVal',fmtTemp(bigaFridgeT));
+
+  // Poolish slider display values
+  setVal('poolishPctVal',Math.round(parseFloat(document.getElementById('poolishPctSlider').value))+'%');
+  setVal('poolishRoomHVal',fmtHours(poolishRoomH_raw));
+  setVal('poolishFridgeHVal',poolishFH===0?'none':fmtHours(poolishFH));
+  setVal('poolishRoomTempVal',fmtTemp(poolishRoomT_raw));
+  setVal('poolishFridgeTempVal',fmtTemp(parseFloat(document.getElementById('poolishFridgeTempSlider').value)||39));
 
   // Update biga info box water temp
   if(isBiga){
@@ -1502,8 +1644,8 @@ function _update(){
 
   // ─── FERMENTATION ACTIVITY ────────────────────────────────────────────────
   var _mixerAutoLock=MIXER_CFG[mixer]?MIXER_CFG[mixer].autoLock:null;
-  var autolyseEffective=isAuto&&!isBiga&&_mixerAutoLock!=='off';
-  var activity=calcActivity(bH,rT,fH,fT,autolyseEffective,inoc,isSour,maltOn);
+  var autolyseEffective=isAuto&&!isBiga&&!isPoolish&&_mixerAutoLock!=='off';
+  var activity=calcActivity(bH,rT,fH,fT,autolyseEffective,inoc,isSour,isBiga&&maltOn);
 
   // Add biga pre-fermentation activity in biga mode
   // Biga contributes real fermentation activity — meter must reflect this
@@ -1515,7 +1657,7 @@ function _update(){
     // Scale biga activity by biga portion — 50% biga contributes proportionally less to total dough
     var bigaActivity=(bigaRoomH*bigaQ10r+bigaFridgeH*bigaSuppF*bigaQ10f)*bigaHydF*bigaPct*0.8;
     activity+=bigaActivity;
-    if(maltOn)activity*=MALT_BOOST;
+    if(isBiga&&maltOn)activity*=MALT_BOOST;
   }
   setVal('actVal',activity.toFixed(2));
   var actUnder=useNewFormula?ACT_UNDER_NEW:ACTIVITY_UNDER;
@@ -1570,11 +1712,11 @@ function _update(){
   // end activity section
 
   // Additional specific warnings
-  if(oven==='gozney'&&maltOn){warn.className='warn-box over';warn.textContent='🔥 Gozney + malt: at 700°F+ browning is very fast — stay at the oven, turn every 15 sec';}
+  if(isBiga&&oven==='gozney'&&maltOn){warn.className='warn-box over';warn.textContent='🔥 Gozney + malt: at 700°F+ browning is very fast — stay at the oven, turn every 15 sec';}
   else if(fT>=43&&fH>0){warn.className='warn-box over';warn.textContent='🌡️ at 43°F+ your fridge is fermenting significantly — watch your dough closely';}
 
   // ─── RECIPE MATH ──────────────────────────────────────────────────────────
-  var needsBloom=!isSour&&!isBiga&&yeast==='ADY';
+  var needsBloom=!isSour&&!isBiga&&!isPoolish&&yeast==='ADY';
   var fb=flourBase(totalMass,hyd);
   var mcfg=MIXER_CFG[mixer]||MIXER_CFG.hand;
   var html='';
@@ -1611,6 +1753,54 @@ function _update(){
     html+=ingRowRange('🌿',yeastLabel(yeast)+' (final dough)',Math.max(0.1,finalYeastG-0.1),finalYeastG+0.1);
     if(maltOn)html+=ingRow('🌾','diastatic malt',maltG,1,'mix into flour before adding');
 
+  } else if(isPoolish){
+    // ── POOLISH RECIPE ──
+    var poolishPct=parseFloat(document.getElementById('poolishPctSlider').value)/100||0.30;
+    var poolishRoomH=parseFloat(document.getElementById('poolishRoomHSlider').value)||12;
+    var poolishFridgeH=parseFloat(document.getElementById('poolishFridgeHSlider').value)||0;
+    var poolishRoomT=parseFloat(document.getElementById('poolishRoomTempSlider').value)||72;
+    var poolishFridgeT=parseFloat(document.getElementById('poolishFridgeTempSlider').value)||39;
+
+    var poolishFlour=fb*poolishPct;
+    var poolishWater=poolishFlour; // always 100% hydration
+    var finalFlourP=fb-poolishFlour;
+    var totalWaterP=fb*hyd;
+    var finalWaterP=totalWaterP-poolishWater;
+    var saltGP=fb*RECIPE.salt;
+    var reservedWaterP=finalWaterP*0.10;
+    var honeyG=honeyOn?poolishFlour*HONEY_PCT:0;
+
+    // Poolish yeast
+    var poolishIDY=calcPoolishYeastIDY(poolishRoomH,poolishRoomT,poolishFridgeH,poolishFridgeT,honeyOn);
+    var poolishYeastG=yeastConvert(poolishFlour*poolishIDY,yeast);
+
+    // Poolish water temp
+    var poolishWaterTempF=calcPoolishWaterTempF(poolishRoomT);
+    var poolishWaterTempDisp=useCelsius?fmtC(poolishWaterTempF)+'°C':Math.round(poolishWaterTempF)+'°F';
+    var pwEl=document.getElementById('poolishWaterTempDisplay');
+    if(pwEl)pwEl.textContent=poolishWaterTempDisp;
+
+    html+=sectionTitle('🌊 poolish');
+    html+=ingRow('🌾','Tipo 00 flour (poolish)',poolishFlour);
+    html+=ingRow('💧','water (poolish)',poolishWater,'','target temp: '+poolishWaterTempDisp);
+    html+=ingRow('🌿',yeastLabel(yeast)+' (poolish)',poolishYeastG,2);
+    if(honeyOn)html+=ingRow('🍯','honey',honeyG,1,'stir into poolish water before adding flour');
+
+    html+=`<div class="recipe-divider"></div>`;
+    html+=sectionTitle('🥣 final dough');
+    html+=ingRow('🌾','Tipo 00 flour',finalFlourP);
+    html+=ingRow('💧','water (final dough)',finalWaterP,'','reserve ~'+Math.round(reservedWaterP)+'g for dissolving salt');
+    html+=ingRow('🧂','sea salt',saltGP,'','dissolve in reserved water · add after incorporating poolish');
+
+    // Small yeast boost for short same-day bulk (no fridge, bulk < 6h)
+    // Poolish alone may not fully leaven remaining flour in short bulk
+    if(fH===0&&bH<6){
+      var finalPoolishIDY=Math.max(0.0001,poolishIDY*0.10);
+      var finalPoolishYeastG=yeastConvert(finalFlourP*finalPoolishIDY,yeast);
+      finalPoolishYeastG=Math.max(0.1,finalPoolishYeastG);
+      html+=ingRow('🌿',yeastLabel(yeast)+' (final dough)',finalPoolishYeastG,2,'small boost · poolish alone is slow for short bulk');
+    }
+
   } else if(isSour){
     // ── SOURDOUGH RECIPE ──
     var sW=fb*inoc;
@@ -1624,29 +1814,24 @@ function _update(){
     html+=ingRow('💧','water',fW,'','reserve ~'+Math.round(reservedW)+'g for dissolving salt');
     html+=ingRow('🌾','Tipo 00 flour',fF);
     html+=ingRow('🧂','sea salt',saltG,'','add after autolyse · dissolved in reserved water');
-    if(maltOn)html+=ingRow('🌾','diastatic malt',maltG,1,'mix into flour before autolyse');
 
   } else {
     // ── YEASTED RECIPE (rapid / slow) ──
     var fW=fb*hyd;
     var saltG=fb*RECIPE.salt;
-    var maltG=maltOn?fb*MALT_PCT:0;
     var reservedW=fW*0.10;
 
     // Yeast calc — toggle between new physics and classic formula
     var yG,yConv;
     if(useNewFormula){
       var yIDY=calcPizzaYeastIDY(bH,rT,fH,fT);
-      if(maltOn)yIDY/=MALT_BOOST;
       yG=fb*yIDY;
       yConv=yeastConvert(yG,yeast);
     } else {
       var refActivity=3.6;
       var basePct=(0.35/100)*(refActivity/Math.max(0.01,activity));
       var retardPenalty=fH>0?Math.max(0.15,1/Math.sqrt(1+fH/12)):1;
-      // Always compute in IDY internally, convert at display via yeastConvert
       var yPctIDY=Math.min(0.02,Math.max(0.0005,basePct*retardPenalty))*0.75;
-      if(maltOn)yPctIDY/=MALT_BOOST;
       yG=fb*yPctIDY;
       yConv=yeastConvert(yG,yeast);
     }
@@ -1668,7 +1853,7 @@ function _update(){
 
   // ─── DDT / WATER TEMP ─────────────────────────────────────────────────────
   var frictionF=mcfg.frictionF;
-  var waterTempF=isBiga?calcBigaWaterTempF(bigaRoomT):calcDDT(rT,frictionF,isSour);
+  var waterTempF=isBiga?calcBigaWaterTempF(bigaRoomT):isPoolish?calcPoolishWaterTempF(poolishRoomT_raw):calcDDT(rT,frictionF,isSour);
   var totalWaterForIce=isSour?Math.max(0,(fb*hyd)-(fb*inoc/2)):fb*hyd;
   var ice=calcIce(totalWaterForIce,waterTempF,rT);
   var mr=mcfg.mixMins;
@@ -2057,7 +2242,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.4.3 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.4.9 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
