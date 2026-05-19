@@ -385,7 +385,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.3.9 · science-verified · party edition</div>
+    <div class="version-badge">v1.4.3 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -597,7 +597,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
       </div>
 
       <div>
-        <div class="ferment-label"><span>fermentation activity</span><span id="actVal">—</span></div>
+        <div class="ferment-label"><span>fermentation potential</span><span id="actVal">—</span></div>
         <div class="ferment-meter" style="position:relative;">
           <div class="ferment-bar" id="actBar"></div>
           <div style="position:absolute;top:0;bottom:0;left:20%;width:1.5px;background:rgba(0,0,0,0.25);border-radius:1px;"></div>
@@ -614,7 +614,10 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
   <!-- RIGHT COLUMN -->
   <div class="right-col">
     <div class="card">
-      <div class="card-title">The recipe</div>
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>The recipe</span>
+        <button id="formulaToggleBtn" onclick="toggleFormula()" style="font-family:var(--num-font);font-size:0.65rem;padding:3px 10px;border-radius:var(--pill-radius);border:1.5px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;letter-spacing:0.04em;transition:all 0.2s;">⚗ new physics</button>
+      </div>
       <div id="recipe"></div>
       <div class="ddt-box" id="ddtBox"></div>
       <div class="dough-temp-check">
@@ -726,7 +729,7 @@ document.getElementById('bigaFridgeTempSlider').addEventListener('input',functio
 
 // ─── PERSIST STATE ────────────────────────────────────────────────────────────
 function saveState(){
-  try{localStorage.setItem('omarPizzaState',JSON.stringify({mode,isAuto,flour,yeast,maltOn,oven,mixer,useCelsius,theme,smartSchedule,
+  try{localStorage.setItem('omarPizzaState',JSON.stringify({mode,isAuto,flour,yeast,maltOn,oven,mixer,useCelsius,theme,smartSchedule,useNewFormula,
     hyd:document.getElementById('hydSlider').value,
     count:document.getElementById('countSlider').value,
     size:document.getElementById('sizeSlider').value,
@@ -761,6 +764,7 @@ function loadState(){
     if(s.useCelsius!==undefined)useCelsius=s.useCelsius;
     if(s.theme){theme=s.theme;document.documentElement.setAttribute('data-theme',theme);}
     if(s.smartSchedule!==undefined)smartSchedule=s.smartSchedule;
+    if(s.useNewFormula!==undefined)useNewFormula=s.useNewFormula;
     var clamp=(id,v)=>{var sl=document.getElementById(id);if(v)sl.value=Math.min(parseFloat(sl.max),Math.max(parseFloat(sl.min),parseFloat(v)));};
     clamp('hydSlider',s.hyd);clamp('countSlider',s.count);clamp('sizeSlider',s.size);
     clamp('bulkSlider',s.bulk);clamp('fTimeSlider',s.fTime);clamp('tempSlider',s.rT);
@@ -821,6 +825,22 @@ var ACTIVITY_OVER =9.0;
 var BLOOM_MINS=10;
 var MIXER_LIMITS={hand:{min:0,max:Infinity},ka:{min:400,max:1800},spiral:{min:1000,max:5000}};
 
+// ─── FORMULA TOGGLE ───────────────────────────────────────────────────────────
+// false = classic (K=0.35, old suppF, thresholds 1.8/9.0)
+// true  = new physics (three-model, suppF=0.518, thresholds 2.0/25.0)
+var useNewFormula=true;
+
+// New physics constants
+var SUPP_F_NEW    = 0.518;   // constant — Q10 handles temperature scaling
+var K_LEHMANN     = 0.217;   // cold retard model, no retardPenalty
+var BLEND_START   = 5.0;     // hours — start blending rapid→slow
+var BLEND_END     = 8.0;     // hours — fully on slow model
+var Y_NEO_REF     = 0.0006;  // 0.06% IDY — Naples tradition anchor
+var T_NEO_REF     = 72.0;    // °F reference temp
+var T_NEO_EFF     = 8.5;     // hours at T_NEO_REF giving Y_NEO_REF
+var ACT_UNDER_NEW = 2.0;     // pizza-specific under threshold
+var ACT_OVER_NEW  = 25.0;    // pizza-specific over threshold
+
 // Biga calibration — C=157, validated against Giorilli standard (0.33% IDY at 18h/64°F → within 6%)
 var BIGA_C=157;
 var BIGA_TARGET=3.5;
@@ -841,7 +861,10 @@ function flourBase(totalMass,hyd){
 }
 
 function fridgeSuppression(fT){
-  // Main dough: two-regime yeast suppression
+  // Main dough fridge suppression
+  // New physics: constant 0.518 (Q10 handles temp scaling, literature-validated)
+  // Classic: linear formula inherited from template
+  if(useNewFormula) return SUPP_F_NEW;
   return 0.08+(fT-34)*(0.16/16);
 }
 
@@ -879,6 +902,32 @@ function calcActivity(bH,rT,fH,fT,autolyseOn,inocPct,isSour,maltOn){
   if(maltOn)act*=MALT_BOOST;
   return act;
 }
+
+function calcPizzaYeastIDY(bH,rT,fH,fT){
+  // Three-model pizza yeast formula — new physics
+  // Calibrated to Neapolitan tradition and literature
+  // Model 3: Cold retard (Lehmann, no retardPenalty)
+  if(fH>0){
+    var act=calcActivity(bH,rT,fH,fT,false,0,false,false);
+    var yPct=(K_LEHMANN/100)*(3.6/Math.max(0.01,act))*0.75;
+    return Math.min(0.020,Math.max(0.0002,yPct));
+  }
+  // Model 1: Rapid same-day (full rise — dough.school power law)
+  var A=10.0*Math.pow(2,(77-rT)/15.5);
+  var power=-1.676-0.006*(rT-77);
+  var y1=A*Math.pow(Math.max(0.5,bH),power)/100;
+  // Model 2: Slow room temp (Neapolitan partial rise)
+  var q10r=Math.pow(2,(rT-T_NEO_REF)/18);
+  var t_eff=bH*q10r;
+  var y2=Y_NEO_REF*Math.pow(T_NEO_EFF/Math.max(0.1,t_eff),0.5);
+  // Smooth sigmoid blend 5-8h transition
+  if(bH<=BLEND_START) return Math.min(0.020,Math.max(0.0002,y1));
+  if(bH>=BLEND_END)   return Math.min(0.020,Math.max(0.0002,y2));
+  var t=(bH-BLEND_START)/(BLEND_END-BLEND_START);
+  var blend=3*t*t-2*t*t*t;
+  return Math.min(0.020,Math.max(0.0002,y1*(1-blend)+y2*blend));
+}
+
 
 function calcGlide(totalMass,count,rT,fT,fH){
   if(fH===0)return 0;
@@ -986,6 +1035,24 @@ function setQuick(v){document.getElementById('sizeSlider').value=v;update();save
 function toggleCelsius(){useCelsius=!useCelsius;update();saveState();}
 
 // ─── SMART SCHEDULE ───────────────────────────────────────────────────────────
+function toggleFormula(){
+  useNewFormula=!useNewFormula;
+  var btn=document.getElementById('formulaToggleBtn');
+  if(useNewFormula){
+    btn.style.background='var(--accent)';
+    btn.style.borderColor='var(--accent)';
+    btn.style.color='#fff';
+    btn.textContent='⚗ new physics';
+  } else {
+    btn.style.background='transparent';
+    btn.style.borderColor='var(--ink3)';
+    btn.style.color='var(--ink3)';
+    btn.textContent='⚗ classic';
+  }
+  update();saveState();
+}
+
+
 function toggleSmartSchedule(){
   // If turning ON — validate date first before changing anything
   if(!smartSchedule){
@@ -1278,6 +1345,22 @@ function _update(){
   document.getElementById('headerEyebrow').textContent=smartSchedule?'🎉 weekend party mode · smart schedule':'✦ a Neapolitan calculator, with feeling ✦';
   document.getElementById('headerSub').textContent=smartSchedule?'I planned your whole pizza weekend.':'I thought carefully about every gram.';
 
+  // Formula toggle button state
+  var formulaBtn=document.getElementById('formulaToggleBtn');
+  if(formulaBtn){
+    if(useNewFormula){
+      formulaBtn.style.background='var(--accent)';
+      formulaBtn.style.borderColor='var(--accent)';
+      formulaBtn.style.color='#fff';
+      formulaBtn.textContent='⚗ new physics';
+    } else {
+      formulaBtn.style.background='transparent';
+      formulaBtn.style.borderColor='var(--ink3)';
+      formulaBtn.style.color='var(--ink3)';
+      formulaBtn.textContent='⚗ classic';
+    }
+  }
+
   // Button states
   ['Rapid','Slow','Sour','Biga'].forEach(function(m){document.getElementById('mode'+m).classList.toggle('on',mode===m.toLowerCase());});
   document.getElementById('ovenSteel').classList.toggle('on',oven==='steel');
@@ -1435,37 +1518,60 @@ function _update(){
     if(maltOn)activity*=MALT_BOOST;
   }
   setVal('actVal',activity.toFixed(2));
-  var pct=Math.min(100,(activity/ACTIVITY_OVER)*100);
+  var actUnder=useNewFormula?ACT_UNDER_NEW:ACTIVITY_UNDER;
+  var actOver=useNewFormula?ACT_OVER_NEW:ACTIVITY_OVER;
+  var pct=Math.min(100,(activity/actOver)*100);
   var bar=document.getElementById('actBar');
   bar.style.width=pct+'%';
-  if(activity<ACTIVITY_UNDER)bar.style.background='#7ec8e3';
-  else if(activity>ACTIVITY_OVER)bar.style.background='#ff7043';
-  else{var t=(activity-ACTIVITY_UNDER)/(ACTIVITY_OVER-ACTIVITY_UNDER);bar.style.background=`hsl(${Math.round(160-t*120)},60%,55%)`;}
+  if(activity<actUnder)bar.style.background='#7ec8e3';
+  else if(activity>actOver)bar.style.background='#ff7043';
+  else{var t=(activity-actUnder)/(actOver-actUnder);bar.style.background=`hsl(${Math.round(160-t*120)},60%,55%)`;}
 
-  // Activity info box
+  // Update threshold markers
+  var underPct=(actUnder/actOver)*100;
+  var markerUnder=document.getElementById('markerUnder');
+  var markerOver=document.getElementById('markerOver');
+  if(markerUnder)markerUnder.style.left=underPct+'%';
+  // over marker stays at 72% visually (it IS the over threshold)
+
+  // Fermentation potential info box
   var actBox=document.getElementById('actInfoBox');
   var actMsg,actCls;
-  if(activity<ACTIVITY_UNDER){
-    actCls='info-box hot';actMsg='🧊 underproofed risk · activity '+activity.toFixed(2)+' — extend fermentation time or increase temperature';
-  } else if(activity<=6.5){
-    actCls='info-box';actMsg='✦ ideal zone · activity '+activity.toFixed(2)+' — fermentation is on track';
-  } else if(activity<=8.0){
-    actCls='info-box warm';actMsg='🌡️ active dough · activity '+activity.toFixed(2)+' — monitor closely, it\'s moving fast';
-  } else if(activity<=ACTIVITY_OVER){
-    actCls='info-box warm';actMsg='⚠️ very active · activity '+activity.toFixed(2)+' — risk of overproofing, act soon';
+  if(activity<actUnder){
+    if(useNewFormula&&(mode==='rapid'||bH<=3)){
+      actCls='info-box';actMsg='⚡ short fermentation · activity '+activity.toFixed(2)+' — yeast amount is adjusted accordingly, dough might not be ready on time';
+    } else {
+      actCls='info-box';actMsg='🧊 low fermentation potential · activity '+activity.toFixed(2)+' — time or temperature may not be sufficient for proper fermentation';
+    }
+  } else if(activity<=actOver*0.26){
+    actCls='info-box';actMsg='✦ good fermentation potential · activity '+activity.toFixed(2)+' — time and temperature are well suited for Neapolitan pizza';
+  } else if(activity<=actOver*0.72){
+    actCls='info-box';actMsg='✦ good fermentation potential · activity '+activity.toFixed(2)+' — time and temperature are well suited for Neapolitan pizza';
+  } else if(activity<=actOver){
+    actCls='info-box warm';actMsg='🌡️ high fermentation potential · activity '+activity.toFixed(2)+' — monitor your dough, extended time at this temperature accelerates enzyme activity';
   } else {
-    actCls='info-box hot';actMsg='🫠 overproofed risk · activity '+activity.toFixed(2)+' — gluten breakdown likely';
+    actCls='info-box hot';actMsg='🫠 excessive fermentation potential · activity '+activity.toFixed(2)+' — protease enzymes may degrade gluten over this time at this temperature';
   }
   actBox.className=actCls;
   actBox.textContent=actMsg;
   actBox.style.display='block';
 
+  // Warn box
   var warn=document.getElementById('warnBox');
-  warn.className='warn-box';
-  if(activity<ACTIVITY_UNDER){warn.className='warn-box under';warn.textContent='🧊 underproofed risk — more bulk time or warmth needed for good oven spring';}
-  else if(activity>ACTIVITY_OVER){warn.className='warn-box over';warn.textContent='🫠 very active dough — risk of overproofing and gluten breakdown';}
-  else if(oven==='gozney'&&maltOn){warn.className='warn-box over';warn.textContent='🔥 Gozney + malt: at 700°F+ browning is very fast — stay at the oven, turn every 15 sec';}
-  else if(fT>=43){warn.className='warn-box over';warn.textContent='🌡️ at 43°F+ your fridge is fermenting as much as retarding — watch your dough';}
+  if(activity<actUnder){
+    if(useNewFormula&&(mode==='rapid'||bH<=3)){warn.className='warn-box under';warn.textContent='⚡ short fermentation — yeast amount is adjusted accordingly, dough might not be ready on time';}
+    else{warn.className='warn-box under';warn.textContent='🧊 low fermentation potential — more bulk time or warmth needed';}
+  } else if(activity>actOver){
+    warn.className='warn-box over';warn.textContent='🫠 excessive fermentation potential — protease enzymes may degrade gluten at this time and temperature';
+  } else {
+    warn.className='warn-box';warn.textContent='';
+  }
+
+  // end activity section
+
+  // Additional specific warnings
+  if(oven==='gozney'&&maltOn){warn.className='warn-box over';warn.textContent='🔥 Gozney + malt: at 700°F+ browning is very fast — stay at the oven, turn every 15 sec';}
+  else if(fT>=43&&fH>0){warn.className='warn-box over';warn.textContent='🌡️ at 43°F+ your fridge is fermenting significantly — watch your dough closely';}
 
   // ─── RECIPE MATH ──────────────────────────────────────────────────────────
   var needsBloom=!isSour&&!isBiga&&yeast==='ADY';
@@ -1527,21 +1633,29 @@ function _update(){
     var maltG=maltOn?fb*MALT_PCT:0;
     var reservedW=fW*0.10;
 
-    // Yeast calc — inherited from template, calibrated for pizza
-    var refActivity=3.6;
-    var basePct=(0.35/100)*(refActivity/Math.max(0.01,activity));
-    var retardPenalty=fH>0?Math.max(0.15,1/Math.sqrt(1+fH/12)):1;
-    var yPct=Math.min(0.02,Math.max(0.0005,basePct*retardPenalty));
-    if(yeast==='IDY')yPct*=0.75;
-    if(maltOn)yPct/=MALT_BOOST;
-    var yG=fb*yPct;
-    var yConv=yeastConvert(yG,yeast);
-
+    // Yeast calc — toggle between new physics and classic formula
+    var yG,yConv;
+    if(useNewFormula){
+      var yIDY=calcPizzaYeastIDY(bH,rT,fH,fT);
+      if(maltOn)yIDY/=MALT_BOOST;
+      yG=fb*yIDY;
+      yConv=yeastConvert(yG,yeast);
+    } else {
+      var refActivity=3.6;
+      var basePct=(0.35/100)*(refActivity/Math.max(0.01,activity));
+      var retardPenalty=fH>0?Math.max(0.15,1/Math.sqrt(1+fH/12)):1;
+      // Always compute in IDY internally, convert at display via yeastConvert
+      var yPctIDY=Math.min(0.02,Math.max(0.0005,basePct*retardPenalty))*0.75;
+      if(maltOn)yPctIDY/=MALT_BOOST;
+      yG=fb*yPctIDY;
+      yConv=yeastConvert(yG,yeast);
+    }
+    var bloomNote=yeast==='ADY'?' · lower end when blooming · upper end when adding dry':'';
     if(needsBloom){
       html+=ingRowRange('🌿',yeastLabel(yeast),Math.max(0.1,yConv-0.1),yConv+0.1);
-      html+=ingRow('💧','water',fW,'','~30g warm for bloom · reserve ~'+Math.round(reservedW)+'g for salt');
+      html+=ingRow('💧','water',fW,'','~30g warm for bloom · reserve ~'+Math.round(reservedW)+'g for salt'+(bloomNote?'<br><em style="font-size:0.78rem;color:var(--ink3);">'+bloomNote.trim()+'</em>':''));
     } else {
-      html+=ingRowRange('🌿',yeastLabel(yeast),Math.max(0.1,yConv-0.1),yConv+0.1);
+      html+=ingRowRange('🌿',yeastLabel(yeast),Math.max(0.1,yConv-0.1),yConv+0.1,'',bloomNote.trim());
       html+=ingRow('💧','water',fW,'','reserve ~'+Math.round(reservedW)+'g for dissolving salt');
     }
     html+=ingRow('🌾',flour==='Tipo'?'Tipo 00 flour':'bread flour',fb);
@@ -1943,7 +2057,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.3.9 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.4.3 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
