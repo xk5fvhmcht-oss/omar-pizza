@@ -385,7 +385,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.5.3 · science-verified · party edition</div>
+    <div class="version-badge">v1.5.4 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -912,7 +912,7 @@ var BIGA_C=157;
 var BIGA_TARGET=3.5;
 
 // ─── POOLISH CONSTANTS ────────────────────────────────────────────────────────
-var POOLISH_A_REF  = 8.2;     // power law prefactor at 72°F — Q10 inverted (cooler=more yeast)
+var POOLISH_A_REF  = 13.9;    // power law prefactor at 72°F — anchored to median of 5 clean sources (0.133% at 12h/72°F)
 var POOLISH_POWER  = -1.872;  // power law exponent
 var POOLISH_TARGET = 6.7;     // target activity (doubled volume)
 var POOLISH_C      = 1595;    // calibration constant
@@ -2283,7 +2283,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.5.3 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.5.4 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
