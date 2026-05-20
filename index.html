@@ -385,7 +385,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.4.9 · science-verified · party edition</div>
+    <div class="version-badge">v1.5.2 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -742,7 +742,7 @@ updateFloaters();
 document.querySelectorAll('input[type=range],input[type=datetime-local]').forEach(function(el){
   el.addEventListener('input',function(){
     // Duration sliders trigger manual override
-    var durationIds=['bulkSlider','fTimeSlider','bigaRoomHSlider','bigaFridgeHSlider','inocSlider'];
+    var durationIds=['bulkSlider','fTimeSlider','bigaRoomHSlider','bigaFridgeHSlider','inocSlider','poolishRoomHSlider','poolishFridgeHSlider'];
     if(smartSchedule&&durationIds.indexOf(el.id)>=0){
       ssDisableManual();
     } else {
@@ -1329,6 +1329,47 @@ function runSmartSchedule(){
     calDay1Name=dayName(ss_t1);calDay1Task='🥣';calDay1Label='mix dough';calDay1Time=fmtTime(ss_t1);
     calDay2Name=dayName(ss_fridgeAnchor);calDay2Task='🔴';calDay2Label='ball + fridge';calDay2Time=fmtTime(ss_fridgeAnchor);
 
+  } else if(mode==='poolish'){
+    // ── POOLISH SCHEDULE ──────────────────────────────────────────────────────
+    // Two sub-cases based on whether poolish uses cold retard or room temp
+
+    var poolishFH_raw=parseFloat(document.getElementById('poolishFridgeHSlider').value)||0;
+    var isColdPoolish=poolishFH_raw>0;
+
+    if(isColdPoolish||!isSunday){
+      // Cold poolish OR Saturday bake — mirrors biga exactly
+      // Force cold poolish schedule for Saturday (room temp doesn't fit Saturday timing)
+      // Day -2: 7pm mix poolish → 9pm into fridge (2h RT)
+      // Day -1: 7pm pull poolish + mix final dough → 8:30pm bulk + ball + fridge
+      // Day  0: pull + temper → bake
+      var ss_poolishOffset=(ss_fridgeAnchor.getDate()===dayAt(2,0).getDate())?3:2;
+      ss_t1=dayAt(ss_poolishOffset,BIGA_MIX_HOUR);    // 7pm mix poolish
+      ss_t2=dayAt(ss_poolishOffset,BIGA_FRIDGE_HOUR); // 9pm poolish into fridge
+      ss_t3=dayAt(ss_poolishOffset-1,MIX_HOUR);       // 7pm pull poolish + mix final dough
+      var ss_poolishRoomH=Math.round((ss_t2-ss_t1)/3600000*2)/2;  // ~2h
+      var ss_poolishFridgeH=Math.round((ss_t3-ss_t2)/3600000);    // ~22h
+      ss_bH=1.0;
+      setSliderSS('poolishRoomHSlider',ss_poolishRoomH);
+      setSliderSS('poolishFridgeHSlider',Math.max(0,ss_poolishFridgeH));
+      setSliderSS('bulkSlider',ss_bH);
+      setSliderSS('fTimeSlider',ss_fH);
+      calDay1Name=dayName(ss_t1);calDay1Task='🌊';calDay1Label='mix poolish';calDay1Time=fmtTime(ss_t1);
+      calDay2Name=dayName(ss_t3);calDay2Task='🥣';calDay2Label='mix dough';calDay2Time=fmtTime(ss_t3);
+
+    } else {
+      // Room temp poolish — Sunday bake only (Sat morning poolish → Sat evening mix)
+      // Sunday bake: poolish mixed Saturday morning
+      ss_t1=dayAt(1,7.0);   // Sat 7am mix poolish
+      ss_t2=dayAt(1,MIX_HOUR); // Sat 7pm mix final dough (12h later)
+      ss_bH=1.0;
+      setSliderSS('poolishRoomHSlider',12);
+      setSliderSS('poolishFridgeHSlider',0);
+      setSliderSS('bulkSlider',ss_bH);
+      setSliderSS('fTimeSlider',ss_fH);
+      calDay1Name=dayName(ss_t1);calDay1Task='🌊';calDay1Label='mix poolish';calDay1Time=fmtTime(ss_t1);
+      calDay2Name=dayName(ss_t2);calDay2Task='🥣';calDay2Label='mix dough';calDay2Time=fmtTime(ss_t2);
+    }
+
   } else if(mode==='sour'){
     // Feed before work, mix evening — same day as fridge anchor
     var ss_feedDay=(ss_fridgeAnchor.getDate()===dayAt(2,0).getDate())?2:1;
@@ -1427,7 +1468,7 @@ function _update(){
     ssStatusEl.style.display='none';
   } else if(ssIsRapid){
     ssStatusEl.style.display='block';
-    ssStatusEl.textContent='⚡ switch to slow, sourdough, or biga to unlock';
+    ssStatusEl.textContent='⚡ switch to slow, sourdough, biga, or poolish to unlock';
   } else if(!ssIsWeekend){
     ssStatusEl.style.display='block';
     ssStatusEl.textContent='📅 set a Saturday or Sunday bake to unlock';
@@ -2242,7 +2283,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.4.9 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.5.2 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
