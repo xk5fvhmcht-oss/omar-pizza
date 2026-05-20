@@ -385,7 +385,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.5.2 · science-verified · party edition</div>
+    <div class="version-badge">v1.5.3 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -1533,7 +1533,7 @@ function _update(){
   document.getElementById('sourInocWrap').style.display=isSour?'':'none';
   document.getElementById('bigaChemWrap').style.display=isBiga?'':'none';
   document.getElementById('poolishWrap').style.display=isPoolish?'':'none';
-  document.getElementById('yeastWrap').style.display=(isSour||isPoolish)?'none':'';
+  document.getElementById('yeastWrap').style.display=isSour?'none':'';
   document.getElementById('bigaFermentWrap').style.display=isBiga?'':'none';
   document.getElementById('sourSuggestWrap').style.display=isSour?'':'none';
 
@@ -2283,7 +2283,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.5.2 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.5.3 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
