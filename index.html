@@ -385,7 +385,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.5.4 · science-verified · party edition</div>
+    <div class="version-badge">v1.5.5 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -900,7 +900,7 @@ var useNewFormula=true;
 var SUPP_F_NEW    = 0.518;   // constant — Q10 handles temperature scaling
 var K_LEHMANN     = 0.217;   // cold retard model, no retardPenalty
 var BLEND_START   = 5.0;     // hours — start blending rapid→slow
-var BLEND_END     = 8.0;     // hours — fully on slow model
+var BLEND_END     = 12.0;    // hours — fully on slow model (extended from 8h to fix cliff)
 var Y_NEO_REF     = 0.0006;  // 0.06% IDY — Naples tradition anchor
 var T_NEO_REF     = 72.0;    // °F reference temp
 var T_NEO_EFF     = 8.5;     // hours at T_NEO_REF giving Y_NEO_REF
@@ -993,11 +993,19 @@ function calcPizzaYeastIDY(bH,rT,fH,fT){
   var A=10.0*Math.pow(2,(77-rT)/15.5);
   var power=-1.676-0.006*(rT-77);
   var y1=A*Math.pow(Math.max(0.5,bH),power)/100;
+  // Fix 1: linear ramp below 4h — smooth progression from 2% ceiling at 1h
+  // to the confident 4h anchor rather than a flat clamp
+  if(bH<4.0){
+    var anchor4h=Math.min(0.020,Math.max(0.0002,y1));
+    if(bH<=1.0) return 0.020;
+    var t0=(bH-1.0)/3.0;
+    return 0.020+t0*(anchor4h-0.020);
+  }
   // Model 2: Slow room temp (Neapolitan partial rise)
   var q10r=Math.pow(2,(rT-T_NEO_REF)/18);
   var t_eff=bH*q10r;
   var y2=Y_NEO_REF*Math.pow(T_NEO_EFF/Math.max(0.1,t_eff),0.5);
-  // Smooth sigmoid blend 5-8h transition
+  // Fix 2: extended sigmoid blend 5-12h (was 5-8h) — eliminates cliff at 6-8h
   if(bH<=BLEND_START) return Math.min(0.020,Math.max(0.0002,y1));
   if(bH>=BLEND_END)   return Math.min(0.020,Math.max(0.0002,y2));
   var t=(bH-BLEND_START)/(BLEND_END-BLEND_START);
@@ -2283,7 +2291,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.5.4 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.5.5 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
