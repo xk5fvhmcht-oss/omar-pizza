@@ -385,7 +385,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.5.5 · science-verified · party edition</div>
+    <div class="version-badge">v1.5.6 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -683,7 +683,11 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
       <button class="journal-btn" onclick="toggleJournal()">✦ save this bake to journal</button>
       <div class="journal-panel" id="journalPanel">
         <textarea id="journalNotes" placeholder="notes — what worked, what didn't, how it tasted, how the cornicione looked..."></textarea>
-        <button class="journal-save-btn" onclick="saveBake()">save bake</button>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button class="journal-save-btn" onclick="saveBake()">save bake</button>
+          <button class="journal-save-btn" onclick="exportJournal()" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);">↑ export all</button>
+        </div>
+        <div id="journalExportOverlay" style="display:none;margin-top:10px;"></div>
         <div class="journal-entries" id="journalEntries"></div>
       </div>
   </div>
@@ -2135,10 +2139,61 @@ function saveBake(){
     renderJournal();
   }catch(e){}
 }
-function renderJournal(){
+function exportJournal(){
   try{
     var entries=JSON.parse(localStorage.getItem('omarPizzaJournal')||'[]');
-    var container=document.getElementById('journalEntries');
+    if(!entries.length){alert('No bakes saved yet.');return;}
+    var lines=[];
+    lines.push('OMAR PIZZA — BAKE JOURNAL');
+    lines.push('Exported: '+new Date().toLocaleString());
+    lines.push('─'.repeat(40));
+    entries.forEach(function(e,i){
+      lines.push('');
+      lines.push('BAKE '+(i+1)+' · '+e.date);
+      var params=e.count+'×'+e.size+'g · '+(e.hydLabel||e.hyd+'%')+' hydration · '+e.mode+' mode · '+(e.bulkLabel||e.bulk+'h bulk')+' · '+(e.fTimeLabel||e.fTime+'h retard')+' · '+(e.rTLabel||e.rT+'°F room')+' · '+(e.fTLabel||e.fT+'°F fridge')+(e.maltOn?' · diastatic malt':'');
+      lines.push(params);
+      if(e.notes)lines.push('Notes: '+e.notes);
+      lines.push('─'.repeat(40));
+    });
+    var text=lines.join('\n');
+
+    // Try clipboard first
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){
+        showExportFeedback('✓ copied to clipboard');
+      }).catch(function(){
+        showExportFallback(text);
+      });
+    } else {
+      // iOS fallback — show selectable overlay
+      showExportFallback(text);
+    }
+  }catch(err){alert('Export failed.');}
+}
+
+function showExportFeedback(msg){
+  var overlay=document.getElementById('journalExportOverlay');
+  overlay.style.display='block';
+  overlay.innerHTML='<div style="font-family:var(--num-font);font-size:0.78rem;color:var(--accent);padding:6px 0;">'+msg+'</div>';
+  setTimeout(function(){overlay.style.display='none';},2500);
+}
+
+function showExportFallback(text){
+  var overlay=document.getElementById('journalExportOverlay');
+  overlay.style.display='block';
+  overlay.innerHTML=
+    '<div style="font-family:var(--num-font);font-size:0.72rem;color:var(--ink3);margin-bottom:6px;">select all · copy · paste into Notes or Mail</div>'+
+    '<textarea readonly style="width:100%;height:160px;font-family:var(--num-font);font-size:0.72rem;padding:8px;border-radius:var(--btn-radius);border:var(--card-border);background:var(--bg);color:var(--ink);resize:vertical;line-height:1.5;" onclick="this.select();">'+text.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</textarea>'+
+    '<button onclick="document.getElementById(\'journalExportOverlay\').style.display=\'none\';" style="margin-top:6px;font-family:var(--num-font);font-size:0.72rem;padding:4px 12px;border-radius:var(--pill-radius);border:var(--card-border);background:transparent;color:var(--ink3);cursor:pointer;">dismiss</button>';
+  // Auto-select on iOS
+  setTimeout(function(){
+    var ta=overlay.querySelector('textarea');
+    if(ta){ta.focus();ta.select();}
+  },50);
+}
+
+function renderJournal(){
+  try{
     if(!entries.length){container.innerHTML='<div style="font-family:var(--num-font);font-size:0.78rem;color:var(--ink3);text-align:center;padding:12px;">no bakes saved yet</div>';return;}
     container.innerHTML=entries.map(function(e){
       var params=e.count+'×'+e.size+'g · '+(e.hydLabel||e.hyd+'%')+' · '+e.mode+' · '+(e.bulkLabel||e.bulk+'h bulk')+' · '+(e.fTimeLabel||e.fTime+'h retard')+' · '+(e.rTLabel||e.rT+'°F room')+' · '+(e.fTLabel||e.fT+'°F fridge')+(e.maltOn?' · malt':'');
@@ -2291,7 +2346,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.5.5 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.5.6 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
