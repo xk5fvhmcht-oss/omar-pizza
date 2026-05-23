@@ -385,7 +385,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.5.6 · science-verified · party edition</div>
+    <div class="version-badge">v1.5.7 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -2194,6 +2194,8 @@ function showExportFallback(text){
 
 function renderJournal(){
   try{
+    var entries=JSON.parse(localStorage.getItem('omarPizzaJournal')||'[]');
+    var container=document.getElementById('journalEntries');
     if(!entries.length){container.innerHTML='<div style="font-family:var(--num-font);font-size:0.78rem;color:var(--ink3);text-align:center;padding:12px;">no bakes saved yet</div>';return;}
     container.innerHTML=entries.map(function(e){
       var params=e.count+'×'+e.size+'g · '+(e.hydLabel||e.hyd+'%')+' · '+e.mode+' · '+(e.bulkLabel||e.bulk+'h bulk')+' · '+(e.fTimeLabel||e.fTime+'h retard')+' · '+(e.rTLabel||e.rT+'°F room')+' · '+(e.fTLabel||e.fT+'°F fridge')+(e.maltOn?' · malt':'');
@@ -2346,7 +2348,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.5.6 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.5.7 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
