@@ -385,7 +385,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.5.7 · science-verified · party edition</div>
+    <div class="version-badge">v1.5.8 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -2106,28 +2106,48 @@ function checkDoughTemp(){
 function toggleJournal(){document.getElementById('journalPanel').classList.toggle('open');renderJournal();}
 function saveBake(){
   var notes=document.getElementById('journalNotes').value.trim();
+  // Collect all slider display labels
+  function getVal(id){var el=document.getElementById(id);return el?el.textContent:'';}
+  function getSlider(id){var el=document.getElementById(id);return el?el.value:0;}
+  // Yeast gram — read from rendered recipe if available
+  var yeastEl=document.querySelector('#recipe .ing-row-val');
   var snap={
     id:Date.now(),date:new Date().toLocaleString(),
-    mode:mode,flour:flour,yeast:yeast,oven:oven,mixer:mixer,maltOn:maltOn,
-    count:document.getElementById('countSlider').value,
-    size:document.getElementById('sizeSlider').value,
-    hyd:document.getElementById('hydSlider').value,
-    bulk:document.getElementById('bulkSlider').value,
-    fTime:document.getElementById('fTimeSlider').value,
-    rT:document.getElementById('tempSlider').value,
-    fT:document.getElementById('fTempSlider').value,
-    inoc:document.getElementById('inocSlider').value,
-    bigaPct:document.getElementById('bigaPctSlider').value,
-    bigaHyd:document.getElementById('bigaHydSlider').value,
-    bigaRoomH:document.getElementById('bigaRoomHSlider').value,
-    bigaFridgeH:document.getElementById('bigaFridgeHSlider').value,
-    bigaRoomT:document.getElementById('bigaRoomTempSlider').value,
-    bigaFridgeT:document.getElementById('bigaFridgeTempSlider').value,
-    hydLabel:document.getElementById('hydVal').textContent,
-    bulkLabel:document.getElementById('bulkVal').textContent,
-    fTimeLabel:document.getElementById('fTimeVal').textContent,
-    rTLabel:document.getElementById('tempVal').textContent,
-    fTLabel:document.getElementById('fTempVal').textContent,
+    mode:mode,flour:flour,yeast:yeast,oven:oven,mixer:mixer,
+    maltOn:maltOn,honeyOn:honeyOn,useNewFormula:useNewFormula,
+    // Core sliders
+    count:getSlider('countSlider'),size:getSlider('sizeSlider'),
+    hyd:getSlider('hydSlider'),bulk:getSlider('bulkSlider'),
+    fTime:getSlider('fTimeSlider'),rT:getSlider('tempSlider'),
+    fT:getSlider('fTempSlider'),inoc:getSlider('inocSlider'),
+    // Biga sliders
+    bigaPct:getSlider('bigaPctSlider'),bigaHyd:getSlider('bigaHydSlider'),
+    bigaRoomH:getSlider('bigaRoomHSlider'),bigaFridgeH:getSlider('bigaFridgeHSlider'),
+    bigaRoomT:getSlider('bigaRoomTempSlider'),bigaFridgeT:getSlider('bigaFridgeTempSlider'),
+    // Poolish sliders
+    poolishPct:getSlider('poolishPctSlider'),
+    poolishRoomH:getSlider('poolishRoomHSlider'),poolishFridgeH:getSlider('poolishFridgeHSlider'),
+    poolishRoomT:getSlider('poolishRoomTempSlider'),poolishFridgeT:getSlider('poolishFridgeTempSlider'),
+    // Display labels (formatted strings)
+    hydLabel:getVal('hydVal'),bulkLabel:getVal('bulkVal'),
+    fTimeLabel:getVal('fTimeVal'),rTLabel:getVal('tempVal'),fTLabel:getVal('fTempVal'),
+    bigaPctLabel:getVal('bigaPctVal'),bigaHydLabel:getVal('bigaHydVal'),
+    bigaRoomHLabel:getVal('bigaRoomHVal'),bigaFridgeHLabel:getVal('bigaFridgeHVal'),
+    bigaRoomTLabel:getVal('bigaRoomTempVal'),bigaFridgeTLabel:getVal('bigaFridgeTempVal'),
+    poolishPctLabel:getVal('poolishPctVal'),
+    poolishRoomHLabel:getVal('poolishRoomHVal'),poolishFridgeHLabel:getVal('poolishFridgeHVal'),
+    poolishRoomTLabel:getVal('poolishRoomTempVal'),poolishFridgeTLabel:getVal('poolishFridgeTempVal'),
+    // Recipe snapshot — read from DOM
+    recipeSnap:(function(){
+      var rows=document.querySelectorAll('#recipe .ing-row');
+      var out=[];
+      rows.forEach(function(r){
+        var lbl=r.querySelector('.ing-label');
+        var val=r.querySelector('.ing-val');
+        if(lbl&&val)out.push(lbl.textContent.trim()+': '+val.textContent.trim());
+      });
+      return out.join(' · ');
+    })(),
     notes:notes,
   };
   try{
@@ -2150,8 +2170,20 @@ function exportJournal(){
     entries.forEach(function(e,i){
       lines.push('');
       lines.push('BAKE '+(i+1)+' · '+e.date);
-      var params=e.count+'×'+e.size+'g · '+(e.hydLabel||e.hyd+'%')+' hydration · '+e.mode+' mode · '+(e.bulkLabel||e.bulk+'h bulk')+' · '+(e.fTimeLabel||e.fTime+'h retard')+' · '+(e.rTLabel||e.rT+'°F room')+' · '+(e.fTLabel||e.fT+'°F fridge')+(e.maltOn?' · diastatic malt':'');
-      lines.push(params);
+      // Line 1
+      lines.push(e.count+'×'+e.size+'g · '+(e.hydLabel||e.hyd+'%')+' hydration · '+e.mode+' mode · '+e.oven+(e.maltOn?' · malt':'')+(e.honeyOn?' · honey':''));
+      // Line 2 — mode detail
+      if(e.mode==='biga'){
+        var bp=e.bigaPctLabel||Math.round(e.bigaPct*100)+'%';
+        var bh=e.bigaHydLabel||Math.round(e.bigaHyd*100)+'%';
+        lines.push('biga '+bp+' · '+bh+' hyd · '+(e.bigaRoomHLabel||e.bigaRoomH+'h')+' RT@'+(e.bigaRoomTLabel||e.bigaRoomT+'°F')+(parseFloat(e.bigaFridgeH)>0?' + '+(e.bigaFridgeHLabel||e.bigaFridgeH+'h')+' cold@'+(e.bigaFridgeTLabel||e.bigaFridgeT+'°F'):'')+' · '+(e.bulkLabel||e.bulk+'h')+' final bulk · '+(e.fTimeLabel||e.fTime+'h')+' retard');
+      } else if(e.mode==='poolish'){
+        var pp=e.poolishPctLabel||Math.round(e.poolishPct*100)+'%';
+        lines.push('poolish '+pp+' · '+(e.poolishRoomHLabel||e.poolishRoomH+'h')+' RT@'+(e.poolishRoomTLabel||e.poolishRoomT+'°F')+(parseFloat(e.poolishFridgeH)>0?' + '+(e.poolishFridgeHLabel||e.poolishFridgeH+'h')+' cold@'+(e.poolishFridgeTLabel||e.poolishFridgeT+'°F'):'')+' · '+(e.bulkLabel||e.bulk+'h')+' final bulk · '+(e.fTimeLabel||e.fTime+'h')+' retard');
+      } else {
+        lines.push((e.bulkLabel||e.bulk+'h')+' bulk · '+(e.fTimeLabel||e.fTime+'h')+' retard · '+(e.rTLabel||e.rT+'°F')+' room'+(parseFloat(e.fTime)>0?' · '+(e.fTLabel||e.fT+'°F')+' fridge':''));
+      }
+      if(e.recipeSnap)lines.push('Recipe: '+e.recipeSnap);
       if(e.notes)lines.push('Notes: '+e.notes);
       lines.push('─'.repeat(40));
     });
@@ -2198,11 +2230,38 @@ function renderJournal(){
     var container=document.getElementById('journalEntries');
     if(!entries.length){container.innerHTML='<div style="font-family:var(--num-font);font-size:0.78rem;color:var(--ink3);text-align:center;padding:12px;">no bakes saved yet</div>';return;}
     container.innerHTML=entries.map(function(e){
-      var params=e.count+'×'+e.size+'g · '+(e.hydLabel||e.hyd+'%')+' · '+e.mode+' · '+(e.bulkLabel||e.bulk+'h bulk')+' · '+(e.fTimeLabel||e.fTime+'h retard')+' · '+(e.rTLabel||e.rT+'°F room')+' · '+(e.fTLabel||e.fT+'°F fridge')+(e.maltOn?' · malt':'');
+      // Line 1 — always: balls, hydration, mode, oven, yeast type
+      var line1=e.count+'×'+e.size+'g · '+(e.hydLabel||e.hyd+'%')+' · '+e.mode+' · '+e.oven+(e.maltOn?' · malt':'')+(e.honeyOn?' · honey':'');
+      // Line 2 — mode-specific fermentation detail
+      var line2='';
+      if(e.mode==='biga'){
+        var bp=e.bigaPctLabel||Math.round(e.bigaPct*100)+'%';
+        var bh=e.bigaHydLabel||Math.round(e.bigaHyd*100)+'%';
+        var brH=e.bigaRoomHLabel||e.bigaRoomH+'h';
+        var bfH=e.bigaFridgeHLabel||e.bigaFridgeH+'h';
+        var brT=e.bigaRoomTLabel||e.bigaRoomT+'°F';
+        var bfT=e.bigaFridgeTLabel||e.bigaFridgeT+'°F';
+        line2='biga '+bp+' · '+bh+' hyd · '+brH+' RT@'+brT+(parseFloat(e.bigaFridgeH)>0?' + '+bfH+' cold@'+bfT:'')+' · '+(e.bulkLabel||e.bulk+'h')+' final bulk · '+(e.fTimeLabel||e.fTime+'h')+' retard';
+      } else if(e.mode==='poolish'){
+        var pp=e.poolishPctLabel||Math.round(e.poolishPct*100)+'%';
+        var prH=e.poolishRoomHLabel||e.poolishRoomH+'h';
+        var pfH=e.poolishFridgeHLabel||e.poolishFridgeH+'h';
+        var prT=e.poolishRoomTLabel||e.poolishRoomT+'°F';
+        var pfT=e.poolishFridgeTLabel||e.poolishFridgeT+'°F';
+        line2='poolish '+pp+' · '+prH+' RT@'+prT+(parseFloat(e.poolishFridgeH)>0?' + '+pfH+' cold@'+pfT:'')+' · '+(e.bulkLabel||e.bulk+'h')+' final bulk · '+(e.fTimeLabel||e.fTime+'h')+' retard';
+      } else if(e.mode==='sour'){
+        line2='starter '+e.inoc+'% · '+(e.bulkLabel||e.bulk+'h')+' bulk · '+(e.fTimeLabel||e.fTime+'h')+' retard · '+(e.rTLabel||e.rT+'°F')+' room';
+      } else {
+        line2=(e.bulkLabel||e.bulk+'h')+' bulk · '+(e.fTimeLabel||e.fTime+'h')+' retard · '+(e.rTLabel||e.rT+'°F')+' room'+(parseFloat(e.fTime)>0?' · '+(e.fTLabel||e.fT+'°F')+' fridge':'');
+      }
+      // Line 3 — recipe snapshot (ingredients) if saved
+      var line3=e.recipeSnap||'';
       return '<div class="journal-entry">'+
         '<div class="journal-entry-date">'+e.date+'</div>'+
-        '<div class="journal-entry-params">'+params+'</div>'+
-        (e.notes?'<div class="journal-entry-notes">'+e.notes+'</div>':'')+
+        '<div class="journal-entry-params">'+line1+'</div>'+
+        '<div class="journal-entry-params" style="margin-top:2px;color:var(--ink2);">'+line2+'</div>'+
+        (line3?'<div class="journal-entry-params" style="margin-top:2px;color:var(--ink3);font-size:0.68rem;">'+line3+'</div>':'')+
+        (e.notes?'<div class="journal-entry-notes" style="margin-top:4px;">'+e.notes+'</div>':'')+
         '<div class="journal-entry-actions">'+
           '<button class="journal-action-btn" onclick="loadBake('+e.id+')">reload settings</button>'+
           '<button class="journal-action-btn del" onclick="deleteEntry('+e.id+')">delete</button>'+
@@ -2216,14 +2275,18 @@ function loadBake(id){
     var entries=JSON.parse(localStorage.getItem('omarPizzaJournal')||'[]');
     var e=entries.find(function(x){return x.id===id;});
     if(!e)return;
-    mode=e.mode;flour=e.flour;yeast=e.yeast||'IDY';oven=e.oven;mixer=e.mixer||'spiral';maltOn=e.maltOn||false;
-    var clamp=function(sid,v){var sl=document.getElementById(sid);if(v!==undefined&&v!==null)sl.value=Math.min(parseFloat(sl.max),Math.max(parseFloat(sl.min),parseFloat(v)));};
+    mode=e.mode;flour=e.flour;yeast=e.yeast||'IDY';oven=e.oven;
+    mixer=e.mixer||'spiral';maltOn=e.maltOn||false;honeyOn=e.honeyOn||false;
+    var clamp=function(sid,v){var sl=document.getElementById(sid);if(v!==undefined&&v!==null&&sl)sl.value=Math.min(parseFloat(sl.max),Math.max(parseFloat(sl.min),parseFloat(v)));};
     clamp('countSlider',e.count);clamp('sizeSlider',e.size);clamp('hydSlider',e.hyd);
     clamp('bulkSlider',e.bulk);clamp('fTimeSlider',e.fTime);
     clamp('tempSlider',e.rT);clamp('fTempSlider',e.fT);clamp('inocSlider',e.inoc);
     clamp('bigaPctSlider',e.bigaPct);clamp('bigaHydSlider',e.bigaHyd);
     clamp('bigaRoomHSlider',e.bigaRoomH);clamp('bigaFridgeHSlider',e.bigaFridgeH);
     clamp('bigaRoomTempSlider',e.bigaRoomT);clamp('bigaFridgeTempSlider',e.bigaFridgeT);
+    clamp('poolishPctSlider',e.poolishPct);
+    clamp('poolishRoomHSlider',e.poolishRoomH);clamp('poolishFridgeHSlider',e.poolishFridgeH);
+    clamp('poolishRoomTempSlider',e.poolishRoomT);clamp('poolishFridgeTempSlider',e.poolishFridgeT);
     update();saveState();
     document.getElementById('journalPanel').classList.remove('open');
   }catch(err){}
@@ -2348,7 +2411,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.5.7 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.5.8 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
