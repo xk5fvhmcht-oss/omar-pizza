@@ -1,5 +1,5 @@
 // Omar Pizza — Service Worker v2.0
-const CACHE = 'omar-pizza-v3';
+const CACHE = 'omar-pizza-v4';
 
 const ASSETS = [
   './',

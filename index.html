@@ -385,7 +385,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.5.8 · science-verified · party edition</div>
+    <div class="version-badge">v1.6.0 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -658,7 +658,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="card">
       <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
         <span>The recipe</span>
-        <button id="formulaToggleBtn" onclick="toggleFormula()" style="font-family:var(--num-font);font-size:0.65rem;padding:3px 10px;border-radius:var(--pill-radius);border:1.5px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;letter-spacing:0.04em;transition:all 0.2s;">⚗ new physics</button>
+        <button id="formulaToggleBtn" onclick="toggleFormula()" style="font-family:var(--num-font);font-size:0.65rem;padding:3px 10px;border-radius:var(--pill-radius);border:1.5px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;letter-spacing:0.04em;transition:all 0.2s;">🍕 Naples</button>
       </div>
       <div id="recipe"></div>
       <div class="ddt-box" id="ddtBox"></div>
@@ -792,7 +792,7 @@ document.getElementById('poolishPctSlider').addEventListener('input',function(){
 
 // ─── PERSIST STATE ────────────────────────────────────────────────────────────
 function saveState(){
-  try{localStorage.setItem('omarPizzaState',JSON.stringify({mode,isAuto,flour,yeast,maltOn,honeyOn,oven,mixer,useCelsius,theme,smartSchedule,useNewFormula,
+  try{localStorage.setItem('omarPizzaState',JSON.stringify({mode,isAuto,flour,yeast,maltOn,honeyOn,oven,mixer,useCelsius,theme,smartSchedule,yeastModel,
     hyd:document.getElementById('hydSlider').value,
     count:document.getElementById('countSlider').value,
     size:document.getElementById('sizeSlider').value,
@@ -831,7 +831,8 @@ function loadState(){
     if(s.useCelsius!==undefined)useCelsius=s.useCelsius;
     if(s.theme){theme=s.theme;document.documentElement.setAttribute('data-theme',theme);}
     if(s.smartSchedule!==undefined)smartSchedule=s.smartSchedule;
-    if(s.useNewFormula!==undefined)useNewFormula=s.useNewFormula;
+    if(s.yeastModel==='yeasty'||s.yeastModel==='naples')yeastModel=s.yeastModel;
+    else yeastModel='naples';
     var clamp=(id,v)=>{var sl=document.getElementById(id);if(v)sl.value=Math.min(parseFloat(sl.max),Math.max(parseFloat(sl.min),parseFloat(v)));};
     clamp('hydSlider',s.hyd);clamp('countSlider',s.count);clamp('sizeSlider',s.size);
     clamp('bulkSlider',s.bulk);clamp('fTimeSlider',s.fTime);clamp('tempSlider',s.rT);
@@ -895,10 +896,27 @@ var ACTIVITY_OVER =9.0;
 var BLOOM_MINS=10;
 var MIXER_LIMITS={hand:{min:0,max:Infinity},ka:{min:400,max:1800},spiral:{min:1000,max:5000}};
 
-// ─── FORMULA TOGGLE ───────────────────────────────────────────────────────────
-// false = classic (K=0.35, old suppF, thresholds 1.8/9.0)
-// true  = new physics (three-model, suppF=0.518, thresholds 2.0/25.0)
+// ─── YEAST MODEL SELECTOR ─────────────────────────────────────────────────────
+// 'naples' = unified activity model (default) — anchored to Ooni 24h/75°F,
+//            validated vs Ooni room+cold, Lehmann, InnoviCat. Restrained, Naples-style.
+// 'yeasty' = legacy three-model "new physics" — recommends more yeast. Comparison only.
+var yeastModel='naples';
+// Back-compat shim: some code still reads useNewFormula for thresholds/suppression.
+// Both Naples and Yeasty use the new-physics thresholds & suppression, so this is always true.
 var useNewFormula=true;
+
+// ─── NAPLES MODEL CONSTANTS (unified activity integral) ───────────────────────
+// yeast_IDY_fraction = NAPLES_A(rT) × E^NAPLES_POWER
+//   E = bH + s_eff(fT) × fH        (effective room-equivalent hours)
+//   NAPLES_A(rT) = NAPLES_A75 × 2^((75-rT)/NAPLES_QR)
+//   s_eff(fT)    = NAPLES_SEFF × 2^((fT-39)/NAPLES_QF)
+var NAPLES_A75   = 0.00982;  // IDY fraction prefactor at 75°F (Ooni-derived)
+var NAPLES_POWER = -1.391;   // room temp power law exponent (Ooni 6-point fit)
+var NAPLES_QR    = 15.1;     // room Q10 interval °F (dough.school 3-temp fit)
+var NAPLES_SEFF  = 0.0565;   // fridge effective rate at 39°F (Ooni cold-retard fit)
+var NAPLES_QF    = 15.5;     // fridge Q10 interval °F (per-cell rate, static population)
+var NAPLES_FLOOR = 0.0001;   // min IDY fraction (lowered so 24h/75°F lands ~0.011%)
+var NAPLES_CEIL  = 0.020;    // max IDY fraction (2% — short proof ceiling)
 
 // New physics constants
 var SUPP_F_NEW    = 0.518;   // constant — Q10 handles temperature scaling
@@ -985,8 +1003,32 @@ function calcActivity(bH,rT,fH,fT,autolyseOn,inocPct,isSour,maltOn){
 }
 
 function calcPizzaYeastIDY(bH,rT,fH,fT){
-  // Three-model pizza yeast formula — new physics
-  // Calibrated to Neapolitan tradition and literature
+  if(yeastModel==='naples') return calcNaplesYeastIDY(bH,rT,fH,fT);
+  return calcYeastyYeastIDY(bH,rT,fH,fT);
+}
+
+function calcNaplesYeastIDY(bH,rT,fH,fT){
+  // Unified activity model — one curve, room + fridge, no rapid/slow branch.
+  // Anchored to Ooni 24h/75°F = Naples standard. Validated vs Ooni, Lehmann, InnoviCat.
+  var s_eff=NAPLES_SEFF*Math.pow(2,(fT-39)/NAPLES_QF);   // fridge contribution per hour
+  var E=bH+s_eff*Math.max(0,fH);                          // effective room-equiv hours
+  var A=NAPLES_A75*Math.pow(2,(75-rT)/NAPLES_QR);         // room temp scaling
+  // Linear ramp below 4h effective: power law explodes at short E, so grade
+  // smoothly from the 4h anchor up to the 2% ceiling at E=1h. Keeps short
+  // same-day bakes sane without a flat clamp.
+  var y;
+  if(E<4.0&&fH<=0){
+    var anchor4=Math.min(NAPLES_CEIL,Math.max(NAPLES_FLOOR,A*Math.pow(4.0,NAPLES_POWER)));
+    if(E<=1.0){y=NAPLES_CEIL;}
+    else{var t0=(E-1.0)/3.0;y=NAPLES_CEIL+t0*(anchor4-NAPLES_CEIL);}
+  } else {
+    y=A*Math.pow(Math.max(0.5,E),NAPLES_POWER);
+  }
+  return Math.min(NAPLES_CEIL,Math.max(NAPLES_FLOOR,y));
+}
+
+function calcYeastyYeastIDY(bH,rT,fH,fT){
+  // Legacy three-model "new physics" — preserved as comparison toggle.
   // Model 3: Cold retard (Lehmann, no retardPenalty)
   if(fH>0){
     var act=calcActivity(bH,rT,fH,fT,false,0,false,false);
@@ -997,8 +1039,7 @@ function calcPizzaYeastIDY(bH,rT,fH,fT){
   var A=10.0*Math.pow(2,(77-rT)/15.5);
   var power=-1.676-0.006*(rT-77);
   var y1=A*Math.pow(Math.max(0.5,bH),power)/100;
-  // Fix 1: linear ramp below 4h — smooth progression from 2% ceiling at 1h
-  // to the confident 4h anchor rather than a flat clamp
+  // Fix 1: linear ramp below 4h
   if(bH<4.0){
     var anchor4h=Math.min(0.020,Math.max(0.0002,y1));
     if(bH<=1.0) return 0.020;
@@ -1009,7 +1050,7 @@ function calcPizzaYeastIDY(bH,rT,fH,fT){
   var q10r=Math.pow(2,(rT-T_NEO_REF)/18);
   var t_eff=bH*q10r;
   var y2=Y_NEO_REF*Math.pow(T_NEO_EFF/Math.max(0.1,t_eff),0.5);
-  // Fix 2: extended sigmoid blend 5-12h (was 5-8h) — eliminates cliff at 6-8h
+  // Fix 2: extended sigmoid blend 5-12h
   if(bH<=BLEND_START) return Math.min(0.020,Math.max(0.0002,y1));
   if(bH>=BLEND_END)   return Math.min(0.020,Math.max(0.0002,y2));
   var t=(bH-BLEND_START)/(BLEND_END-BLEND_START);
@@ -1154,20 +1195,24 @@ function toggleCelsius(){useCelsius=!useCelsius;update();saveState();}
 
 // ─── SMART SCHEDULE ───────────────────────────────────────────────────────────
 function toggleFormula(){
-  useNewFormula=!useNewFormula;
+  yeastModel=(yeastModel==='naples')?'yeasty':'naples';
+  updateFormulaBtn();
+  update();saveState();
+}
+function updateFormulaBtn(){
   var btn=document.getElementById('formulaToggleBtn');
-  if(useNewFormula){
+  if(!btn)return;
+  if(yeastModel==='naples'){
     btn.style.background='var(--accent)';
     btn.style.borderColor='var(--accent)';
     btn.style.color='#fff';
-    btn.textContent='⚗ new physics';
+    btn.textContent='🍕 Naples';
   } else {
     btn.style.background='transparent';
     btn.style.borderColor='var(--ink3)';
     btn.style.color='var(--ink3)';
-    btn.textContent='⚗ classic';
+    btn.textContent='🍞 Yeasty';
   }
-  update();saveState();
 }
 
 
@@ -1506,20 +1551,7 @@ function _update(){
   document.getElementById('headerSub').textContent=smartSchedule?'I planned your whole pizza weekend.':'I thought carefully about every gram.';
 
   // Formula toggle button state
-  var formulaBtn=document.getElementById('formulaToggleBtn');
-  if(formulaBtn){
-    if(useNewFormula){
-      formulaBtn.style.background='var(--accent)';
-      formulaBtn.style.borderColor='var(--accent)';
-      formulaBtn.style.color='#fff';
-      formulaBtn.textContent='⚗ new physics';
-    } else {
-      formulaBtn.style.background='transparent';
-      formulaBtn.style.borderColor='var(--ink3)';
-      formulaBtn.style.color='var(--ink3)';
-      formulaBtn.textContent='⚗ classic';
-    }
-  }
+  updateFormulaBtn();
 
   // Button states
   ['Rapid','Slow','Sour','Biga','Poolish'].forEach(function(m){document.getElementById('mode'+m).classList.toggle('on',mode===m.toLowerCase());});
@@ -1874,20 +1906,10 @@ function _update(){
     var saltG=fb*RECIPE.salt;
     var reservedW=fW*0.10;
 
-    // Yeast calc — toggle between new physics and classic formula
-    var yG,yConv;
-    if(useNewFormula){
-      var yIDY=calcPizzaYeastIDY(bH,rT,fH,fT);
-      yG=fb*yIDY;
-      yConv=yeastConvert(yG,yeast);
-    } else {
-      var refActivity=3.6;
-      var basePct=(0.35/100)*(refActivity/Math.max(0.01,activity));
-      var retardPenalty=fH>0?Math.max(0.15,1/Math.sqrt(1+fH/12)):1;
-      var yPctIDY=Math.min(0.02,Math.max(0.0005,basePct*retardPenalty))*0.75;
-      yG=fb*yPctIDY;
-      yConv=yeastConvert(yG,yeast);
-    }
+    // Yeast calc — routes through calcPizzaYeastIDY (Naples or Yeasty model)
+    var yIDY=calcPizzaYeastIDY(bH,rT,fH,fT);
+    var yG=fb*yIDY;
+    var yConv=yeastConvert(yG,yeast);
     var bloomNote=yeast==='ADY'?' · lower end when blooming · upper end when adding dry':'';
     if(needsBloom){
       html+=ingRowRange('🌿',yeastLabel(yeast),Math.max(0.1,yConv-0.1),yConv+0.1);
@@ -2114,7 +2136,7 @@ function saveBake(){
   var snap={
     id:Date.now(),date:new Date().toLocaleString(),
     mode:mode,flour:flour,yeast:yeast,oven:oven,mixer:mixer,
-    maltOn:maltOn,honeyOn:honeyOn,useNewFormula:useNewFormula,
+    maltOn:maltOn,honeyOn:honeyOn,yeastModel:yeastModel,
     // Core sliders
     count:getSlider('countSlider'),size:getSlider('sizeSlider'),
     hyd:getSlider('hydSlider'),bulk:getSlider('bulkSlider'),
@@ -2411,7 +2433,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.5.8 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.6.0 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
