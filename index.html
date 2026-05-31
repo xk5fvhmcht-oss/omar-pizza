@@ -379,13 +379,16 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
       <div class="toggle-icon"></div>
       <span id="themeLabel">PROFESSIONAL MODE</span>
     </button>
+    <button class="theme-toggle" onclick="toggleWakeLock()" id="wakeBtn" title="keep screen awake while baking">
+      <span id="wakeLabel">☾ screen sleeps</span>
+    </button>
   </div>
 
   <header class="header">
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.6.0 · science-verified · party edition</div>
+    <div class="version-badge">v1.6.1 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -1192,6 +1195,47 @@ function toggleAuto(){
 function toggleMalt(){maltOn=!maltOn;update();saveState();}
 function setQuick(v){document.getElementById('sizeSlider').value=v;update();saveState();}
 function toggleCelsius(){useCelsius=!useCelsius;update();saveState();}
+
+// ─── SCREEN WAKE LOCK ─────────────────────────────────────────────────────────
+// Keeps the screen on while following steps with floury hands.
+var wakeLock=null;
+var wakeWanted=false;
+async function requestWakeLock(){
+  if(!('wakeLock' in navigator))return false;
+  try{
+    wakeLock=await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release',function(){
+      // If the OS released it (e.g. tab hidden) but the baker still wants it,
+      // re-acquire when the page becomes visible again.
+    });
+    return true;
+  }catch(e){return false;}
+}
+async function toggleWakeLock(){
+  var label=document.getElementById('wakeLabel');
+  if(!('wakeLock' in navigator)){
+    if(label)label.textContent='✕ not supported';
+    setTimeout(function(){if(label&&!wakeWanted)label.textContent='☾ screen sleeps';},2000);
+    return;
+  }
+  if(wakeWanted){
+    wakeWanted=false;
+    if(wakeLock){try{await wakeLock.release();}catch(e){}wakeLock=null;}
+    if(label)label.textContent='☾ screen sleeps';
+  } else {
+    var ok=await requestWakeLock();
+    if(ok){wakeWanted=true;if(label)label.textContent='☀ staying awake';}
+    else{if(label)label.textContent='✕ unavailable';setTimeout(function(){if(label)label.textContent='☾ screen sleeps';},2000);}
+  }
+}
+// Re-acquire the lock when returning to the app if the baker wants it staying awake
+document.addEventListener('visibilitychange',async function(){
+  if(wakeWanted&&document.visibilityState==='visible'&&wakeLock===null){
+    var ok=await requestWakeLock();
+    var label=document.getElementById('wakeLabel');
+    if(ok&&label)label.textContent='☀ staying awake';
+  }
+});
 
 // ─── SMART SCHEDULE ───────────────────────────────────────────────────────────
 function toggleFormula(){
@@ -2433,7 +2477,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.6.0 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.6.1 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
