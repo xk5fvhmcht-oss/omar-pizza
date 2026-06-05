@@ -388,7 +388,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.6.1 · science-verified · party edition</div>
+    <div class="version-badge">v1.6.2 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -683,14 +683,19 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
       </div>
       <ul class="timeline" id="schedule"></ul>
       <div class="wisdom" id="wisdom"></div>
-      <button class="journal-btn" onclick="toggleJournal()">✦ save this bake to journal</button>
-      <div class="journal-panel" id="journalPanel">
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="journal-btn" onclick="toggleSavePanel()" id="saveTile" style="margin-top:0;">✦ save this bake</button>
+        <button class="journal-btn" onclick="toggleJournalPanel()" id="journalTile" style="margin-top:0;position:relative;">📖 journal<span id="journalBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:var(--accent);color:#fff;font-family:var(--num-font);font-size:0.62rem;min-width:18px;height:18px;line-height:18px;border-radius:9px;padding:0 5px;text-align:center;"></span></button>
+      </div>
+      <div class="journal-panel" id="savePanel">
         <textarea id="journalNotes" placeholder="notes — what worked, what didn't, how it tasted, how the cornicione looked..."></textarea>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <button class="journal-save-btn" onclick="saveBake()">save bake</button>
+        <button class="journal-save-btn" onclick="saveBake()">save bake</button>
+      </div>
+      <div class="journal-panel" id="journalPanel">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
           <button class="journal-save-btn" onclick="exportJournal()" style="background:transparent;border:1.5px solid var(--accent);color:var(--accent);">↑ export all</button>
         </div>
-        <div id="journalExportOverlay" style="display:none;margin-top:10px;"></div>
+        <div id="journalExportOverlay" style="display:none;margin-bottom:10px;"></div>
         <div class="journal-entries" id="journalEntries"></div>
       </div>
   </div>
@@ -2169,7 +2174,27 @@ function checkDoughTemp(){
 }
 
 // ─── JOURNAL ──────────────────────────────────────────────────────────────────
-function toggleJournal(){document.getElementById('journalPanel').classList.toggle('open');renderJournal();}
+function journalCount(){
+  try{return JSON.parse(localStorage.getItem('omarPizzaJournal')||'[]').length;}catch(e){return 0;}
+}
+function updateJournalBadge(){
+  var badge=document.getElementById('journalBadge');
+  if(!badge)return;
+  var n=journalCount();
+  if(n>0){badge.style.display='block';badge.textContent=n;}
+  else{badge.style.display='none';}
+}
+function toggleSavePanel(){
+  var sp=document.getElementById('savePanel');
+  document.getElementById('journalPanel').classList.remove('open');
+  sp.classList.toggle('open');
+}
+function toggleJournalPanel(){
+  var jp=document.getElementById('journalPanel');
+  document.getElementById('savePanel').classList.remove('open');
+  jp.classList.toggle('open');
+  if(jp.classList.contains('open'))renderJournal();
+}
 function saveBake(){
   var notes=document.getElementById('journalNotes').value.trim();
   // Collect all slider display labels
@@ -2222,6 +2247,10 @@ function saveBake(){
     if(entries.length>20)entries.pop();
     localStorage.setItem('omarPizzaJournal',JSON.stringify(entries));
     document.getElementById('journalNotes').value='';
+    updateJournalBadge();
+    // After saving, switch from the save panel to the journal view
+    document.getElementById('savePanel').classList.remove('open');
+    document.getElementById('journalPanel').classList.add('open');
     renderJournal();
   }catch(e){}
 }
@@ -2354,7 +2383,7 @@ function loadBake(id){
     clamp('poolishRoomHSlider',e.poolishRoomH);clamp('poolishFridgeHSlider',e.poolishFridgeH);
     clamp('poolishRoomTempSlider',e.poolishRoomT);clamp('poolishFridgeTempSlider',e.poolishFridgeT);
     update();saveState();
-    document.getElementById('journalPanel').classList.remove('open');
+    document.getElementById('journalPanel').classList.remove('open');document.getElementById('savePanel').classList.remove('open');
   }catch(err){}
 }
 function deleteEntry(id){
@@ -2362,6 +2391,7 @@ function deleteEntry(id){
     var entries=JSON.parse(localStorage.getItem('omarPizzaJournal')||'[]');
     localStorage.setItem('omarPizzaJournal',JSON.stringify(entries.filter(function(x){return x.id!==id;})));
     renderJournal();
+    updateJournalBadge();
   }catch(e){}
 }
 
@@ -2477,7 +2507,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.6.1 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.6.2 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
@@ -2523,6 +2553,7 @@ loadState();
 updateThemeText();
 update();
 renderJournal();
+updateJournalBadge();
 </script>
 </body>
 </html>
