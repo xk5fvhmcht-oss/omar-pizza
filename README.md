@@ -2,127 +2,125 @@
 
 **Live app:** https://xk5fvhmcht-oss.github.io/omar-pizza/
 
-A science-grounded Neapolitan pizza dough calculator. Built as a Progressive Web App — install it on your iPhone home screen and it works offline.
+A physics- and biology-grounded Neapolitan pizza dough calculator. Built as a Progressive Web App — install it on your iPhone home screen and it works offline.
+
+The app has one job: tell you how much yeast to use and how to time your ferment so a dough ball arrives ready to stretch and bake — whether that's 4 hours from now or 72. Every recommendation is anchored to published reference data or real bakes, never guessed.
 
 ## Fermentation Modes
 
-**Five modes**, each with its own calibrated yeast formula:
+Five modes. Direct dough (Rapid/Slow) runs on one unified model; the two preferments and sourdough each answer their own question.
 
-- **⚡ Rapid** — same-day, 1–8 hours room temp. Power law anchored to dough.school reference table. Linear ramp below 4h smooths the transition to the 2% ceiling for very short proofs.
-- **🌙 Slow** — overnight room temp or cold retard. Neapolitan partial-rise model (Naples tradition: 8–24h room temp, 24–72h cold retard). Lehmann method for cold fermentation, validated against PizzaBlab and InnoviCat reference data.
-- **🍋 Sourdough** — inoculation-based model with ripeness guidance.
-- **🍕 Biga** — stiff pre-ferment (44–60% hydration). Calibrated against the Giorilli standard (0.33% IDY at 18h/64°F, C=157). Supports room temp, cold retard, and hybrid workflows. Optional diastatic malt toggle (0.5% flour, ×1.18 activity).
-- **🌊 Poolish** — liquid pre-ferment (always 100% hydration). Two-model architecture: power law for room temp (POOLISH_A_REF anchored to median of 5 independent sources), inverse formula for cold poolish. Optional honey toggle (2% poolish flour, ×1.15 activity).
+- **⚡ Rapid / 🌙 Slow** — two doors into one room. Both run the **Naples model** (below). Rapid is framed for same-day, Slow for overnight/cold-retard, but the math is identical and continuous — a Slow dough with the fridge zeroed gives exactly what Rapid would.
+- **🍋 Sourdough** — inoculation-based, with ripeness and timing guidance.
+- **🍕 Biga** — stiff pre-ferment (44–60% hydration). Preferment yeast calibrated to the Giorilli standard (0.33% IDY at 18h/64°F). Final-dough yeast uses the coverage model (below).
+- **🌊 Poolish** — liquid pre-ferment (100% hydration). Preferment yeast anchored to the median of five published sources. Final-dough yeast uses the coverage model, tuned so a normal poolish needs none.
 
-## Science Foundation
+## The Naples Model (direct dough)
 
-Yeast recommendations are calculated from validated formulas, not lookup tables:
+The core of the app. One activity-integral model, anchored to **24h at 75°F = the Naples standard** and validated against the Ooni calculator, the Lehmann cold-retard method, and InnoviCat/AVPN data.
 
-**Rapid model (bH ≥ 4h):**
 ```
-y = A(rT) × bH^(-1.676) / 100
-A(rT) = 10.0 × 2^((77-rT)/15.5)
-```
-Calibrated against dough.school reference table (4–24h, three temperatures). Below 4h a linear ramp grades smoothly from the 4h anchor to the 2% ceiling at 1h.
-
-**Slow model (Neapolitan partial rise):**
-```
-y = 0.0006 × (8.5 / t_eff)^0.5
-t_eff = bH × Q10(rT)
-```
-Blend zone 5–12h (sigmoid) transitions from rapid to slow without a cliff.
-
-**Cold retard (Lehmann method):**
-```
-y = (K/100) × (3.6 / activity) × 0.75
-activity = bH × Q10r × 0.90 + fH × suppF × Q10f
-suppF = 0.518 (validated: 1h RT @ 72°F ≈ 6.2h fridge @ 39°F)
-K = 0.217
-```
-Validated against 9 Lehmann/PizzaBlab scenarios and InnoviCat multipliers (AVPN + Dough School source).
-
-**Biga model:**
-```
-y = BIGA_TARGET / (C × bH × Q10r × hydF + fH × suppF_biga × Q10f × hydF)
-C = 157, BIGA_TARGET = 3.5
-```
-Giorilli-validated. Separate hydration factor (hydF) and fridge suppression.
-
-**Poolish model (room temp):**
-```
-y = A(rT) × bH^(-1.872) / 100
-A(rT) = 13.9 × 2^((72-rT)/18)
-```
-Inverted Q10 (cooler = more yeast). A_REF anchored to median of biancolievito, Weekend Bakery (summer + winter), Fresh Loaf real bake, and mypizzacorner.
-
-**Poolish model (cold):**
-```
-y = 6.7 / (1595 × (bH × Q10r + fH × 0.250 × Q10f))
+yeast_IDY% = A(rT) × E^(-1.391)
+E          = bH + s_eff(fT) × fH          (effective room-equivalent hours)
+A(rT)      = 0.00982 × 2^((75 − rT) / 15.1)
+s_eff(fT)  = 0.0565  × 2^((fT − 39) / 15.5)
 ```
 
-## Formula Toggle
+**The biology it encodes:** at room temperature the yeast population compounds (it reproduces as it ferments), which is why long ferments need so little yeast — the steep power-law exponent captures this. In the fridge the population is near-static (reproduction nearly stops below ~40°F), so each fridge hour contributes only ~0.057 of a room-temperature hour. That single effective-rate figure absorbs the cooldown transient, so we don't over-model a fridge whose temperature isn't even constant.
 
-Switch between **⚗ new physics** (default, all formulas above) and **⚗ classic** (legacy linear model) to compare recommendations. Classic kept for reference; new physics is the validated default.
+Below 4 hours (room only) a linear ramp grades smoothly from the 4h anchor up to a 2% ceiling at 1h, so very short same-day bakes stay sane.
+
+### Naples vs Yeasty toggle
+
+- **🍕 Naples** (default) — the unified model above. Restrained, Naples-style, leans slightly under.
+- **🍞 Yeasty** — the previous three-model "new physics" build, kept as a comparison. Tends to recommend a bit more yeast. Useful for side-by-side testing.
+
+The old "classic" linear model has been retired (it over-recommended). In practice Naples and Yeasty agree across most everyday scenarios; they diverge only at the extremes.
+
+## Cold Retard
+
+Handled inside the Naples model via the `s_eff(fT) × fH` term — no separate formula. Validated against Lehmann/PizzaBlab (6/6) and InnoviCat multipliers (AVPN + Dough School source). Warmer-fridge sensitivity is real: at 43°F+ the app warns the fridge is fermenting significantly.
+
+## Preferment Final-Dough Yeast
+
+After a biga or poolish is mixed into the final dough, the mature preferment already carries much of the leavening. The remaining fresh flour needs a top-up — and that top-up responds to the final schedule and the preferment percentage:
+
+```
+finalIDY = freshFlour × Naples(finalSchedule) × (1 − coverage)
+coverage = ANCHOR × (pct / (1 − pct)),  capped at 1.0
+```
+
+- **Biga** ANCHOR = 0.834 — anchored to a real bake (1.5g ADY at 2h room/75°F, 50% biga). Coverage reaches 100% (zero added yeast) around 70% biga.
+- **Poolish** ANCHOR = 2.333 — a wet poolish is a stronger, less-exhausted leavener, so coverage reaches 100% around 30% poolish. A normal poolish (20–40%) needs **no added yeast** — it is the leavening — which matches published practice. Only a small poolish with a short finish gets a small optional boost.
+
+Zero means zero (no artificial floor), and the final-dough yeast is shown at 0.01g resolution.
+
+## Over-Ferment Nudge
+
+A gentle, time-and-temperature-aware note — never a verdict, never a collapse time. It appears when:
+
+- **Direct dough:** the model wants *less* yeast than is practical to weigh (below ~0.1g) — meaning the schedule has run long/warm past ready.
+- **Preferment:** the schedule delivers more than ~2 room-hours-at-75°F of activity *past* the point where the preferment alone fully leavens.
+
+Both triggers scale with temperature from the activity math — a cooler kitchen gets more grace, a hotter one triggers sooner. The line reads: *"🌙 may ferment past its peak at this time & temperature — for more control, try a cooler spot, a shorter proof, or mixing later."*
 
 ## Other Features
 
-- **Desired Dough Temperature** — 3-factor DDT water temperature for all modes
-- **Fermentation potential meter** — visual activity gauge with zone warnings (under/ideal/high/excessive)
-- **Smart Schedule (Party Mode)** — weekend-only calendar strip. Set your bake time, the app works backwards to set all fermentation windows. Supports Slow, Sourdough, Biga, and Poolish modes. Manual override exits the schedule.
-- **Newtonian cooling model** — calculates temper time to pull dough balls from fridge before baking
-- **Autolyse toggle** — 30-minute rest step for KitchenAid and spiral mixer workflows
-- **Bake journal** — save notes from each bake, reload settings, export all entries to clipboard (iOS fallback: selectable overlay for copy to Notes)
-- **Two themes** — Artisan and Professional
-- **PWA** — works offline, installable on iOS via Safari share sheet
+- **Desired Dough Temperature** — 3-factor DDT water temperature for all modes.
+- **Fermentation potential meter** — visual activity gauge with zone warnings (independent of which yeast model is active).
+- **Smart Schedule** — set your bake time and the app works backward to schedule every fermentation window. Supports Slow, Sourdough, Biga, and Poolish.
+- **Newtonian cooling model** — calculates temper time to pull cold balls before baking.
+- **Keep-awake toggle** — holds the screen on while you bake with floury hands (Screen Wake Lock API, session-only, re-acquires on return).
+- **Bake journal** — two side-by-side tiles (save / journal) with a live entry-count badge. Captures full params, mode-specific ferment detail, and a recipe snapshot; reload any bake's settings; export all entries to clipboard (iOS fallback: selectable overlay).
+- **Autolyse toggle** — 30-minute rest step for KitchenAid and spiral workflows.
+- **Two themes** — Artisan and Professional.
+- **PWA** — network-first service worker (always fetches the latest when online, falls back to cache offline). Installable on iOS via Safari share sheet.
 
 ## Ingredients
 
-Pure Neapolitan. Four ingredients only:
+Pure Neapolitan. Four ingredients:
 
-- Tipo 00 flour (or bread flour for Rapid/Slow)
+- Tipo 00 flour (or bread flour for direct dough)
 - Water
-- Sea salt — 2.8% (AVPN range: 2.5–3%)
-- Yeast — fresh, active dry, or instant (all three selectable in every mode)
+- Sea salt — 2.8% (AVPN range 2.5–3%)
+- Yeast — instant, active dry, or fresh (ADY = IDY × 1.33, Fresh = IDY × 3.0)
+
+Optional: diastatic malt (biga), honey (poolish).
 
 ## Dough Balls
 
-- Range: 220–300g in 5g steps
-- Quick pills: 230g (thin) / 250g (classic, AVPN standard) / 270g (generous)
-- Default: 6 balls at 250g
+- Range 220–300g in 5g steps
+- Pills: 230g (thin) / 250g (classic, AVPN standard) / 270g (generous)
+- Default: 6 × 250g
 
-## Ovens
+## Ovens & Mixers
 
-- Home steel at 550°F (standard home oven)
-- Gozney Dome at 700–900°F (wood-fired / gas outdoor oven)
-
-## Mixers
-
-- Hand mix (default for sourdough)
-- KitchenAid
-- Ooni Halo Pro spiral (default for yeasted modes)
+- **Ovens:** home steel ~550°F · Gozney Dome 700–900°F
+- **Mixers:** hand · KitchenAid · Ooni Halo Pro spiral
 
 ## Validation Summary
 
-| Model | Tests | Passing | Key anchors |
-|-------|-------|---------|-------------|
-| Rapid | 8 | 7/8 | dough.school 4h/77°F = 1.0% ✓ |
-| Slow RT | 9 | 9/9 | Naples tradition, mypizzacorner ✓ |
-| Cold retard | 9 | 9/9 | Lehmann/PizzaBlab, InnoviCat ✓ |
-| Biga | 4 | 4/4 | Giorilli 0.33% at 18h/64°F ✓ |
-| Poolish RT | 7 | 7/8 | Median of 5 sources ✓ |
-| Poolish cold | 4 | 4/4 | Weekend Bakery, Salt Butter Smoke ✓ |
-| Fermentation potential | 9 | 9/9 | AVPN thresholds ✓ |
+| Source | Result |
+|--------|--------|
+| Ooni room temp (the anchor) | 6/6 ✓ |
+| Ooni cold retard | 4/4 ✓ |
+| Lehmann / InnoviCat cold | 6/6 ✓ |
+| Biga (Giorilli + real bake) | anchored ✓ |
+| Poolish (5 published sources) | anchored ✓ |
+| Physics directions (time, temp, fridge) | all monotonic ✓ |
+
+dough.school was deliberately set aside as the lone outlier — it targets a fuller, yeastier rise and stood alone against Ooni, Lehmann, InnoviCat, and AVPN. Anchoring to Ooni/Naples resolved a long-standing calibration drift.
 
 ## Install on iPhone
 
 1. Open in Safari
-2. Tap the Share button
+2. Tap Share
 3. Tap "Add to Home Screen"
 4. Works offline after first load
 
 ## Version
 
-Current: v1.5.6
+Current: v1.6.6 · service worker cache v10
 
 ## License
 

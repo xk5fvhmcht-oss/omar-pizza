@@ -388,7 +388,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.6.2 · science-verified · party edition</div>
+    <div class="version-badge">v1.6.6 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -940,6 +940,12 @@ var ACT_OVER_NEW  = 25.0;    // pizza-specific over threshold
 // Biga calibration — C=157, validated against Giorilli standard (0.33% IDY at 18h/64°F → within 6%)
 var BIGA_C=157;
 var BIGA_TARGET=3.5;
+// Biga final-dough yeast — Option 2 model. The mature biga covers part of the
+// fresh flour's leavening need; the remainder is added yeast.
+//   finalIDY = freshFlour × NaplesNeed(finalSchedule) × (1 − coverage)
+//   coverage = BIGA_FINAL_COV50 × (bigaPct / (1 − bigaPct)), capped at 1.0
+// Anchored to a real bake: 1.5g ADY (=1.128g IDY) at 2h room/75°F, 50% biga → coverage 83.4%.
+var BIGA_FINAL_COV50 = 0.834;   // biga's coverage of fresh-flour need at 50% biga
 
 // ─── POOLISH CONSTANTS ────────────────────────────────────────────────────────
 var POOLISH_A_REF  = 13.9;    // power law prefactor at 72°F — anchored to median of 5 clean sources (0.133% at 12h/72°F)
@@ -947,6 +953,11 @@ var POOLISH_POWER  = -1.872;  // power law exponent
 var POOLISH_TARGET = 6.7;     // target activity (doubled volume)
 var POOLISH_C      = 1595;    // calibration constant
 var POOLISH_SUPP_F = 0.250;   // fridge suppression for poolish
+// Poolish final-dough yeast — same Option 2 model as biga, but poolish is a wet,
+// less-exhausting preferment so it leavens more strongly: coverage hits 100% at ~30%
+// poolish (vs 70% for biga). Anchored to published practice — a normal poolish
+// (20–40%) needs zero added yeast; only a small poolish with a short finish needs a boost.
+var POOLISH_FINAL_COV = 2.333; // coverage = this × (pct/(1−pct)); =1.0 at 30% poolish
 var HONEY_BOOST    = 1.15;    // activity multiplier (needs bake validation)
 var HONEY_PCT      = 0.02;    // 2% of poolish flour, fixed
 
@@ -996,6 +1007,60 @@ function calcBigaYeastIDY(bigaFlourG,bigaRoomH,bigaFridgeH,bigaRoomT,bigaFridgeT
   if(denom<=0)return bigaFlourG*0.003;
   var yPct=Math.min(0.005,Math.max(0.0003,BIGA_TARGET/denom));
   return bigaFlourG*yPct;
+}
+
+function calcBigaFinalIDY(freshFlourG,bigaPct,bH,rT,fH,fT){
+  // Final-dough yeast for a biga build (Option 2 model).
+  // The fresh, unfermented flour needs leavening on the final schedule (Naples);
+  // the mature biga covers a share of it (coverage), the rest is added yeast.
+  if(bigaPct>=1.0) return 0;                     // no fresh flour → no added yeast
+  var coverage=BIGA_FINAL_COV50*(bigaPct/(1-bigaPct));
+  if(coverage>=1.0) return 0;                    // biga fully covers the small fresh fraction
+  var need=calcNaplesYeastIDY(bH,rT,fH,fT)*freshFlourG;  // fresh flour's leavening need
+  var add=need*(1-coverage);
+  return add;  // no floor — if it's zero, it's zero
+}
+
+function calcPoolishFinalIDY(freshFlourG,poolishPct,bH,rT,fH,fT){
+  // Final-dough yeast for a poolish build — same model as biga, poolish-specific coverage.
+  // A wet poolish leavens strongly, so coverage reaches 100% at ~30% poolish: a normal
+  // poolish needs zero added yeast (it IS the leavening). Only a small poolish with a
+  // short final schedule asks for a small optional boost to finish in time.
+  if(poolishPct>=1.0) return 0;
+  var coverage=POOLISH_FINAL_COV*(poolishPct/(1-poolishPct));
+  if(coverage>=1.0) return 0;                    // poolish fully leavens — no added yeast
+  var need=calcNaplesYeastIDY(bH,rT,fH,fT)*freshFlourG;
+  var add=need*(1-coverage);
+  return add;
+}
+
+// ─── OVER-FERMENT NUDGE ───────────────────────────────────────────────────────
+// Gentle, time-and-temperature-aware. Two grounded signals, never claims a collapse time.
+//   Direct dough: the model wants LESS yeast than is practical to weigh (below floor)
+//     → the schedule has run long/warm past ready.
+//   Preferment: the schedule delivers meaningful activity PAST the coverage-zero point
+//     (preferment alone fully leavens, then keeps going) → drifting past peak.
+var OVERFERMENT_FLOOR_G = 0.1;      // smallest practical yeast weight (IDY-equiv)
+var OVERFERMENT_GRACE   = 2.0;      // grace = 2 room-hours @75°F of activity past zero-crossing
+function actRate(rT){ return Math.pow(2,(rT-75)/NAPLES_QR); }  // activity rate vs 75°F
+
+function directOverFerment(bH,rT,fH,fT,flourG){
+  // True if the computed yeast falls below the practical floor (model wants less than weighable)
+  var idy=calcNaplesYeastIDY(bH,rT,fH,fT);
+  return (idy*flourG) < OVERFERMENT_FLOOR_G;
+}
+function prefermentExcessActivity(coverageRatio, bH, rT, fH, fT){
+  // How much activity (in 75°F-room-hours) the final schedule delivers PAST the point
+  // where the preferment alone fully leavens. coverageRatio>=1 means we're past zero-crossing.
+  if(coverageRatio < 1.0) return 0;            // still needs added yeast — not over-fermenting
+  var s_eff=NAPLES_SEFF*Math.pow(2,(fT-39)/NAPLES_QF);
+  var E=bH+s_eff*Math.max(0,fH);               // effective hours of the final schedule
+  // Activity beyond a baseline "ready" finish. We treat the excess simply as E's activity
+  // scaled by how far past full coverage we are — but the dominant signal is just time/temp.
+  return E*actRate(rT) - OVERFERMENT_GRACE;    // >0 means past the grace window
+}
+function overFermentLine(){
+  return '<div class="recipe-item" style="border:none;padding-top:6px;"><span class="ing-name" style="font-family:var(--num-font);font-size:0.72rem;color:var(--ink3);font-style:italic;font-weight:400;">🌙 may ferment past its peak at this time &amp; temperature — for more control, try a cooler spot, a shorter proof, or mixing later</span></div>';
 }
 
 function calcActivity(bH,rT,fH,fT,autolyseOn,inocPct,isSour,maltOn){
@@ -1870,8 +1935,9 @@ function _update(){
     var bigaIDY=calcBigaYeastIDY(bigaFlour,bigaRoomH,bigaFridgeH,bigaRoomT,bigaFridgeT,bigaHyd);
     var bigaYeastG=yeastConvert(bigaIDY,yeast);
 
-    // Final dough yeast — small boost (15% of biga yeast amount, minimum 0.1g)
-    var finalIDY=Math.max(0.1/yeastConvert(1,yeast),bigaIDY*0.15);
+    // Final dough yeast — Option 2 model: biga covers part of the fresh flour's
+    // leavening need on the final schedule; the rest is added yeast (IDY).
+    var finalIDY=calcBigaFinalIDY(finalFlour,bigaPct,bH,rT,fH,fT);
     var finalYeastG=yeastConvert(finalIDY,yeast);
 
     html+=sectionTitle('🍕 biga');
@@ -1884,8 +1950,16 @@ function _update(){
     html+=ingRow('🌾','Tipo 00 flour',finalFlour);
     html+=ingRow('💧','water (final dough)',finalWater,'','reserve ~'+Math.round(reservedWater)+'g for dissolving salt');
     html+=ingRow('🧂','sea salt',saltG,'','sprinkle over dough · follow with reserved water');
-    html+=ingRowRange('🌿',yeastLabel(yeast)+' (final dough)',Math.max(0.1,finalYeastG-0.1),finalYeastG+0.1);
+    if(finalIDY<=0){
+      html+=`<div class="recipe-item"><span class="ing-name"><span class="ing-emoji">🌿</span>${yeastLabel(yeast)} (final dough)<span style="font-family:var(--num-font);font-size:0.7rem;color:var(--ink3);font-style:normal;margin-left:4px;">biga carries the leavening at this ratio</span></span><span class="ing-weight">none</span></div>`;
+    } else {
+      var fLo=Math.max(0.01,finalYeastG-0.05);
+      var fHi=finalYeastG+0.05;
+      html+=`<div class="recipe-item"><span class="ing-name"><span class="ing-emoji">🌿</span>${yeastLabel(yeast)} (final dough)</span><span class="ing-weight">${fLo.toFixed(2)}–${fHi.toFixed(2)} g</span></div>`;
+    }
     if(maltOn)html+=ingRow('🌾','diastatic malt',maltG,1,'mix into flour before adding');
+    var bigaCovRatio=(bigaPct>=1.0)?2:BIGA_FINAL_COV50*(bigaPct/(1-bigaPct));
+    if(finalIDY<=0 && prefermentExcessActivity(bigaCovRatio,bH,rT,fH,fT)>0) html+=overFermentLine();
 
   } else if(isPoolish){
     // ── POOLISH RECIPE ──
@@ -1926,14 +2000,19 @@ function _update(){
     html+=ingRow('💧','water (final dough)',finalWaterP,'','reserve ~'+Math.round(reservedWaterP)+'g for dissolving salt');
     html+=ingRow('🧂','sea salt',saltGP,'','dissolve in reserved water · add after incorporating poolish');
 
-    // Small yeast boost for short same-day bulk (no fridge, bulk < 6h)
-    // Poolish alone may not fully leaven remaining flour in short bulk
-    if(fH===0&&bH<6){
-      var finalPoolishIDY=Math.max(0.0001,poolishIDY*0.10);
-      var finalPoolishYeastG=yeastConvert(finalFlourP*finalPoolishIDY,yeast);
-      finalPoolishYeastG=Math.max(0.1,finalPoolishYeastG);
-      html+=ingRow('🌿',yeastLabel(yeast)+' (final dough)',finalPoolishYeastG,2,'small boost · poolish alone is slow for short bulk');
+    // Final dough yeast — Option 2 model (same as biga, poolish-specific coverage).
+    // Poolish normally leavens fully (zero added); only small poolish + short finish adds a boost.
+    var finalPoolishIDY=calcPoolishFinalIDY(finalFlourP,poolishPct,bH,rT,fH,fT);
+    if(finalPoolishIDY>0){
+      var finalPoolishYeastG=yeastConvert(finalPoolishIDY,yeast);
+      var pLo=Math.max(0.01,finalPoolishYeastG-0.05);
+      var pHi=finalPoolishYeastG+0.05;
+      html+=`<div class="recipe-item"><span class="ing-name"><span class="ing-emoji">🌿</span>${yeastLabel(yeast)} (final dough)<span style="font-family:var(--num-font);font-size:0.7rem;color:var(--ink3);font-style:normal;margin-left:4px;">optional · speeds a short finish · poolish leavens on its own with more time</span></span><span class="ing-weight">${pLo.toFixed(2)}–${pHi.toFixed(2)} g</span></div>`;
+    } else {
+      html+=`<div class="recipe-item"><span class="ing-name"><span class="ing-emoji">🌿</span>${yeastLabel(yeast)} (final dough)<span style="font-family:var(--num-font);font-size:0.7rem;color:var(--ink3);font-style:normal;margin-left:4px;">poolish carries the leavening — no added yeast</span></span><span class="ing-weight">none</span></div>`;
     }
+    var poolishCovRatio=(poolishPct>=1.0)?2:POOLISH_FINAL_COV*(poolishPct/(1-poolishPct));
+    if(finalPoolishIDY<=0 && prefermentExcessActivity(poolishCovRatio,bH,rT,fH,fT)>0) html+=overFermentLine();
 
   } else if(isSour){
     // ── SOURDOUGH RECIPE ──
@@ -1970,6 +2049,7 @@ function _update(){
     html+=ingRow('🌾',flour==='Tipo'?'Tipo 00 flour':'bread flour',fb);
     html+=ingRow('🧂','sea salt',saltG,'','add after flour hydrates · dissolved in reserved water');
     if(maltOn)html+=ingRow('🌾','diastatic malt',maltG,1,'mix into flour before adding');
+    if(directOverFerment(bH,rT,fH,fT,fb)) html+=overFermentLine();
   }
 
   document.getElementById('recipe').innerHTML=html;
@@ -2507,7 +2587,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.6.2 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.6.6 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
