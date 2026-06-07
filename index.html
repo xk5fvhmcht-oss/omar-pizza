@@ -388,7 +388,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.6.6 · science-verified · party edition</div>
+    <div class="version-badge">v1.6.7 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -2587,7 +2587,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.6.6 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.6.7 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
@@ -2627,6 +2627,117 @@ function closePrint(){
   var style=document.getElementById('printStyle');
   if(style)style.remove();
 }
+
+// ═══ SMARTER SCHEDULE (BETA) ENGINE ═══════════════════════════════════════════
+// Self-contained, validated backward-scheduling engine. Pure logic, no DOM.
+// Built and validated standalone (28-case stress test, 0 window violations).
+// Namespaced to avoid any collision with the existing Smart Schedule.
+var SmarterSchedule=(function(){
+  'use strict';
+  var SPAN={slow:[36,60],biga:[60,84],poolish:[48,72],sour:[48,84]};
+  var TEMPER_BEFORE_BAKE=2.0, BULK_BEFORE_BALL=1.5;
+  var PREFERMENT_RIPEN={biga:16,poolish:14}, FEED_BEFORE_MIX=10;
+  var STEP_GRID_MIN=15, SNAP_CAP_HOURS=12;
+  var MODES={
+    biga:[{key:'biga_mix',label:'mix biga',emoji:'🍕',weight:'heavy',role:'first'},
+      {key:'dough_mix',label:'pull biga + mix dough',emoji:'🥣',weight:'heavy',role:'dough'},
+      {key:'ball_fridge',label:'ball + fridge',emoji:'🔴',weight:'heavy',role:'ball'},
+      {key:'temper',label:'pull + temper',emoji:'🌡️',weight:'light',role:'temper'},
+      {key:'bake',label:'shape + bake',emoji:'🎉',weight:'heavy',role:'bake'}],
+    poolish:[{key:'poolish_mix',label:'mix poolish',emoji:'🌊',weight:'light',role:'first'},
+      {key:'dough_mix',label:'pull poolish + mix dough',emoji:'🥣',weight:'heavy',role:'dough'},
+      {key:'ball_fridge',label:'ball + fridge',emoji:'🔴',weight:'heavy',role:'ball'},
+      {key:'temper',label:'pull + temper',emoji:'🌡️',weight:'light',role:'temper'},
+      {key:'bake',label:'shape + bake',emoji:'🎉',weight:'heavy',role:'bake'}],
+    slow:[{key:'dough_mix',label:'mix dough',emoji:'🥣',weight:'heavy',role:'dough'},
+      {key:'ball_fridge',label:'ball + fridge',emoji:'🔴',weight:'heavy',role:'ball'},
+      {key:'temper',label:'pull + temper',emoji:'🌡️',weight:'light',role:'temper'},
+      {key:'bake',label:'shape + bake',emoji:'🎉',weight:'heavy',role:'bake'}],
+    sour:[{key:'feed',label:'feed starter',emoji:'🍋',weight:'light',role:'first'},
+      {key:'dough_mix',label:'mix + ball',emoji:'🥣',weight:'heavy',role:'dough'},
+      {key:'ball_fridge',label:'ball + fridge',emoji:'🔴',weight:'heavy',role:'ball'},
+      {key:'temper',label:'pull + temper',emoji:'🌡️',weight:'light',role:'temper'},
+      {key:'bake',label:'shape + bake',emoji:'🎉',weight:'heavy',role:'bake'}]
+  };
+  var MS_HOUR=3600000, MS_MIN=60000;
+  function addHours(d,h){return new Date(d.getTime()+h*MS_HOUR);}
+  function addMinutes(d,m){return new Date(d.getTime()+m*MS_MIN);}
+  function diffHours(a,b){return (a.getTime()-b.getTime())/MS_HOUR;}
+  function decimalHour(d){return d.getHours()+d.getMinutes()/60+d.getSeconds()/3600;}
+  function isWeekend(d){var w=d.getDay();return w===0||w===6;}
+  function round2(x){return Math.round(x*100)/100;}
+  function round3(x){return Math.round(x*1000)/1000;}
+  function ceilToGrid(d){var g=STEP_GRID_MIN*MS_MIN;return new Date(Math.ceil(d.getTime()/g)*g);}
+  function defaultWindowsFor(d){
+    if(isWeekend(d))return [{startHour:9.0,endHour:22.0,allowsHeavy:true}];
+    return [{startHour:6.0,endHour:7.5,allowsHeavy:false},{startHour:18.0,endHour:22.0,allowsHeavy:true}];
+  }
+  function windowContaining(d,wf){var h=decimalHour(d);var ws=wf(d);for(var i=0;i<ws.length;i++){var w=ws[i];if(h>=w.startHour-1e-9&&h<=w.endHour+1e-9)return w;}return null;}
+  function inWindow(d,reqHeavy,wf){var w=windowContaining(d,wf);if(!w)return false;if(reqHeavy&&!w.allowsHeavy)return false;return true;}
+  function inHeavyWindow(d,wf){return inWindow(d,true,wf);}
+  function positionInWindow(d,wf){var w=windowContaining(d,wf);return w?decimalHour(d)-w.startHour:1e6;}
+  function snapToWindow(ideal,reqHeavy,wf,capH){
+    capH=capH||SNAP_CAP_HOURS;var capMin=capH*60;
+    for(var off=0;off<=capMin;off+=STEP_GRID_MIN){
+      var earlier=addMinutes(ideal,-off);
+      if(inWindow(earlier,reqHeavy,wf))return earlier;
+      if(off>0){var later=addMinutes(ideal,off);if(inWindow(later,reqHeavy,wf))return later;}
+    }
+    return null;
+  }
+  function placeFirstStep(mode,doughMix,wf){
+    switch(mode){
+      case 'slow':return doughMix;
+      case 'biga':return snapToWindow(addHours(doughMix,-PREFERMENT_RIPEN.biga),true,wf);
+      case 'poolish':return snapToWindow(addHours(doughMix,-PREFERMENT_RIPEN.poolish),false,wf);
+      case 'sour':return snapToWindow(addHours(doughMix,-FEED_BEFORE_MIX),false,wf);
+      default:return null;
+    }
+  }
+  function assembleSchedule(mode,pick,bake,temper,floor,ceiling){
+    var ball=pick.ball,doughMix=pick.doughMix,firstStep=pick.firstStep,totalSpan=pick.totalSpan;
+    function timeFor(role){
+      switch(role){case 'first':return firstStep;case 'dough':return doughMix;case 'ball':return ball;case 'temper':return temper;case 'bake':return bake;}
+    }
+    var steps=MODES[mode].map(function(def){return {key:def.key,label:def.label,emoji:def.emoji,weight:def.weight,time:timeFor(def.role)};});
+    return {feasible:true,mode:mode,steps:steps,totalSpanHours:round2(totalSpan),coldRetardHours:round2(diffHours(temper,ball)),spanWindow:[floor,ceiling]};
+  }
+  function solve(mode,bakeDateTime,options){
+    options=options||{};
+    var wf=options.windowsFor||defaultWindowsFor;
+    if(mode==='rapid')return {feasible:false,reason:'rapid is not scheduled'};
+    if(!SPAN[mode])return {feasible:false,reason:'unknown mode: '+mode};
+    var floor=SPAN[mode][0],ceiling=SPAN[mode][1];
+    var bake=new Date(bakeDateTime.getTime());
+    var temper=addHours(bake,-TEMPER_BEFORE_BAKE);
+    var startBall=ceilToGrid(addHours(bake,-(ceiling+6)));
+    var endBall=addHours(temper,-1);
+    var gridMs=STEP_GRID_MIN*MS_MIN;
+    var candidates=[];
+    for(var t=startBall.getTime();t<=endBall.getTime()+1;t+=gridMs){
+      var ball=new Date(t);
+      if(!inHeavyWindow(ball,wf))continue;
+      var doughMix=addHours(ball,-BULK_BEFORE_BALL);
+      if(!inHeavyWindow(doughMix,wf))continue;
+      var firstStep=placeFirstStep(mode,doughMix,wf);
+      if(firstStep==null)continue;
+      if(mode!=='slow'&&!(firstStep.getTime()<doughMix.getTime()))continue;
+      var totalSpan=diffHours(bake,firstStep);
+      if(totalSpan<floor-1e-9||totalSpan>ceiling+1e-9)continue;
+      var lean=positionInWindow(doughMix,wf)+positionInWindow(ball,wf);
+      if(mode==='biga')lean+=positionInWindow(firstStep,wf);
+      candidates.push({ball:ball,doughMix:doughMix,firstStep:firstStep,totalSpan:totalSpan,lean:lean});
+    }
+    if(candidates.length===0)return {feasible:false,reason:'no schedule fits windows within span range'};
+    candidates.sort(function(a,b){
+      var dl=round3(a.lean)-round3(b.lean);if(Math.abs(dl)>1e-9)return dl;
+      var ds=round3(a.totalSpan)-round3(b.totalSpan);if(Math.abs(ds)>1e-9)return ds;
+      return a.ball.getTime()-b.ball.getTime();
+    });
+    return assembleSchedule(mode,candidates[0],bake,temper,floor,ceiling);
+  }
+  return {solve:solve,defaultWindowsFor:defaultWindowsFor,diffHours:diffHours,SPAN:SPAN};
+})();
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadState();
