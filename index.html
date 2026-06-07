@@ -103,6 +103,21 @@
 .cal-day-task{font-size:1rem;margin-bottom:2px;}
 .cal-day-label{font-family:var(--label-font);font-size:0.78rem;color:var(--ink2);margin-bottom:3px;}
 .cal-day-time{font-family:var(--num-font);font-size:0.72rem;color:var(--accent);}
+/* Smarter Schedule (beta) */
+.ss2-temp{display:none;margin-top:10px;font-family:var(--num-font);font-size:0.72rem;color:var(--ink3);letter-spacing:0.03em;padding:2px 2px 0;}
+.ss2-temp.show{display:block;}
+.ss2-plan{display:none;margin-top:10px;flex-direction:column;gap:0;}
+.ss2-plan.show{display:flex;}
+.ss2-step{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:var(--btn-radius);background:var(--sub);margin-bottom:6px;border-left:3px solid var(--border);}
+.ss2-step.heavy{border-left-color:var(--accent);}
+.ss2-step.light{border-left-color:var(--teal);}
+.ss2-step.party{border-left-color:var(--teal);background:var(--teal-f);}
+.ss2-step-emoji{font-size:1.1rem;line-height:1.3;flex-shrink:0;}
+.ss2-step-body{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;}
+.ss2-step-when{font-family:var(--num-font);font-size:0.82rem;color:var(--ink);font-weight:500;}
+.ss2-step-what{font-family:var(--label-font);font-size:0.9rem;color:var(--ink2);}
+.ss2-step-tag{font-family:var(--num-font);font-size:0.6rem;letter-spacing:0.05em;color:var(--ink3);text-transform:uppercase;}
+.ss2-summary{font-family:var(--num-font);font-size:0.72rem;color:var(--ink3);text-align:center;padding:4px 0 2px;letter-spacing:0.03em;}
 .cal-day.active{border-color:var(--accent);background:var(--accent-f);}
 .cal-day.party{border-color:#4aab9a;background:rgba(74,171,154,0.1);}
 [data-theme="party"] .cal-day.active{border-color:var(--accent);background:rgba(193,123,58,0.15);}
@@ -388,7 +403,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.6.7 · science-verified · party edition</div>
+    <div class="version-badge">v1.6.9 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -417,6 +432,20 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
           <div class="cal-day" id="calDay2"><div class="cal-day-name" id="calDay2Name">—</div><div class="cal-day-task" id="calDay2Task">—</div><div class="cal-day-label" id="calDay2Label">—</div><div class="cal-day-time" id="calDay2Time">—</div></div>
           <div class="cal-day party" id="calDay3"><div class="cal-day-name" id="calDay3Name">—</div><div class="cal-day-task" id="calDay3Task">🎉</div><div class="cal-day-label" id="calDay3Label">party</div><div class="cal-day-time" id="calDay3Time">—</div></div>
         </div>
+      </div>
+
+      <!-- SMARTER SCHEDULE (BETA) -->
+      <div class="smart-schedule-wrap" id="ss2Wrap">
+        <div class="smart-schedule-toggle" id="ss2Toggle" onclick="toggleSmarterSchedule()">
+          <div class="ss-label">
+            <span class="ss-title">🗓️ Smarter Schedule <span style="font-family:var(--num-font);font-size:0.6rem;color:var(--accent);border:1px solid var(--accent);border-radius:8px;padding:1px 6px;letter-spacing:0.05em;vertical-align:middle;">BETA</span></span>
+            <span class="ss-sub">ANY DAY · PLANS AROUND YOUR WORK & SLEEP</span>
+          </div>
+          <div class="ss-switch"></div>
+        </div>
+        <div class="ss2-temp" id="ss2Temp"></div>
+        <div class="ss2-plan" id="ss2Plan"></div>
+        <div class="ss-error" id="ss2Error"></div>
       </div>
 
       <span class="section-label">quantity</span>
@@ -553,7 +582,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
           </div>
           <div class="slider-wrap" style="margin-bottom:12px">
             <div class="slider-head"><span class="slider-name">biga fridge hours</span><span class="slider-val" id="bigaFridgeHVal">48h</span></div>
-            <input type="range" id="bigaFridgeHSlider" min="0" max="72" step="2" value="48">
+            <input type="range" id="bigaFridgeHSlider" min="0" max="72" step="1" value="48">
           </div>
           <div class="info-box pizza" id="bigaInfoBox">
             Mix biga flour + biga water + yeast until just combined — shaggy and rough is correct, do not develop gluten. Dissolve yeast in the biga water first. Mix by hand or spiral mixer at slow speed for 3–4 min. <strong>Target biga water temperature: <span id="bigaWaterTempDisplay" style="color:var(--accent);">—</span></strong> · Place in a lightly oiled tall container. Cover with perforated cling film — the biga needs to breathe. A ripe biga will be domed, just starting to show a centre dip, stringy and webbed when pulled apart, with a strong fermented aroma.
@@ -593,7 +622,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
             </div>
             <div class="slider-wrap">
               <div class="slider-head"><span class="slider-name">poolish fridge hours</span><span class="slider-val" id="poolishFridgeHVal">0h</span></div>
-              <input type="range" id="poolishFridgeHSlider" min="0" max="48" step="2" value="0">
+              <input type="range" id="poolishFridgeHSlider" min="0" max="48" step="1" value="0">
             </div>
             <div class="info-box pizza" id="poolishInfoBox">
               Mix poolish flour + water + yeast until smooth — no lumps. <strong>Target poolish water temperature: <span id="poolishWaterTempDisplay" style="color:var(--accent);">—</span></strong> · Cover with cling film and ferment until doubled in volume, domed on top, with bubbles throughout and a slightly tangy aroma. A ripe poolish will deflate slightly when tapped — use it immediately at this point.
@@ -637,7 +666,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
         </div>
         <div class="slider-wrap" style="margin-bottom:0">
           <div class="slider-head"><span class="slider-name" id="fridgeLabel">ball cold retard</span><span class="slider-val" id="fTimeVal">24h</span></div>
-          <input type="range" id="fTimeSlider" min="0" max="72" step="2" value="24">
+          <input type="range" id="fTimeSlider" min="0" max="72" step="1" value="24">
         </div>
       </div>
 
@@ -764,6 +793,10 @@ document.querySelectorAll('input[type=range],input[type=datetime-local]').forEac
       }
       update();saveState();
     }
+    // Smarter Schedule (beta) re-renders on bake-time or temperature change
+    if(smarterSchedule&&(el.id==='targetBake'||el.id==='tempSlider'||el.id==='fTempSlider')){
+      renderSmarterSchedule();
+    }
   });
 });
 
@@ -800,7 +833,7 @@ document.getElementById('poolishPctSlider').addEventListener('input',function(){
 
 // ─── PERSIST STATE ────────────────────────────────────────────────────────────
 function saveState(){
-  try{localStorage.setItem('omarPizzaState',JSON.stringify({mode,isAuto,flour,yeast,maltOn,honeyOn,oven,mixer,useCelsius,theme,smartSchedule,yeastModel,
+  try{localStorage.setItem('omarPizzaState',JSON.stringify({mode,isAuto,flour,yeast,maltOn,honeyOn,oven,mixer,useCelsius,theme,smartSchedule,smarterSchedule,yeastModel,
     hyd:document.getElementById('hydSlider').value,
     count:document.getElementById('countSlider').value,
     size:document.getElementById('sizeSlider').value,
@@ -839,6 +872,7 @@ function loadState(){
     if(s.useCelsius!==undefined)useCelsius=s.useCelsius;
     if(s.theme){theme=s.theme;document.documentElement.setAttribute('data-theme',theme);}
     if(s.smartSchedule!==undefined)smartSchedule=s.smartSchedule;
+    if(s.smarterSchedule!==undefined)smarterSchedule=s.smarterSchedule;
     if(s.yeastModel==='yeasty'||s.yeastModel==='naples')yeastModel=s.yeastModel;
     else yeastModel='naples';
     var clamp=(id,v)=>{var sl=document.getElementById(id);if(v)sl.value=Math.min(parseFloat(sl.max),Math.max(parseFloat(sl.min),parseFloat(v)));};
@@ -1246,6 +1280,7 @@ function setMode(m){
   if(m==='biga')flour='Tipo';
   // Re-run Smart Schedule for new mode
   if(smartSchedule&&m!=='rapid')runSmartSchedule();
+  if(smarterSchedule)renderSmarterSchedule();
   snapHyd();update();saveState();
 }
 function setOven(o){oven=o;snapHyd();update();saveState();}
@@ -1386,6 +1421,85 @@ function ssDisableManual(){
   document.getElementById('themeColor').content='#fdf8f0';
   updateFloaters();
   update();saveState();
+}
+
+// ─── SMARTER SCHEDULE (BETA) — UI ─────────────────────────────────────────────
+var smarterSchedule=false;
+function toggleSmarterSchedule(){
+  smarterSchedule=!smarterSchedule;
+  document.getElementById('ss2Toggle').classList.toggle('on',smarterSchedule);
+  document.getElementById('ss2Error').classList.remove('show');
+  if(smarterSchedule){
+    renderSmarterSchedule();
+  } else {
+    document.getElementById('ss2Plan').classList.remove('show');
+    document.getElementById('ss2Temp').classList.remove('show');
+  }
+  saveState();
+}
+function renderSmarterSchedule(){
+  if(!smarterSchedule)return;
+  var planEl=document.getElementById('ss2Plan');
+  var tempEl=document.getElementById('ss2Temp');
+  var errEl=document.getElementById('ss2Error');
+  errEl.classList.remove('show');
+  // rapid has no schedule
+  if(mode==='rapid'){
+    planEl.classList.remove('show'); tempEl.classList.remove('show');
+    errEl.textContent='⚡ Rapid same-day dough needs no schedule — it bakes the day you mix.';
+    errEl.classList.add('show');
+    return;
+  }
+  // bake time required
+  var rawVal=document.getElementById('targetBake').value;
+  if(!rawVal){
+    planEl.classList.remove('show'); tempEl.classList.remove('show');
+    errEl.textContent='⚠ Set your bake time above first.';
+    errEl.classList.add('show');
+    return;
+  }
+  var parts=rawVal.split('T');
+  var dp=parts[0].split('-');
+  var tp=(parts[1]||'18:00').split(':');
+  var bake=new Date(parseInt(dp[0]),parseInt(dp[1])-1,parseInt(dp[2]),parseInt(tp[0]),parseInt(tp[1]),0,0);
+  var res=SmarterSchedule.solve(mode,bake);
+  if(!res.feasible){
+    planEl.classList.remove('show'); tempEl.classList.remove('show');
+    errEl.textContent='⚠ '+res.reason+' — try a later bake time.';
+    errEl.classList.add('show');
+    return;
+  }
+  // read-only temperature display (points to the real dials below)
+  var rT=+document.getElementById('tempSlider').value;
+  var fT=+document.getElementById('fTempSlider').value;
+  var rTd=useCelsius?Math.round((rT-32)*5/9)+'°C':rT+'°F';
+  var fTd=useCelsius?Math.round((fT-32)*5/9)+'°C':fT+'°F';
+  tempEl.textContent='planning for a '+rTd+' kitchen · '+fTd+' fridge — adjust on the dials below';
+  tempEl.classList.add('show');
+  // render every step as a row
+  var DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  function fmtWhen(d){
+    var h=d.getHours(), m=d.getMinutes();
+    var ap=h<12?'am':'pm'; var h12=h%12; if(h12===0)h12=12;
+    var mm=m===0?'':':'+String(m).padStart(2,'0');
+    return DOW[d.getDay()]+' '+h12+mm+ap;
+  }
+  var html='';
+  res.steps.forEach(function(s){
+    var cls=s.key==='bake'?'party':s.weight;
+    var tag=s.key==='bake'?'the party':(s.weight==='light'?'quick task':'main task');
+    html+='<div class="ss2-step '+cls+'">'+
+      '<span class="ss2-step-emoji">'+s.emoji+'</span>'+
+      '<span class="ss2-step-body">'+
+        '<span class="ss2-step-when">'+fmtWhen(s.time)+'</span>'+
+        '<span class="ss2-step-what">'+s.label+'</span>'+
+      '</span>'+
+      '<span class="ss2-step-tag">'+tag+'</span>'+
+    '</div>';
+  });
+  html+='<div class="ss2-summary">'+Math.round(res.totalSpanHours)+'h total ferment · '+Math.round(res.coldRetardHours)+'h cold retard</div>';
+  planEl.innerHTML=html;
+  planEl.classList.add('show');
 }
 
 function updateFloaters(){
@@ -2587,7 +2701,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.6.7 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.6.9 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
@@ -2741,6 +2855,10 @@ var SmarterSchedule=(function(){
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadState();
+if(smarterSchedule){
+  document.getElementById('ss2Toggle').classList.add('on');
+  renderSmarterSchedule();
+}
 updateThemeText();
 update();
 renderJournal();
