@@ -403,7 +403,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.6.9 · science-verified · party edition</div>
+    <div class="version-badge">v1.7.0 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -1498,8 +1498,48 @@ function renderSmarterSchedule(){
     '</div>';
   });
   html+='<div class="ss2-summary">'+Math.round(res.totalSpanHours)+'h total ferment · '+Math.round(res.coldRetardHours)+'h cold retard</div>';
+  feedDialsFromSchedule(res);
   planEl.innerHTML=html;
   planEl.classList.add('show');
+}
+
+function feedDialsFromSchedule(res){
+  // Translate the engine's clock-time steps into duration dials, so the detailed
+  // timeline and yeast math recompute from ONE source of truth. The schedule drives
+  // the dials; the baker can fine-tune from there.
+  if(!res||!res.feasible)return;
+  var t={};
+  res.steps.forEach(function(s){t[s.key]=s.time;});
+  function hrs(a,b){return (t[a].getTime()-t[b].getTime())/3600000;}
+  var rT=+document.getElementById('tempSlider').value;
+  var fT=+document.getElementById('fTempSlider').value;
+  if(res.mode==='slow'){
+    // dough_mix -> ball_fridge = bulk ; ball_fridge -> temper = cold retard
+    setSliderSS('bulkSlider', hrs('ball_fridge','dough_mix'));
+    setSliderSS('fTimeSlider', hrs('temper','ball_fridge'));
+  } else if(res.mode==='biga'){
+    // biga ripen (biga_mix -> dough_mix) split: 2h room, remainder fridge
+    var ripen=hrs('dough_mix','biga_mix');
+    var bigaRoom=Math.min(2, ripen);
+    var bigaFridge=Math.max(0, ripen-bigaRoom);
+    setSliderSS('bigaRoomHSlider', bigaRoom);
+    setSliderSS('bigaFridgeHSlider', bigaFridge);
+    // final dough: bulk = dough_mix -> ball_fridge ; cold retard = ball_fridge -> temper
+    setSliderSS('bulkSlider', hrs('ball_fridge','dough_mix'));
+    setSliderSS('fTimeSlider', hrs('temper','ball_fridge'));
+  } else if(res.mode==='poolish'){
+    // poolish ripen (poolish_mix -> dough_mix): all room (poolish is a room-temp ferment)
+    var pripen=hrs('dough_mix','poolish_mix');
+    setSliderSS('poolishRoomHSlider', pripen);
+    setSliderSS('poolishFridgeHSlider', 0);
+    setSliderSS('bulkSlider', hrs('ball_fridge','dough_mix'));
+    setSliderSS('fTimeSlider', hrs('temper','ball_fridge'));
+  } else if(res.mode==='sour'){
+    // feed -> dough_mix is starter ripen (not a dial); bulk + cold retard map as usual
+    setSliderSS('bulkSlider', hrs('ball_fridge','dough_mix'));
+    setSliderSS('fTimeSlider', hrs('temper','ball_fridge'));
+  }
+  update();
 }
 
 function updateFloaters(){
@@ -2701,7 +2741,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.6.9 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.7.0 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
