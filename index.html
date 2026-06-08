@@ -118,6 +118,9 @@
 .ss2-step-what{font-family:var(--label-font);font-size:0.9rem;color:var(--ink2);}
 .ss2-step-tag{font-family:var(--num-font);font-size:0.6rem;letter-spacing:0.05em;color:var(--ink3);text-transform:uppercase;}
 .ss2-summary{font-family:var(--num-font);font-size:0.72rem;color:var(--ink3);text-align:center;padding:4px 0 2px;letter-spacing:0.03em;}
+.ss2-drift{display:none;font-family:var(--num-font);font-size:0.72rem;color:var(--ink3);font-style:italic;text-align:center;padding:6px 2px 2px;letter-spacing:0.02em;}
+.ss2-drift.show{display:block;}
+.ss2-drift-restore{color:var(--accent);font-style:normal;cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
 .cal-day.active{border-color:var(--accent);background:var(--accent-f);}
 .cal-day.party{border-color:#4aab9a;background:rgba(74,171,154,0.1);}
 [data-theme="party"] .cal-day.active{border-color:var(--accent);background:rgba(193,123,58,0.15);}
@@ -403,7 +406,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.7.3 · science-verified · party edition</div>
+    <div class="version-badge">v1.7.4 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -445,6 +448,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
         </div>
         <div class="ss2-temp" id="ss2Temp"></div>
         <div class="ss2-plan" id="ss2Plan"></div>
+        <div class="ss2-drift" id="ss2Drift"></div>
         <div class="ss-error" id="ss2Error"></div>
       </div>
 
@@ -772,6 +776,11 @@ window.onerror=function(msg,src,line,col,err){
 // ─── STATE ────────────────────────────────────────────────────────────────────
 var mode='rapid',isAuto=false,flour='Tipo',yeast='IDY',maltOn=false;
 var smartSchedule=false,ssManualOverride=false;
+// Smarter Schedule (beta) shared state:
+//   ssOverFermentFlag — set by update() when the CURRENT dial state trips the over-ferment
+//     warning. The beta reads this (never recomputes the threshold) so plan & warning agree.
+//   ssSuggested — the dial values the engine last seeded, for drift detection / restore.
+var ssOverFermentFlag=false, ssSuggested=null;
 var oven='steel',mixer='spiral',useCelsius=false,theme='artisan';
 
 var initD=new Date();initD.setHours(initD.getHours()+36,0,0,0);
@@ -793,9 +802,22 @@ document.querySelectorAll('input[type=range],input[type=datetime-local]').forEac
       }
       update();saveState();
     }
-    // Smarter Schedule (beta) re-renders on bake-time or temperature change
-    if(smarterSchedule&&(el.id==='targetBake'||el.id==='tempSlider'||el.id==='fTempSlider')){
-      renderSmarterSchedule();
+    // Smarter Schedule (beta)
+    if(smarterSchedule){
+      if(el.id==='targetBake'){
+        renderSmarterSchedule();                       // new bake time → re-solve + re-seed
+      } else if(el.id==='tempSlider'||el.id==='fTempSlider'){
+        // Temp change: yeast was just recomputed by update() above. Do NOT re-seed the duration
+        // dials — that would wipe the baker's edits on an unrelated tweak. If the new temp pushes
+        // the current schedule past peak, bow out; otherwise just refresh the read-out.
+        if(ssOverFermentFlag){
+          ssBowOut('Smarter Schedule needs a cooler kitchen for this bake. Dial it in manually, or lower your temps and try again.');
+        } else {
+          refreshSSTempLine(); updateDriftLine();
+        }
+      } else if(durationIds.indexOf(el.id)>=0){
+        updateDriftLine();                             // baker nudged a dial → reflect drift
+      }
     }
   });
 });
@@ -1434,6 +1456,8 @@ function toggleSmarterSchedule(){
   } else {
     document.getElementById('ss2Plan').classList.remove('show');
     document.getElementById('ss2Temp').classList.remove('show');
+    var d=document.getElementById('ss2Drift'); if(d)d.classList.remove('show');
+    ssSuggested=null;
   }
   saveState();
 }
@@ -1443,6 +1467,7 @@ function renderSmarterSchedule(){
   var tempEl=document.getElementById('ss2Temp');
   var errEl=document.getElementById('ss2Error');
   errEl.classList.remove('show');
+  var driftEl=document.getElementById('ss2Drift'); if(driftEl)driftEl.classList.remove('show');
   // rapid has no schedule
   if(mode==='rapid'){
     planEl.classList.remove('show'); tempEl.classList.remove('show');
@@ -1474,18 +1499,19 @@ function renderSmarterSchedule(){
   // rather than show a plan the yeast math can't match — the baker takes the dials manually.
   var fed=feedDialsFromSchedule(res);
   if(!fed.ok){
+    if(fed.reason==='overferment'){
+      // The suggested schedule would ferment past peak at these temps — step off to manual.
+      ssBowOut('Smarter Schedule needs a cooler kitchen for this bake. Dial it in manually, or lower your temps and try again.');
+      return;
+    }
+    // reason 'range': a valid schedule the dials can't draw — stay on, hand over manual tuning.
     planEl.classList.remove('show'); tempEl.classList.remove('show');
     errEl.textContent='⚠ This bake lands outside Smarter Schedule\u2019s range — fine-tune the dials below by hand.';
     errEl.classList.add('show');
     return;
   }
   // read-only temperature display (points to the real dials below)
-  var rT=+document.getElementById('tempSlider').value;
-  var fT=+document.getElementById('fTempSlider').value;
-  var rTd=useCelsius?Math.round((rT-32)*5/9)+'°C':rT+'°F';
-  var fTd=useCelsius?Math.round((fT-32)*5/9)+'°C':fT+'°F';
-  tempEl.textContent='planning for a '+rTd+' kitchen · '+fTd+' fridge — adjust on the dials below';
-  tempEl.classList.add('show');
+  refreshSSTempLine();
   // render every step as a row
   var DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   function fmtWhen(d){
@@ -1510,6 +1536,7 @@ function renderSmarterSchedule(){
   html+='<div class="ss2-summary">'+Math.round(res.totalSpanHours)+'h total ferment · '+Math.round(res.coldRetardHours)+'h cold retard</div>';
   planEl.innerHTML=html;
   planEl.classList.add('show');
+  updateDriftLine();
 }
 
 function feedDialsFromSchedule(res){
@@ -1556,11 +1583,87 @@ function feedDialsFromSchedule(res){
     var sl=document.getElementById(sets[i][0]);
     if(!sl)continue;
     var v=sets[i][1], mn=parseFloat(sl.min), mx=parseFloat(sl.max);
-    if(v<mn-1e-9||v>mx+1e-9)return {ok:false};
+    if(v<mn-1e-9||v>mx+1e-9)return {ok:false, reason:'range'};
   }
+  // Snapshot the dials we're about to touch, so we can put them back untouched if this
+  // schedule turns out to over-ferment (leave the baker exactly where they were).
+  var snapshot={};
+  sets.forEach(function(p){var sl=document.getElementById(p[0]); if(sl)snapshot[p[0]]=sl.value;});
+  // Seed, then let update() recompute the recipe + over-ferment decision on the seeded state.
   sets.forEach(function(p){setSliderSS(p[0],p[1]);});
   update();
+  if(ssOverFermentFlag){
+    // The schedule we'd suggest would ferment past peak at the baker's temps. Don't show it —
+    // restore their dials and report, so the caller can bow out to manual control.
+    Object.keys(snapshot).forEach(function(id){var sl=document.getElementById(id); if(sl)sl.value=snapshot[id];});
+    update();
+    return {ok:false, reason:'overferment'};
+  }
+  // Success: record the seeded values (read back, post-clamp) as the suggestion to detect drift.
+  ssSuggested={};
+  sets.forEach(function(p){var sl=document.getElementById(p[0]); if(sl)ssSuggested[p[0]]=sl.value;});
   return {ok:true};
+}
+
+// Beta bow-out: turn Smarter Schedule off and explain why, leaving the dials wherever they
+// are now (the caller restores the pre-toggle snapshot first when relevant). The beta never
+// touched the theme, so — unlike the old Smart Schedule's showSSError — there's nothing to revert.
+function ssBowOut(msg){
+  smarterSchedule=false;
+  document.getElementById('ss2Toggle').classList.remove('on');
+  document.getElementById('ss2Plan').classList.remove('show');
+  document.getElementById('ss2Temp').classList.remove('show');
+  var d=document.getElementById('ss2Drift'); if(d)d.classList.remove('show');
+  ssSuggested=null;
+  var e=document.getElementById('ss2Error');
+  e.textContent='⚠ '+msg;
+  e.classList.add('show');
+  saveState();
+}
+
+// The read-only "planning for a __ kitchen" line. Temps come from the baker's own dials.
+function refreshSSTempLine(){
+  if(!smarterSchedule)return;
+  var tempEl=document.getElementById('ss2Temp');
+  if(!tempEl)return;
+  var rT=+document.getElementById('tempSlider').value;
+  var fT=+document.getElementById('fTempSlider').value;
+  var rTd=useCelsius?Math.round((rT-32)*5/9)+'°C':rT+'°F';
+  var fTd=useCelsius?Math.round((fT-32)*5/9)+'°C':fT+'°F';
+  tempEl.textContent='planning for a '+rTd+' kitchen · '+fTd+' fridge — adjust on the dials below';
+  tempEl.classList.add('show');
+}
+
+// Drift line: shows only when the baker has nudged a duration dial off the suggested value,
+// and only while a plan is on screen. Disappears on its own once they're back on plan.
+function updateDriftLine(){
+  var d=document.getElementById('ss2Drift');
+  if(!d)return;
+  var plan=document.getElementById('ss2Plan');
+  if(!(smarterSchedule && ssSuggested && plan && plan.classList.contains('show'))){
+    d.classList.remove('show'); return;
+  }
+  var drifted=false;
+  Object.keys(ssSuggested).forEach(function(id){
+    var sl=document.getElementById(id);
+    if(sl && Math.abs(parseFloat(sl.value)-parseFloat(ssSuggested[id]))>1e-6) drifted=true;
+  });
+  if(drifted){
+    d.innerHTML='\u270E adjusted from the plan · <span class="ss2-drift-restore" onclick="ssRestoreSuggestion()">restore suggested times</span>';
+    d.classList.add('show');
+  } else {
+    d.classList.remove('show');
+  }
+}
+
+// Re-apply the engine's last suggestion to the dials (the way back from a manual edit).
+function ssRestoreSuggestion(){
+  if(!ssSuggested)return;
+  Object.keys(ssSuggested).forEach(function(id){var sl=document.getElementById(id); if(sl)sl.value=ssSuggested[id];});
+  update();
+  refreshSSTempLine();
+  updateDriftLine();   // back on plan → line hides itself
+  saveState();
 }
 
 function updateFloaters(){
@@ -1783,6 +1886,7 @@ function sectionTitle(text){
 // ─── MAIN UPDATE ──────────────────────────────────────────────────────────────
 function update(){try{_update();}catch(e){console.error('Omar Pizza update error:',e);}}
 function _update(){
+  ssOverFermentFlag=false;  // re-evaluated below; read by Smarter Schedule (beta)
   var isSour=mode==='sour';
   var isBiga=mode==='biga';
   var isPoolish=mode==='poolish';
@@ -2134,7 +2238,7 @@ function _update(){
     }
     if(maltOn)html+=ingRow('🌾','diastatic malt',maltG,1,'mix into flour before adding');
     var bigaCovRatio=(bigaPct>=1.0)?2:BIGA_FINAL_COV50*(bigaPct/(1-bigaPct));
-    if(finalIDY<=0 && prefermentExcessActivity(bigaCovRatio,bH,rT,fH,fT)>0) html+=overFermentLine();
+    if(finalIDY<=0 && prefermentExcessActivity(bigaCovRatio,bH,rT,fH,fT)>0){ ssOverFermentFlag=true; html+=overFermentLine(); }
 
   } else if(isPoolish){
     // ── POOLISH RECIPE ──
@@ -2187,7 +2291,7 @@ function _update(){
       html+=`<div class="recipe-item"><span class="ing-name"><span class="ing-emoji">🌿</span>${yeastLabel(yeast)} (final dough)<span style="font-family:var(--num-font);font-size:0.7rem;color:var(--ink3);font-style:normal;margin-left:4px;">poolish carries the leavening — no added yeast</span></span><span class="ing-weight">none</span></div>`;
     }
     var poolishCovRatio=(poolishPct>=1.0)?2:POOLISH_FINAL_COV*(poolishPct/(1-poolishPct));
-    if(finalPoolishIDY<=0 && prefermentExcessActivity(poolishCovRatio,bH,rT,fH,fT)>0) html+=overFermentLine();
+    if(finalPoolishIDY<=0 && prefermentExcessActivity(poolishCovRatio,bH,rT,fH,fT)>0){ ssOverFermentFlag=true; html+=overFermentLine(); }
 
   } else if(isSour){
     // ── SOURDOUGH RECIPE ──
@@ -2224,7 +2328,7 @@ function _update(){
     html+=ingRow('🌾',flour==='Tipo'?'Tipo 00 flour':'bread flour',fb);
     html+=ingRow('🧂','sea salt',saltG,'','add after flour hydrates · dissolved in reserved water');
     if(maltOn)html+=ingRow('🌾','diastatic malt',maltG,1,'mix into flour before adding');
-    if(directOverFerment(bH,rT,fH,fT,fb)) html+=overFermentLine();
+    if(directOverFerment(bH,rT,fH,fT,fb)){ ssOverFermentFlag=true; html+=overFermentLine(); }
   }
 
   document.getElementById('recipe').innerHTML=html;
@@ -2762,7 +2866,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.7.3 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.7.4 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
