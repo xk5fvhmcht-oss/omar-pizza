@@ -1,5 +1,5 @@
 // Omar Pizza — Service Worker v3.0 (network-first for app shell)
-const CACHE = 'omar-pizza-v15';
+const CACHE = 'omar-pizza-v16';
 
 const ASSETS = [
   './',
@@ -14,8 +14,11 @@ self.addEventListener('install', e => {
     caches.open(CACHE).then(cache => {
       return Promise.allSettled(
         ASSETS.map(url =>
-          fetch(url, { mode: 'no-cors' })
-            .then(r => cache.put(url, r))
+          // Default mode: same-origin for the shell, CORS for Google Fonts
+          // (both support it). Avoids opaque (status 0) responses that can't
+          // be reliably served back as the app shell or applied as CSS.
+          fetch(url)
+            .then(r => { if (r.ok) return cache.put(url, r); })
             .catch(() => {})
         )
       );
