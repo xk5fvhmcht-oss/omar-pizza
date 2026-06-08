@@ -430,7 +430,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.8.0 · science-verified · party edition</div>
+    <div class="version-badge">v1.8.1 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -470,10 +470,6 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
           </div>
           <div class="ss-switch"></div>
         </div>
-        <div class="ss2-temp" id="ss2Temp"></div>
-        <div class="ss2-plan" id="ss2Plan"></div>
-        <div class="ss2-drift" id="ss2Drift"></div>
-        <div class="ss-error" id="ss2Error"></div>
         <div class="ss2-profiles" id="ss2Profiles">
           <div class="ss2-prof-head" onclick="toggleProfilePanel()">
             <span class="ss2-prof-title">⚙ availability</span>
@@ -485,6 +481,10 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
             <div class="ss2-prof-editor" id="ss2ProfEditor"></div>
           </div>
         </div>
+        <div class="ss2-temp" id="ss2Temp"></div>
+        <div class="ss2-plan" id="ss2Plan"></div>
+        <div class="ss2-drift" id="ss2Drift"></div>
+        <div class="ss-error" id="ss2Error"></div>
       </div>
 
       <span class="section-label">quantity</span>
@@ -3037,7 +3037,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.8.0 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.8.1 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
