@@ -403,7 +403,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.7.2 · science-verified · party edition</div>
+    <div class="version-badge">v1.7.3 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -1469,6 +1469,16 @@ function renderSmarterSchedule(){
     errEl.classList.add('show');
     return;
   }
+  // Mirror the schedule into the dials (the single source of truth). If any part of it
+  // falls outside what the dials can represent, Smarter Schedule bows out for this bake
+  // rather than show a plan the yeast math can't match — the baker takes the dials manually.
+  var fed=feedDialsFromSchedule(res);
+  if(!fed.ok){
+    planEl.classList.remove('show'); tempEl.classList.remove('show');
+    errEl.textContent='⚠ This bake lands outside Smarter Schedule\u2019s range — fine-tune the dials below by hand.';
+    errEl.classList.add('show');
+    return;
+  }
   // read-only temperature display (points to the real dials below)
   var rT=+document.getElementById('tempSlider').value;
   var fT=+document.getElementById('fTempSlider').value;
@@ -1498,7 +1508,6 @@ function renderSmarterSchedule(){
     '</div>';
   });
   html+='<div class="ss2-summary">'+Math.round(res.totalSpanHours)+'h total ferment · '+Math.round(res.coldRetardHours)+'h cold retard</div>';
-  feedDialsFromSchedule(res);
   planEl.innerHTML=html;
   planEl.classList.add('show');
 }
@@ -1507,39 +1516,51 @@ function feedDialsFromSchedule(res){
   // Translate the engine's clock-time steps into duration dials, so the detailed
   // timeline and yeast math recompute from ONE source of truth. The schedule drives
   // the dials; the baker can fine-tune from there.
-  if(!res||!res.feasible)return;
+  //
+  // If any duration falls outside a dial's range we do NOT clamp it — a silent clamp
+  // would desync the plan from the math. Instead we report {ok:false} so the caller
+  // can tell the baker this bake is outside Smarter Schedule's range and hand them
+  // the dials to experiment with manually. Returns {ok:true} when the whole schedule
+  // fits and has been applied.
+  if(!res||!res.feasible)return {ok:false};
   var t={};
   res.steps.forEach(function(s){t[s.key]=s.time;});
   function hrs(a,b){return (t[a].getTime()-t[b].getTime())/3600000;}
-  var rT=+document.getElementById('tempSlider').value;
-  var fT=+document.getElementById('fTempSlider').value;
+  // Build the full list of dial writes for this mode FIRST, apply nothing yet.
+  var sets=[];
   if(res.mode==='slow'){
     // dough_mix -> ball_fridge = bulk ; ball_fridge -> temper = cold retard
-    setSliderSS('bulkSlider', hrs('ball_fridge','dough_mix'));
-    setSliderSS('fTimeSlider', hrs('temper','ball_fridge'));
+    sets.push(['bulkSlider', hrs('ball_fridge','dough_mix')]);
+    sets.push(['fTimeSlider', hrs('temper','ball_fridge')]);
   } else if(res.mode==='biga'){
     // v2: biga has real biga_fridge and pull_biga steps — derive room & fridge time
     // from the schedule itself rather than hardcoding.
-    var bigaRoom=hrs('biga_fridge','biga_mix');       // mix -> fridge = room rest
-    var bigaFridge=hrs('pull_biga','biga_fridge');    // fridge -> pull = cold ripen
-    setSliderSS('bigaRoomHSlider', bigaRoom);
-    setSliderSS('bigaFridgeHSlider', bigaFridge);
-    // final dough: bulk = dough_mix -> ball_fridge ; cold retard = ball_fridge -> temper
-    setSliderSS('bulkSlider', hrs('ball_fridge','dough_mix'));
-    setSliderSS('fTimeSlider', hrs('temper','ball_fridge'));
+    sets.push(['bigaRoomHSlider', hrs('biga_fridge','biga_mix')]);   // mix -> fridge = room rest
+    sets.push(['bigaFridgeHSlider', hrs('pull_biga','biga_fridge')]);// fridge -> pull = cold ripen
+    sets.push(['bulkSlider', hrs('ball_fridge','dough_mix')]);       // bulk
+    sets.push(['fTimeSlider', hrs('temper','ball_fridge')]);         // cold retard
   } else if(res.mode==='poolish'){
     // poolish ripen (poolish_mix -> dough_mix): all room (poolish is a room-temp ferment)
-    var pripen=hrs('dough_mix','poolish_mix');
-    setSliderSS('poolishRoomHSlider', pripen);
-    setSliderSS('poolishFridgeHSlider', 0);
-    setSliderSS('bulkSlider', hrs('ball_fridge','dough_mix'));
-    setSliderSS('fTimeSlider', hrs('temper','ball_fridge'));
+    sets.push(['poolishRoomHSlider', hrs('dough_mix','poolish_mix')]);
+    sets.push(['poolishFridgeHSlider', 0]);
+    sets.push(['bulkSlider', hrs('ball_fridge','dough_mix')]);
+    sets.push(['fTimeSlider', hrs('temper','ball_fridge')]);
   } else if(res.mode==='sour'){
     // feed -> dough_mix is starter ripen (not a dial); bulk + cold retard map as usual
-    setSliderSS('bulkSlider', hrs('ball_fridge','dough_mix'));
-    setSliderSS('fTimeSlider', hrs('temper','ball_fridge'));
+    sets.push(['bulkSlider', hrs('ball_fridge','dough_mix')]);
+    sets.push(['fTimeSlider', hrs('temper','ball_fridge')]);
   }
+  // Range-check every value against its dial BEFORE touching anything. If any one
+  // would fall outside the dial, bail without applying — never half-apply a schedule.
+  for(var i=0;i<sets.length;i++){
+    var sl=document.getElementById(sets[i][0]);
+    if(!sl)continue;
+    var v=sets[i][1], mn=parseFloat(sl.min), mx=parseFloat(sl.max);
+    if(v<mn-1e-9||v>mx+1e-9)return {ok:false};
+  }
+  sets.forEach(function(p){setSliderSS(p[0],p[1]);});
   update();
+  return {ok:true};
 }
 
 function updateFloaters(){
@@ -2741,7 +2762,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.7.2 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.7.3 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
