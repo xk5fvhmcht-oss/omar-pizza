@@ -121,6 +121,30 @@
 .ss2-drift{display:none;font-family:var(--num-font);font-size:0.72rem;color:var(--ink3);font-style:italic;text-align:center;padding:6px 2px 2px;letter-spacing:0.02em;}
 .ss2-drift.show{display:block;}
 .ss2-drift-restore{color:var(--accent);font-style:normal;cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
+.ss2-profiles{display:none;margin-top:8px;}
+.ss2-profiles.show{display:block;}
+.ss2-prof-head{display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 11px;background:var(--sub);border:1px solid var(--border);border-radius:var(--btn-radius);}
+.ss2-prof-title{font-family:var(--label-font);font-size:0.82rem;color:var(--ink2);flex:1;}
+.ss2-prof-active{font-family:var(--num-font);font-size:0.7rem;color:var(--accent);}
+.ss2-prof-caret{font-size:0.7rem;color:var(--ink3);}
+.ss2-prof-body{display:none;padding:11px 3px 2px;}
+.ss2-prof-body.open{display:block;}
+.ss2-prof-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:11px;}
+.ss2-prof-chip{font-family:var(--label-font);font-size:0.8rem;padding:5px 12px;border-radius:var(--pill-radius);border:1px solid var(--border);background:transparent;color:var(--ink2);cursor:pointer;}
+.ss2-prof-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.ss2-prof-new{font-family:var(--label-font);font-size:0.8rem;padding:5px 12px;border-radius:var(--pill-radius);border:1px dashed var(--border);background:transparent;color:var(--ink3);cursor:pointer;}
+.ss2-prof-note{font-family:var(--label-font);font-size:0.82rem;color:var(--ink3);line-height:1.45;padding:2px;}
+.ss2-prof-tmpl{margin-bottom:10px;}
+.ss2-prof-tmpl-h{font-family:var(--num-font);font-size:0.6rem;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:5px;}
+.ss2-win{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:4px 0;}
+.ss2-win.off{opacity:0.45;}
+.ss2-win-on,.ss2-win-heavy{font-family:var(--label-font);font-size:0.76rem;color:var(--ink2);display:inline-flex;align-items:center;gap:3px;}
+.ss2-win-time{font-family:var(--num-font);font-size:0.78rem;padding:2px 5px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--ink);}
+.ss2-win-dash{color:var(--ink3);}
+.ss2-prof-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.ss2-prof-save{font-family:var(--label-font);font-size:0.8rem;padding:6px 13px;border-radius:var(--btn-radius);border:1px solid var(--border);background:transparent;color:var(--ink3);cursor:pointer;}
+.ss2-prof-save.dirty{background:var(--accent);color:#fff;border-color:var(--accent);}
+.ss2-prof-rename,.ss2-prof-del{font-family:var(--label-font);font-size:0.76rem;padding:6px 11px;border-radius:var(--btn-radius);border:1px solid var(--border);background:transparent;color:var(--ink3);cursor:pointer;}
 .cal-day.active{border-color:var(--accent);background:var(--accent-f);}
 .cal-day.party{border-color:#4aab9a;background:rgba(74,171,154,0.1);}
 [data-theme="party"] .cal-day.active{border-color:var(--accent);background:rgba(193,123,58,0.15);}
@@ -406,7 +430,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.7.4 · science-verified · party edition</div>
+    <div class="version-badge">v1.8.0 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -450,6 +474,17 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
         <div class="ss2-plan" id="ss2Plan"></div>
         <div class="ss2-drift" id="ss2Drift"></div>
         <div class="ss-error" id="ss2Error"></div>
+        <div class="ss2-profiles" id="ss2Profiles">
+          <div class="ss2-prof-head" onclick="toggleProfilePanel()">
+            <span class="ss2-prof-title">⚙ availability</span>
+            <span class="ss2-prof-active" id="ss2ProfActive">Default</span>
+            <span class="ss2-prof-caret" id="ss2ProfCaret">▸</span>
+          </div>
+          <div class="ss2-prof-body" id="ss2ProfBody">
+            <div class="ss2-prof-list" id="ss2ProfList"></div>
+            <div class="ss2-prof-editor" id="ss2ProfEditor"></div>
+          </div>
+        </div>
       </div>
 
       <span class="section-label">quantity</span>
@@ -777,10 +812,21 @@ window.onerror=function(msg,src,line,col,err){
 var mode='rapid',isAuto=false,flour='Tipo',yeast='IDY',maltOn=false;
 var smartSchedule=false,ssManualOverride=false;
 // Smarter Schedule (beta) shared state:
-//   ssOverFermentFlag — set by update() when the CURRENT dial state trips the over-ferment
-//     warning. The beta reads this (never recomputes the threshold) so plan & warning agree.
+//   ssOverFermentFlag — set by update() ONLY for the hard, temperature-driven case: the
+//     recommended commercial yeast falls below a weighable amount (directOverFerment). This
+//     is the "warm kitchen → unworkable" signal the bow-out keys off. The softer preferment
+//     "past peak" nudge (prefermentExcessActivity) still shows its line but does NOT bow out —
+//     it's ratio/length-driven, fires at normal temps, and is fine alongside a schedule.
 //   ssSuggested — the dial values the engine last seeded, for drift detection / restore.
 var ssOverFermentFlag=false, ssSuggested=null;
+// Custom availability profiles (beta). The in-memory library IS the working set; Save commits
+// it to its OWN storage key. 'default' is virtual (uses the engine's defaultWindowsFor), so when
+// it's active the schedule is byte-for-byte identical to shipping. Edits/creates/deletes are
+// session-only until Save — reload restores the last saved state.
+var ssProfiles=[];               // [{id, name, weekday:[win,win], weekend:[win,win]}]
+var ssActiveProfile='default';   // 'default' or a profile id
+var ssDirty=false;               // in-memory library differs from saved
+var ssProfPanelOpen=false;       // expandable tile open/closed
 var oven='steel',mixer='spiral',useCelsius=false,theme='artisan';
 
 var initD=new Date();initD.setHours(initD.getHours()+36,0,0,0);
@@ -1459,6 +1505,7 @@ function toggleSmarterSchedule(){
     var d=document.getElementById('ss2Drift'); if(d)d.classList.remove('show');
     ssSuggested=null;
   }
+  renderProfilePanel();
   saveState();
 }
 function renderSmarterSchedule(){
@@ -1487,7 +1534,7 @@ function renderSmarterSchedule(){
   var dp=parts[0].split('-');
   var tp=(parts[1]||'18:00').split(':');
   var bake=new Date(parseInt(dp[0]),parseInt(dp[1])-1,parseInt(dp[2]),parseInt(tp[0]),parseInt(tp[1]),0,0);
-  var res=SmarterSchedule.solve(mode,bake);
+  var res=SmarterSchedule.solve(mode,bake,{windowsFor:activeProfileWindows()});
   if(!res.feasible){
     planEl.classList.remove('show'); tempEl.classList.remove('show');
     errEl.textContent='⚠ '+res.reason+' — try a later bake time.';
@@ -1618,6 +1665,7 @@ function ssBowOut(msg){
   var e=document.getElementById('ss2Error');
   e.textContent='⚠ '+msg;
   e.classList.add('show');
+  renderProfilePanel();
   saveState();
 }
 
@@ -1664,6 +1712,129 @@ function ssRestoreSuggestion(){
   refreshSSTempLine();
   updateDriftLine();   // back on plan → line hides itself
   saveState();
+}
+
+// ─── CUSTOM AVAILABILITY PROFILES (beta) ───────────────────────────────────────
+// Persistence: separate storage key, never the omarPizzaState blob. Save is the only writer.
+function saveProfiles(){
+  try{localStorage.setItem('omarPizzaProfiles',JSON.stringify({list:ssProfiles,active:ssActiveProfile}));ssDirty=false;}catch(e){}
+}
+function loadProfiles(){
+  try{
+    var p=JSON.parse(localStorage.getItem('omarPizzaProfiles')||'{}');
+    ssProfiles=Array.isArray(p.list)?p.list:[];
+    ssActiveProfile=(typeof p.active==='string')?p.active:'default';
+    // active pointer must reference an existing profile, else fall back to the safe default
+    if(ssActiveProfile!=='default' && !ssProfiles.some(function(x){return x.id===ssActiveProfile;}))ssActiveProfile='default';
+  }catch(e){ ssProfiles=[]; ssActiveProfile='default'; }
+  ssDirty=false;
+}
+function ssWin(on,start,end,heavy){return {on:on,start:start,end:end,heavy:heavy};}
+function ssDefaultTemplates(){
+  // Mirrors the engine's defaultWindowsFor: weekday 6:00–7:30 (light) + 18:00–22:00 (heavy);
+  // weekend single 9:00–22:00 (heavy), second slot off.
+  return {
+    weekday:[ssWin(true,6.0,7.5,false), ssWin(true,18.0,22.0,true)],
+    weekend:[ssWin(true,9.0,22.0,true), ssWin(false,18.0,22.0,true)]
+  };
+}
+function ssNewId(){return 'p'+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36);}
+
+// Build a PURE windowsFor(date) from a profile (read once into the closure; no side effects).
+function profileToWindowsFor(p){
+  function build(arr){var o=[];for(var i=0;i<(arr||[]).length;i++){var w=arr[i];if(w.on && w.end>w.start)o.push({startHour:w.start,endHour:w.end,allowsHeavy:!!w.heavy});}return o;}
+  var wd=build(p.weekday), we=build(p.weekend);
+  return function(d){var day=d.getDay();return (day===0||day===6)?we:wd;};
+}
+// The windowsFor the schedule should use right now. Default → the engine's own function,
+// so the active=Default path is identical to shipping behavior.
+function activeProfileWindows(){
+  if(ssActiveProfile==='default')return SmarterSchedule.defaultWindowsFor;
+  var p=ssProfiles.find(function(x){return x.id===ssActiveProfile;});
+  return p?profileToWindowsFor(p):SmarterSchedule.defaultWindowsFor;
+}
+function activeProfileName(){
+  if(ssActiveProfile==='default')return 'Default';
+  var p=ssProfiles.find(function(x){return x.id===ssActiveProfile;});
+  return p?p.name:'Default';
+}
+function ssUniqueName(base){var n=base,i=2,names=ssProfiles.map(function(p){return p.name;});while(names.indexOf(n)>=0){n=base+' '+i;i++;}return n;}
+
+// ── actions (all mutate in-memory + mark dirty + re-solve; Save commits) ──
+function ssSelectProfile(id){ ssActiveProfile=id; ssDirty=true; ssReSolveAndRender(); }
+function ssNewProfile(){
+  var t=ssDefaultTemplates();
+  var prof={id:ssNewId(),name:ssUniqueName('My schedule'),weekday:t.weekday,weekend:t.weekend};
+  ssProfiles.push(prof); ssActiveProfile=prof.id; ssDirty=true; ssProfPanelOpen=true; ssReSolveAndRender();
+}
+function ssRenameProfile(id){
+  var p=ssProfiles.find(function(x){return x.id===id;}); if(!p)return;
+  var nn=prompt('Rename schedule:',p.name);
+  if(nn && nn.trim()){ p.name=nn.trim(); ssDirty=true; renderProfilePanel(); }
+}
+function ssDeleteProfile(id){
+  var p=ssProfiles.find(function(x){return x.id===id;}); if(!p)return;
+  if(!confirm('Delete \u201C'+p.name+'\u201D? (won\u2019t be permanent until you Save)'))return;
+  ssProfiles=ssProfiles.filter(function(x){return x.id!==id;});
+  if(ssActiveProfile===id)ssActiveProfile='default';
+  ssDirty=true; ssReSolveAndRender();
+}
+function ssEditWindow(id,tmpl,idx,field,value){
+  var p=ssProfiles.find(function(x){return x.id===id;}); if(!p||!p[tmpl]||!p[tmpl][idx])return;
+  p[tmpl][idx][field]=value; ssDirty=true; ssReSolveAndRender();
+}
+function ssSaveProfiles(){ saveProfiles(); renderProfilePanel(); }
+function ssReSolveAndRender(){
+  if(smarterSchedule)renderSmarterSchedule();  // re-seeds dials, resets drift — correct: the plan changed
+  renderProfilePanel();
+}
+
+// ── panel rendering ──
+function toggleProfilePanel(){ ssProfPanelOpen=!ssProfPanelOpen; renderProfilePanel(); }
+function ssEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;');}
+function fmtTimeInput(dec){var h=Math.floor(dec),m=Math.round((dec-h)*60);if(m===60){h++;m=0;}return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');}
+function parseTimeInput(v){var pp=String(v).split(':');return (parseInt(pp[0],10)||0)+(parseInt(pp[1],10)||0)/60;}
+function ssTemplateEditor(p,tmpl,label){
+  var arr=p[tmpl]||[],rows='';
+  for(var i=0;i<arr.length;i++){var w=arr[i];
+    rows+='<div class="ss2-win'+(w.on?'':' off')+'">'+
+      '<label class="ss2-win-on"><input type="checkbox" '+(w.on?'checked':'')+' onchange="ssEditWindow(\''+p.id+'\',\''+tmpl+'\','+i+',\'on\',this.checked)"> on</label>'+
+      '<input class="ss2-win-time" type="time" step="900" value="'+fmtTimeInput(w.start)+'" onchange="ssEditWindow(\''+p.id+'\',\''+tmpl+'\','+i+',\'start\',parseTimeInput(this.value))">'+
+      '<span class="ss2-win-dash">\u2013</span>'+
+      '<input class="ss2-win-time" type="time" step="900" value="'+fmtTimeInput(w.end)+'" onchange="ssEditWindow(\''+p.id+'\',\''+tmpl+'\','+i+',\'end\',parseTimeInput(this.value))">'+
+      '<label class="ss2-win-heavy"><input type="checkbox" '+(w.heavy?'checked':'')+' onchange="ssEditWindow(\''+p.id+'\',\''+tmpl+'\','+i+',\'heavy\',this.checked)"> messy work ok</label>'+
+    '</div>';
+  }
+  return '<div class="ss2-prof-tmpl"><div class="ss2-prof-tmpl-h">'+label+'</div>'+rows+'</div>';
+}
+function renderProfilePanel(){
+  var root=document.getElementById('ss2Profiles'); if(!root)return;
+  if(!smarterSchedule){ root.classList.remove('show'); return; }   // gated on beta being on
+  root.classList.add('show');
+  var act=document.getElementById('ss2ProfActive'); if(act)act.textContent=activeProfileName();
+  var caret=document.getElementById('ss2ProfCaret'); if(caret)caret.textContent=ssProfPanelOpen?'\u25BE':'\u25B8';
+  var body=document.getElementById('ss2ProfBody'); if(body)body.classList.toggle('open',ssProfPanelOpen);
+  if(!ssProfPanelOpen)return;
+  var list=document.getElementById('ss2ProfList');
+  if(list){
+    var chips='<button class="ss2-prof-chip'+(ssActiveProfile==='default'?' active':'')+'" onclick="ssSelectProfile(\'default\')">Default</button>';
+    ssProfiles.forEach(function(p){chips+='<button class="ss2-prof-chip'+(ssActiveProfile===p.id?' active':'')+'" onclick="ssSelectProfile(\''+p.id+'\')">'+ssEsc(p.name)+'</button>';});
+    chips+='<button class="ss2-prof-new" onclick="ssNewProfile()">\uFF0B new</button>';
+    list.innerHTML=chips;
+  }
+  var ed=document.getElementById('ss2ProfEditor'); if(!ed)return;
+  if(ssActiveProfile==='default'){
+    ed.innerHTML='<div class="ss2-prof-note">Default is the built-in schedule \u2014 mornings before work, evenings, open weekends. Tap \uFF0B new to build your own.</div>';
+    return;
+  }
+  var p=ssProfiles.find(function(x){return x.id===ssActiveProfile;});
+  if(!p){ed.innerHTML='';return;}
+  ed.innerHTML=ssTemplateEditor(p,'weekday','Weekdays')+ssTemplateEditor(p,'weekend','Weekends')+
+    '<div class="ss2-prof-actions">'+
+      '<button class="ss2-prof-save'+(ssDirty?' dirty':'')+'" onclick="ssSaveProfiles()">'+(ssDirty?'\u25CF save changes':'saved')+'</button>'+
+      '<button class="ss2-prof-rename" onclick="ssRenameProfile(\''+p.id+'\')">rename</button>'+
+      '<button class="ss2-prof-del" onclick="ssDeleteProfile(\''+p.id+'\')">\u2715 delete</button>'+
+    '</div>';
 }
 
 function updateFloaters(){
@@ -2238,7 +2409,7 @@ function _update(){
     }
     if(maltOn)html+=ingRow('🌾','diastatic malt',maltG,1,'mix into flour before adding');
     var bigaCovRatio=(bigaPct>=1.0)?2:BIGA_FINAL_COV50*(bigaPct/(1-bigaPct));
-    if(finalIDY<=0 && prefermentExcessActivity(bigaCovRatio,bH,rT,fH,fT)>0){ ssOverFermentFlag=true; html+=overFermentLine(); }
+    if(finalIDY<=0 && prefermentExcessActivity(bigaCovRatio,bH,rT,fH,fT)>0){ html+=overFermentLine(); }
 
   } else if(isPoolish){
     // ── POOLISH RECIPE ──
@@ -2291,7 +2462,7 @@ function _update(){
       html+=`<div class="recipe-item"><span class="ing-name"><span class="ing-emoji">🌿</span>${yeastLabel(yeast)} (final dough)<span style="font-family:var(--num-font);font-size:0.7rem;color:var(--ink3);font-style:normal;margin-left:4px;">poolish carries the leavening — no added yeast</span></span><span class="ing-weight">none</span></div>`;
     }
     var poolishCovRatio=(poolishPct>=1.0)?2:POOLISH_FINAL_COV*(poolishPct/(1-poolishPct));
-    if(finalPoolishIDY<=0 && prefermentExcessActivity(poolishCovRatio,bH,rT,fH,fT)>0){ ssOverFermentFlag=true; html+=overFermentLine(); }
+    if(finalPoolishIDY<=0 && prefermentExcessActivity(poolishCovRatio,bH,rT,fH,fT)>0){ html+=overFermentLine(); }
 
   } else if(isSour){
     // ── SOURDOUGH RECIPE ──
@@ -2866,7 +3037,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.7.4 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.8.0 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
@@ -3062,10 +3233,12 @@ var SmarterSchedule=(function(){
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadState();
+loadProfiles();
 if(smarterSchedule){
   document.getElementById('ss2Toggle').classList.add('on');
   renderSmarterSchedule();
 }
+renderProfilePanel();
 updateThemeText();
 update();
 renderJournal();
