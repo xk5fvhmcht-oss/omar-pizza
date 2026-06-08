@@ -403,7 +403,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v1.7.0 · science-verified · party edition</div>
+    <div class="version-badge">v1.7.2 · science-verified · party edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -515,7 +515,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
       <div id="sourInocWrap" style="display:none;">
         <div class="slider-wrap" style="background:var(--accent-f);padding:12px;border-radius:var(--btn-radius);border:1px solid rgba(193,123,58,0.15)">
           <div class="slider-head"><span class="slider-name">starter inoculation</span><span class="slider-val" id="inocVal">15%</span></div>
-          <input type="range" id="inocSlider" min="5" max="30" step="5" value="15">
+          <input type="range" id="inocSlider" min="3" max="30" step="1" value="15">
           <div style="font-family:var(--num-font);font-size:0.7rem;color:var(--ink3);margin-top:6px;">assumes 100% hydration starter</div>
         </div>
       </div>
@@ -653,7 +653,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
         </div>
         <div class="slider-wrap" style="margin-bottom:0" id="bulkWrap">
           <div class="slider-head"><span class="slider-name" id="bulkLabel">bulk fermentation</span><span class="slider-val" id="bulkVal">4h</span></div>
-          <input type="range" id="bulkSlider" min="1" max="12" step="0.25" value="4.0">
+          <input type="range" id="bulkSlider" min="1" max="18" step="0.25" value="4.0">
         </div>
       </div>
 
@@ -1518,10 +1518,10 @@ function feedDialsFromSchedule(res){
     setSliderSS('bulkSlider', hrs('ball_fridge','dough_mix'));
     setSliderSS('fTimeSlider', hrs('temper','ball_fridge'));
   } else if(res.mode==='biga'){
-    // biga ripen (biga_mix -> dough_mix) split: 2h room, remainder fridge
-    var ripen=hrs('dough_mix','biga_mix');
-    var bigaRoom=Math.min(2, ripen);
-    var bigaFridge=Math.max(0, ripen-bigaRoom);
+    // v2: biga has real biga_fridge and pull_biga steps — derive room & fridge time
+    // from the schedule itself rather than hardcoding.
+    var bigaRoom=hrs('biga_fridge','biga_mix');       // mix -> fridge = room rest
+    var bigaFridge=hrs('pull_biga','biga_fridge');    // fridge -> pull = cold ripen
     setSliderSS('bigaRoomHSlider', bigaRoom);
     setSliderSS('bigaFridgeHSlider', bigaFridge);
     // final dough: bulk = dough_mix -> ball_fridge ; cold retard = ball_fridge -> temper
@@ -2741,7 +2741,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v1.7.0 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v1.7.2 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
@@ -2788,30 +2788,38 @@ function closePrint(){
 // Namespaced to avoid any collision with the existing Smart Schedule.
 var SmarterSchedule=(function(){
   'use strict';
+  // Smarter Schedule v2 — fridge transitions are real LIGHT steps the engine places.
   var SPAN={slow:[36,60],biga:[60,84],poolish:[48,72],sour:[48,84]};
   var TEMPER_BEFORE_BAKE=2.0, BULK_BEFORE_BALL=1.5;
-  var PREFERMENT_RIPEN={biga:16,poolish:14}, FEED_BEFORE_MIX=10;
+  var BIGA_ROOM_REST={min:2,max:4,ideal:2};
+  var POOLISH_USES_FRIDGE=false;
+  var BIGA_RIPEN={min:14,max:22,ideal:16};
+  var POOLISH_RIPEN={min:12,max:16,ideal:14};
+  var FEED_BEFORE_MIX={min:8,max:12,ideal:10};
+  var PULL_BIGA_BEFORE_MIX=0.1;
   var STEP_GRID_MIN=15, SNAP_CAP_HOURS=12;
   var MODES={
-    biga:[{key:'biga_mix',label:'mix biga',emoji:'🍕',weight:'heavy',role:'first'},
-      {key:'dough_mix',label:'pull biga + mix dough',emoji:'🥣',weight:'heavy',role:'dough'},
-      {key:'ball_fridge',label:'ball + fridge',emoji:'🔴',weight:'heavy',role:'ball'},
-      {key:'temper',label:'pull + temper',emoji:'🌡️',weight:'light',role:'temper'},
-      {key:'bake',label:'shape + bake',emoji:'🎉',weight:'heavy',role:'bake'}],
-    poolish:[{key:'poolish_mix',label:'mix poolish',emoji:'🌊',weight:'light',role:'first'},
-      {key:'dough_mix',label:'pull poolish + mix dough',emoji:'🥣',weight:'heavy',role:'dough'},
-      {key:'ball_fridge',label:'ball + fridge',emoji:'🔴',weight:'heavy',role:'ball'},
-      {key:'temper',label:'pull + temper',emoji:'🌡️',weight:'light',role:'temper'},
-      {key:'bake',label:'shape + bake',emoji:'🎉',weight:'heavy',role:'bake'}],
-    slow:[{key:'dough_mix',label:'mix dough',emoji:'🥣',weight:'heavy',role:'dough'},
-      {key:'ball_fridge',label:'ball + fridge',emoji:'🔴',weight:'heavy',role:'ball'},
-      {key:'temper',label:'pull + temper',emoji:'🌡️',weight:'light',role:'temper'},
-      {key:'bake',label:'shape + bake',emoji:'🎉',weight:'heavy',role:'bake'}],
-    sour:[{key:'feed',label:'feed starter',emoji:'🍋',weight:'light',role:'first'},
-      {key:'dough_mix',label:'mix + ball',emoji:'🥣',weight:'heavy',role:'dough'},
-      {key:'ball_fridge',label:'ball + fridge',emoji:'🔴',weight:'heavy',role:'ball'},
-      {key:'temper',label:'pull + temper',emoji:'🌡️',weight:'light',role:'temper'},
-      {key:'bake',label:'shape + bake',emoji:'🎉',weight:'heavy',role:'bake'}]
+    biga:[{key:'biga_mix',label:'mix biga',emoji:'🍕',weight:'heavy'},
+      {key:'biga_fridge',label:'biga → fridge',emoji:'🧊',weight:'light'},
+      {key:'pull_biga',label:'pull biga',emoji:'🍕',weight:'light'},
+      {key:'dough_mix',label:'mix final dough',emoji:'🥣',weight:'heavy'},
+      {key:'ball_fridge',label:'ball + fridge',emoji:'🔴',weight:'heavy'},
+      {key:'temper',label:'pull + temper',emoji:'🌡️',weight:'light'},
+      {key:'bake',label:'shape + bake',emoji:'🎉',weight:'heavy'}],
+    poolish:[{key:'poolish_mix',label:'mix poolish',emoji:'🌊',weight:'light'},
+      {key:'dough_mix',label:'mix final dough',emoji:'🥣',weight:'heavy'},
+      {key:'ball_fridge',label:'ball + fridge',emoji:'🔴',weight:'heavy'},
+      {key:'temper',label:'pull + temper',emoji:'🌡️',weight:'light'},
+      {key:'bake',label:'shape + bake',emoji:'🎉',weight:'heavy'}],
+    slow:[{key:'dough_mix',label:'mix dough',emoji:'🥣',weight:'heavy'},
+      {key:'ball_fridge',label:'ball + fridge',emoji:'🔴',weight:'heavy'},
+      {key:'temper',label:'pull + temper',emoji:'🌡️',weight:'light'},
+      {key:'bake',label:'shape + bake',emoji:'🎉',weight:'heavy'}],
+    sour:[{key:'feed',label:'feed starter',emoji:'🍋',weight:'light'},
+      {key:'dough_mix',label:'mix + ball',emoji:'🥣',weight:'heavy'},
+      {key:'ball_fridge',label:'ball + fridge',emoji:'🔴',weight:'heavy'},
+      {key:'temper',label:'pull + temper',emoji:'🌡️',weight:'light'},
+      {key:'bake',label:'shape + bake',emoji:'🎉',weight:'heavy'}]
   };
   var MS_HOUR=3600000, MS_MIN=60000;
   function addHours(d,h){return new Date(d.getTime()+h*MS_HOUR);}
@@ -2839,26 +2847,59 @@ var SmarterSchedule=(function(){
     }
     return null;
   }
-  function placeFirstStep(mode,doughMix,wf){
-    switch(mode){
-      case 'slow':return doughMix;
-      case 'biga':return snapToWindow(addHours(doughMix,-PREFERMENT_RIPEN.biga),true,wf);
-      case 'poolish':return snapToWindow(addHours(doughMix,-PREFERMENT_RIPEN.poolish),false,wf);
-      case 'sour':return snapToWindow(addHours(doughMix,-FEED_BEFORE_MIX),false,wf);
-      default:return null;
+  function placeBigaFridge(bigaMix,wf){
+    for(var m=BIGA_ROOM_REST.min*60;m<=BIGA_ROOM_REST.max*60+1e-6;m+=STEP_GRID_MIN){
+      var cand=addMinutes(bigaMix,m);
+      if(windowContaining(cand,wf))return cand;
     }
+    return null;
+  }
+  function placeBiga(doughMix,wf){
+    var ideal=addHours(doughMix,-BIGA_RIPEN.ideal);var capMin=SNAP_CAP_HOURS*60;
+    for(var off=0;off<=capMin;off+=STEP_GRID_MIN){
+      var cands=off===0?[ideal]:[addMinutes(ideal,-off),addMinutes(ideal,off)];
+      for(var i=0;i<cands.length;i++){
+        var cand=cands[i];
+        var ripen=diffHours(doughMix,cand);
+        if(ripen<BIGA_RIPEN.min-1e-9||ripen>BIGA_RIPEN.max+1e-9)continue;
+        if(!inHeavyWindow(cand,wf))continue;
+        var bigaFridge=placeBigaFridge(cand,wf);
+        if(!bigaFridge)continue;
+        var pullBiga=addHours(doughMix,-PULL_BIGA_BEFORE_MIX);
+        if(!windowContaining(pullBiga,wf))pullBiga=doughMix;
+        return {firstStep:cand,pref:{biga_mix:cand,biga_fridge:bigaFridge,pull_biga:pullBiga}};
+      }
+    }
+    return null;
+  }
+  function placePreferment(mode,doughMix,wf){
+    if(mode==='slow')return {firstStep:doughMix,pref:{}};
+    if(mode==='sour'){
+      var feed=snapToWindow(addHours(doughMix,-FEED_BEFORE_MIX.ideal),false,wf);
+      if(!feed)return null;
+      var fr=diffHours(doughMix,feed);
+      if(fr<FEED_BEFORE_MIX.min-1e-9||fr>FEED_BEFORE_MIX.max+1e-9)return null;
+      return {firstStep:feed,pref:{feed:feed}};
+    }
+    if(mode==='poolish'){
+      var pm=snapToWindow(addHours(doughMix,-POOLISH_RIPEN.ideal),false,wf);
+      if(!pm)return null;
+      var pr=diffHours(doughMix,pm);
+      if(pr<POOLISH_RIPEN.min-1e-9||pr>POOLISH_RIPEN.max+1e-9)return null;
+      return {firstStep:pm,pref:{poolish_mix:pm}};
+    }
+    if(mode==='biga')return placeBiga(doughMix,wf);
+    return null;
   }
   function assembleSchedule(mode,pick,bake,temper,floor,ceiling){
-    var ball=pick.ball,doughMix=pick.doughMix,firstStep=pick.firstStep,totalSpan=pick.totalSpan;
-    function timeFor(role){
-      switch(role){case 'first':return firstStep;case 'dough':return doughMix;case 'ball':return ball;case 'temper':return temper;case 'bake':return bake;}
-    }
-    var steps=MODES[mode].map(function(def){return {key:def.key,label:def.label,emoji:def.emoji,weight:def.weight,time:timeFor(def.role)};});
+    var ball=pick.ball,doughMix=pick.doughMix,pref=pick.pref,totalSpan=pick.totalSpan;
+    var timeByKey=Object.assign({dough_mix:doughMix,ball_fridge:ball,temper:temper,bake:bake},pref);
+    var steps=MODES[mode].map(function(def){return {key:def.key,label:def.label,emoji:def.emoji,weight:def.weight,time:timeByKey[def.key]};});
     return {feasible:true,mode:mode,steps:steps,totalSpanHours:round2(totalSpan),coldRetardHours:round2(diffHours(temper,ball)),spanWindow:[floor,ceiling]};
   }
   function solve(mode,bakeDateTime,options){
     options=options||{};
-    var wf=options.windowsFor||defaultWindowsFor;
+    var wf=(options&&options.windowsFor)?options.windowsFor:defaultWindowsFor;
     if(mode==='rapid')return {feasible:false,reason:'rapid is not scheduled'};
     if(!SPAN[mode])return {feasible:false,reason:'unknown mode: '+mode};
     var floor=SPAN[mode][0],ceiling=SPAN[mode][1];
@@ -2873,14 +2914,15 @@ var SmarterSchedule=(function(){
       if(!inHeavyWindow(ball,wf))continue;
       var doughMix=addHours(ball,-BULK_BEFORE_BALL);
       if(!inHeavyWindow(doughMix,wf))continue;
-      var firstStep=placeFirstStep(mode,doughMix,wf);
-      if(firstStep==null)continue;
+      var placed=placePreferment(mode,doughMix,wf);
+      if(placed==null)continue;
+      var firstStep=placed.firstStep,pref=placed.pref;
       if(mode!=='slow'&&!(firstStep.getTime()<doughMix.getTime()))continue;
       var totalSpan=diffHours(bake,firstStep);
       if(totalSpan<floor-1e-9||totalSpan>ceiling+1e-9)continue;
       var lean=positionInWindow(doughMix,wf)+positionInWindow(ball,wf);
-      if(mode==='biga')lean+=positionInWindow(firstStep,wf);
-      candidates.push({ball:ball,doughMix:doughMix,firstStep:firstStep,totalSpan:totalSpan,lean:lean});
+      if(mode==='biga')lean+=positionInWindow(pref.biga_mix,wf);
+      candidates.push({ball:ball,doughMix:doughMix,pref:pref,firstStep:firstStep,totalSpan:totalSpan,lean:lean});
     }
     if(candidates.length===0)return {feasible:false,reason:'no schedule fits windows within span range'};
     candidates.sort(function(a,b){
@@ -2890,7 +2932,7 @@ var SmarterSchedule=(function(){
     });
     return assembleSchedule(mode,candidates[0],bake,temper,floor,ceiling);
   }
-  return {solve:solve,defaultWindowsFor:defaultWindowsFor,diffHours:diffHours,SPAN:SPAN};
+  return {solve:solve,defaultWindowsFor:defaultWindowsFor,diffHours:diffHours,SPAN:SPAN,MODES:MODES};
 })();
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
