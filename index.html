@@ -125,6 +125,15 @@
 .ss2-drift{display:none;font-family:var(--num-font);font-size:0.72rem;color:var(--ink3);font-style:italic;text-align:center;padding:6px 2px 2px;letter-spacing:0.02em;}
 .ss2-drift.show{display:block;}
 .ss2-drift-restore{color:var(--accent);font-style:normal;cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
+.flour2{margin-top:8px;}
+.flour2-toggle{font-family:var(--ui-font);font-size:0.82rem;padding:6px 13px;border-radius:var(--pill-radius);border:1px dashed var(--border);background:transparent;color:var(--ink3);cursor:pointer;}
+.flour2-toggle.on{border-style:solid;border-color:var(--accent);color:var(--accent);}
+.flour2-panel{display:none;margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:var(--btn-radius);background:var(--sub);}
+.flour2-panel.show{display:block;}
+.flour2-types{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.pill.f2{font-family:var(--ui-font);font-size:0.78rem;padding:7px 4px;border-radius:var(--btn-radius);border:1px solid var(--border);background:var(--bg);color:var(--ink2);cursor:pointer;text-align:center;}
+.pill.f2.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+.flour2-note{min-height:2.6em;font-family:var(--ui-font);font-size:0.8rem;color:var(--ink3);line-height:1.4;margin:9px 2px 2px;}
 .ss2-profiles{display:none;margin-top:8px;}
 .ss2-profiles.show{display:block;}
 .ss2-prof-head{display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 11px;background:var(--sub);border:1px solid var(--border);border-radius:var(--btn-radius);}
@@ -434,7 +443,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v2.0 · science-verified · party edition</div>
+    <div class="version-badge">v2.1.1 · science-verified · smarter edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -552,6 +561,23 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
       <div class="pill-row">
         <button class="pill on" id="flourTipo" onclick="setFlour('Tipo')">Tipo 00</button>
         <button class="pill" id="flourBread" onclick="setFlour('Bread')">bread flour</button>
+      </div>
+
+      <div class="flour2">
+        <button class="flour2-toggle" id="flour2Toggle" onclick="toggleFlour2()">＋ blend a second flour</button>
+        <div class="flour2-panel" id="flour2Panel">
+          <div class="flour2-types">
+            <button class="pill f2" id="f2_ww" onclick="setFlour2('ww')">whole wheat</button>
+            <button class="pill f2" id="f2_rye" onclick="setFlour2('rye')">rye</button>
+            <button class="pill f2" id="f2_spelt" onclick="setFlour2('spelt')">spelt</button>
+            <button class="pill f2" id="f2_emmer" onclick="setFlour2('emmer')">emmer</button>
+            <button class="pill f2" id="f2_semola" onclick="setFlour2('semola')">semola</button>
+            <button class="pill f2" id="f2_other" onclick="setFlour2('other')">other</button>
+          </div>
+          <div class="flour2-note" id="flour2Note"></div>
+          <div class="slider-head" style="margin-top:4px;"><span class="slider-name">second flour · % of flour</span><span class="slider-val" id="flour2Val">10%</span></div>
+          <input type="range" id="flour2Slider" min="0" max="30" step="1" value="10" oninput="setFlour2Pct(this.value)">
+        </div>
       </div>
 
       <!-- Sourdough inoculation -->
@@ -814,6 +840,10 @@ window.onerror=function(msg,src,line,col,err){
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 var mode='rapid',isAuto=false,flour='Tipo',yeast='IDY',maltOn=false;
+// Optional second-flour blend (informative only — never alters the calibrated model).
+// flour2Type 'none' = single flour. The split is a pure proportional partition of the
+// total flour, so every flour line in the recipe splits the same way and the math can't go invalid.
+var flour2Type='none', flour2Pct=0;
 var smartSchedule=false,ssManualOverride=false;
 // Smarter Schedule (beta) shared state:
 //   ssOverFermentFlag — set by update() ONLY for the hard, temperature-driven case: the
@@ -905,7 +935,7 @@ document.getElementById('poolishPctSlider').addEventListener('input',function(){
 
 // ─── PERSIST STATE ────────────────────────────────────────────────────────────
 function saveState(){
-  try{localStorage.setItem('omarPizzaState',JSON.stringify({mode,isAuto,flour,yeast,maltOn,honeyOn,oven,mixer,useCelsius,theme,smartSchedule,smarterSchedule,yeastModel,
+  try{localStorage.setItem('omarPizzaState',JSON.stringify({mode,isAuto,flour,yeast,maltOn,honeyOn,oven,mixer,useCelsius,theme,smartSchedule,smarterSchedule,yeastModel,flour2Type,flour2Pct,
     hyd:document.getElementById('hydSlider').value,
     count:document.getElementById('countSlider').value,
     size:document.getElementById('sizeSlider').value,
@@ -933,6 +963,8 @@ function loadState(){
     if(s.mode)mode=s.mode;
     if(s.isAuto!==undefined)isAuto=s.isAuto;
     if(s.flour)flour=s.flour;
+    if(s.flour2Type)flour2Type=s.flour2Type;
+    if(s.flour2Pct!==undefined){flour2Pct=+s.flour2Pct; var f2s=document.getElementById('flour2Slider'); if(f2s)f2s.value=s.flour2Pct;}
     if(s.yeast)yeast=s.yeast;
     if(s.maltOn!==undefined)maltOn=s.maltOn;
     if(s.honeyOn!==undefined)honeyOn=s.honeyOn;
@@ -1353,6 +1385,7 @@ function setMode(m){
   // Re-run Smart Schedule for new mode
   if(smartSchedule&&m!=='rapid')runSmartSchedule();
   if(smarterSchedule)renderSmarterSchedule();
+  renderFlour2Panel();
   snapHyd();update();saveState();
 }
 function setOven(o){oven=o;snapHyd();update();saveState();}
@@ -1364,6 +1397,58 @@ function setMixer(mx){
   update();saveState();
 }
 function setFlour(f){flour=f;snapHyd();update();saveState();}
+
+// ─── SECOND-FLOUR BLEND (optional, informative only) ───────────────────────────
+var FLOUR2={
+  ww:    {label:'whole wheat',        note:'Absorbs more water and ferments a little faster — consider +2–3% hydration.'},
+  rye:   {label:'rye',                note:'Thirsty and fast-fermenting, low in gluten and a touch sticky — keep the share modest.'},
+  spelt: {label:'spelt',              note:'Weak, extensible gluten that slackens easily — handle gently and don\u2019t over-hydrate.'},
+  emmer: {label:'emmer (farro)',      note:'Ancient and delicate, low in gluten — lovely flavour, but the dough gets looser above ~15%.'},
+  semola:{label:'semola rimacinata',  note:'Durum semolina adds structure and a sweet, golden crumb — the friendliest blend.'},
+  other: {label:'second flour',       note:'No blending notes for this one — adjust by feel.'}
+};
+function toggleFlour2(){
+  if(flour2Type==='none'){
+    flour2Type='ww';
+    if(flour2Pct<=0){ flour2Pct=10; var sl=document.getElementById('flour2Slider'); if(sl)sl.value=10; }
+  } else {
+    flour2Type='none';
+  }
+  renderFlour2Panel(); update(); saveState();
+}
+function setFlour2(t){ flour2Type=t; renderFlour2Panel(); update(); saveState(); }
+function setFlour2Pct(v){ flour2Pct=+v; var el=document.getElementById('flour2Val'); if(el)el.textContent=Math.round(flour2Pct)+'%'; update(); saveState(); }
+function renderFlour2Panel(){
+  var on=flour2Type!=='none';
+  var tog=document.getElementById('flour2Toggle'), panel=document.getElementById('flour2Panel');
+  if(tog){ tog.textContent=on?'\u2715 single flour':'\uFF0B blend a second flour'; tog.classList.toggle('on',on); }
+  if(panel)panel.classList.toggle('show',on);
+  if(!on)return;
+  ['ww','rye','spelt','emmer','semola','other'].forEach(function(k){
+    var b=document.getElementById('f2_'+k); if(b)b.classList.toggle('on',flour2Type===k);
+  });
+  var note=document.getElementById('flour2Note');
+  if(note){
+    var txt=(FLOUR2[flour2Type]&&FLOUR2[flour2Type].note)||'';
+    if((mode==='biga'||mode==='poolish') && flour2Type!=='other'){
+      txt+=' Your '+FLOUR2[flour2Type].label+' is split across the '+mode+' and the final dough — the '+mode+' will run a touch livelier.';
+    }
+    note.textContent=txt;
+  }
+  var val=document.getElementById('flour2Val'); if(val)val.textContent=Math.round(flour2Pct)+'%';
+}
+// Render one flour line, or split it proportionally into base + second flour. Because the
+// split is proportional, base = (1-s)·grams and flour2 = s·grams are both >=0 for any input —
+// invalid math is impossible. Sub-lines that round to ~0 (e.g. final flour at 100% biga) are dropped.
+function flourLines(baseName,grams,suffix){
+  suffix=suffix||'';
+  if(!(grams>0.5))return '';
+  if(flour2Type==='none'||flour2Pct<=0) return ingRow('\uD83C\uDF3E',baseName+suffix,grams);
+  var s=flour2Pct/100, g2=grams*s, gBase=grams-g2, h='';
+  if(gBase>0.5) h+=ingRow('\uD83C\uDF3E',baseName+suffix,gBase);
+  if(g2>0.5)    h+=ingRow('\uD83C\uDF3E',FLOUR2[flour2Type].label+suffix,g2);
+  return h;
+}
 function setYeast(y){yeast=y;update();saveState();}
 function toggleAuto(){
   var cfg=MIXER_CFG[mixer];
@@ -2396,13 +2481,13 @@ function _update(){
     var finalYeastG=yeastConvert(finalIDY,yeast);
 
     html+=sectionTitle('🍕 biga');
-    html+=ingRow('🌾','Tipo 00 flour (biga)',bigaFlour);
+    html+=flourLines('Tipo 00 flour',bigaFlour,' (biga)');
     html+=ingRow('💧','water (biga)',bigaWater);
     html+=ingRowRange('🌿',yeastLabel(yeast)+' (biga)',Math.max(0.1,bigaYeastG-0.1),bigaYeastG+0.1);
 
     html+=`<div class="recipe-divider"></div>`;
     html+=sectionTitle('🥣 final dough');
-    html+=ingRow('🌾','Tipo 00 flour',finalFlour);
+    html+=flourLines('Tipo 00 flour',finalFlour,'');
     html+=ingRow('💧','water (final dough)',finalWater,'','reserve ~'+Math.round(reservedWater)+'g for dissolving salt');
     html+=ingRow('🧂','sea salt',saltG,'','sprinkle over dough · follow with reserved water');
     if(finalIDY<=0){
@@ -2444,14 +2529,14 @@ function _update(){
     if(pwEl)pwEl.textContent=poolishWaterTempDisp;
 
     html+=sectionTitle('🌊 poolish');
-    html+=ingRow('🌾','Tipo 00 flour (poolish)',poolishFlour);
+    html+=flourLines('Tipo 00 flour',poolishFlour,' (poolish)');
     html+=ingRow('💧','water (poolish)',poolishWater,'','target temp: '+poolishWaterTempDisp);
     html+=ingRow('🌿',yeastLabel(yeast)+' (poolish)',poolishYeastG,2);
     if(honeyOn)html+=ingRow('🍯','honey',honeyG,1,'stir into poolish water before adding flour');
 
     html+=`<div class="recipe-divider"></div>`;
     html+=sectionTitle('🥣 final dough');
-    html+=ingRow('🌾','Tipo 00 flour',finalFlourP);
+    html+=flourLines('Tipo 00 flour',finalFlourP,'');
     html+=ingRow('💧','water (final dough)',finalWaterP,'','reserve ~'+Math.round(reservedWaterP)+'g for dissolving salt');
     html+=ingRow('🧂','sea salt',saltGP,'','dissolve in reserved water · add after incorporating poolish');
 
@@ -2480,7 +2565,7 @@ function _update(){
 
     html+=ingRow('🍋','sourdough starter (peak)',sW);
     html+=ingRow('💧','water',fW,'','reserve ~'+Math.round(reservedW)+'g for dissolving salt');
-    html+=ingRow('🌾','Tipo 00 flour',fF);
+    html+=flourLines('Tipo 00 flour',fF,'');
     html+=ingRow('🧂','sea salt',saltG,'','add after autolyse · dissolved in reserved water');
 
   } else {
@@ -2501,7 +2586,7 @@ function _update(){
       html+=ingRowRange('🌿',yeastLabel(yeast),Math.max(0.1,yConv-0.1),yConv+0.1,'',bloomNote.trim());
       html+=ingRow('💧','water',fW,'','reserve ~'+Math.round(reservedW)+'g for dissolving salt');
     }
-    html+=ingRow('🌾',flour==='Tipo'?'Tipo 00 flour':'bread flour',fb);
+    html+=flourLines(flour==='Tipo'?'Tipo 00 flour':'bread flour',fb,'');
     html+=ingRow('🧂','sea salt',saltG,'','add after flour hydrates · dissolved in reserved water');
     if(maltOn)html+=ingRow('🌾','diastatic malt',maltG,1,'mix into flour before adding');
     if(directOverFerment(bH,rT,fH,fT,fb)){ ssOverFermentFlag=true; html+=overFermentLine(); }
@@ -2741,6 +2826,7 @@ function saveBake(){
     id:Date.now(),date:new Date().toLocaleString(),
     mode:mode,flour:flour,yeast:yeast,oven:oven,mixer:mixer,
     maltOn:maltOn,honeyOn:honeyOn,yeastModel:yeastModel,
+    flour2Type:flour2Type,flour2Pct:flour2Pct,
     // Core sliders
     count:getSlider('countSlider'),size:getSlider('sizeSlider'),
     hyd:getSlider('hydSlider'),bulk:getSlider('bulkSlider'),
@@ -2907,6 +2993,8 @@ function loadBake(id){
     if(!e)return;
     mode=e.mode;flour=e.flour;yeast=e.yeast||'IDY';oven=e.oven;
     mixer=e.mixer||'spiral';maltOn=e.maltOn||false;honeyOn=e.honeyOn||false;
+    flour2Type=e.flour2Type||'none';flour2Pct=(e.flour2Pct!==undefined?+e.flour2Pct:0);
+    var f2sl=document.getElementById('flour2Slider'); if(f2sl&&flour2Pct>0)f2sl.value=flour2Pct;
     var clamp=function(sid,v){var sl=document.getElementById(sid);if(v!==undefined&&v!==null&&sl)sl.value=Math.min(parseFloat(sl.max),Math.max(parseFloat(sl.min),parseFloat(v)));};
     clamp('countSlider',e.count);clamp('sizeSlider',e.size);clamp('hydSlider',e.hyd);
     clamp('bulkSlider',e.bulk);clamp('fTimeSlider',e.fTime);
@@ -2917,7 +3005,7 @@ function loadBake(id){
     clamp('poolishPctSlider',e.poolishPct);
     clamp('poolishRoomHSlider',e.poolishRoomH);clamp('poolishFridgeHSlider',e.poolishFridgeH);
     clamp('poolishRoomTempSlider',e.poolishRoomT);clamp('poolishFridgeTempSlider',e.poolishFridgeT);
-    update();saveState();
+    update();saveState();renderFlour2Panel();
     document.getElementById('journalPanel').classList.remove('open');document.getElementById('savePanel').classList.remove('open');
   }catch(err){}
 }
@@ -3042,7 +3130,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v2.0 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v2.1.1 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
@@ -3239,6 +3327,7 @@ var SmarterSchedule=(function(){
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadState();
 loadProfiles();
+renderFlour2Panel();
 if(smarterSchedule){
   document.getElementById('ss2Toggle').classList.add('on');
   renderSmarterSchedule();
