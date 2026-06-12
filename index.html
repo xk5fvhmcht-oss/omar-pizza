@@ -51,35 +51,10 @@
   --card-hover-shadow:0 4px 20px rgba(30,26,20,0.08);
   --header-align:center;
 }
-/* ─── PARTY THEME ─────────────────────────────────────────────────────────── */
-[data-theme="party"] {
-  --bg:#fef9ee;--card:#fef3d4;--border:#f0d98a;
-  --ink:#2d2418;--ink2:#5c4d38;--ink3:#9c7a2a;
-  --accent:#c17b3a;--accent-lt:#e8c99a;--accent-f:rgba(193,123,58,0.12);
-  --teal:#2d7d72;--teal-f:rgba(45,125,114,0.12);
-  --rose:#b85c5c;--rose-f:rgba(184,92,92,0.12);
-  --ice:#5b9bd5;--sub:#fdf0c0;
-  --body-font:'Fraunces',Georgia,serif;
-  --label-font:'Caveat',cursive;
-  --ui-font:'Caveat',cursive;
-  --num-font:'DM Mono','Courier New',monospace;
-  --card-radius:16px;--btn-radius:10px;--pill-radius:20px;
-  --card-border:1.5px solid var(--border);
-  --card-hover-shadow:0 8px 30px rgba(193,123,58,0.15);
-  --header-align:center;
-}
-[data-theme="party"] body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:100;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");}
-[data-theme="party"] .smart-schedule-toggle{border-color:var(--accent-lt);background:var(--accent-f);}
-[data-theme="party"] .smart-schedule-toggle.on{border-color:var(--accent);background:var(--accent-f);}
-[data-theme="party"] .cal-day{background:var(--sub);border-color:var(--border);}
-[data-theme="party"] .cal-day.active{border-color:var(--accent);background:var(--accent-f);}
-[data-theme="party"] .cal-day.party{border-color:var(--teal);background:var(--teal-f);}
 .smart-schedule-wrap{margin-bottom:16px;}
 .smart-schedule-toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:var(--btn-radius);border:var(--card-border);background:var(--sub);cursor:pointer;transition:all 0.25s;}
 .smart-schedule-toggle:hover{border-color:var(--accent-lt);}
 .smart-schedule-toggle.on{border-color:var(--accent);background:var(--accent-f);}
-[data-theme="party"] .smart-schedule-toggle{border-color:#4a7aaa;background:rgba(74,122,170,0.15);}
-[data-theme="party"] .smart-schedule-toggle.on{border-color:var(--accent);background:var(--accent-f);}
 .ss-label{display:flex;flex-direction:column;gap:2px;}
 .ss-title{font-family:var(--label-font);font-size:1rem;color:var(--ink);}
 .ss-sub{font-family:var(--num-font);font-size:0.7rem;color:var(--ink3);letter-spacing:0.04em;}
@@ -88,21 +63,14 @@
 .smart-schedule-toggle.on .ss-switch{background:var(--accent);}
 .smart-schedule-toggle.on .ss-switch::after{transform:translateX(22px);}
 
-/* Party prompt */
-.ss-prompt{display:none;margin-top:10px;padding:10px 14px;border-radius:var(--btn-radius);background:var(--accent-f);border-left:3px solid var(--accent);font-family:var(--label-font);font-size:0.92rem;color:var(--ink2);line-height:1.5;}
-[data-theme="artisan"] .ss-prompt{color:#7a4510;}
-.ss-prompt.show{display:block;}
 .ss-error{display:none;margin-top:10px;padding:10px 14px;border-radius:var(--btn-radius);background:var(--rose-f);border-left:3px solid var(--rose);font-family:var(--num-font);font-size:0.78rem;color:var(--rose);}
 .ss-error.show{display:block;}
 .ss-error.info{background:var(--accent-f);border-left-color:var(--accent);color:var(--ink2);}
-.ss-manual{display:none;margin-top:6px;font-family:var(--num-font);font-size:0.7rem;color:var(--ink3);text-align:center;letter-spacing:0.05em;}
-.ss-manual.show{display:block;}
 
 /* Calendar strip */
 .cal-strip{display:none;margin-top:14px;gap:6px;}
 .cal-strip.show{display:flex;}
 .cal-day{flex:1;background:var(--sub);border:var(--card-border);border-radius:var(--btn-radius);padding:10px 8px;text-align:center;}
-[data-theme="party"] .cal-day{background:rgba(255,255,255,0.06);border-color:#3a4f66;}
 .cal-day-name{font-family:var(--num-font);font-size:0.65rem;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;}
 .cal-day-task{font-size:1rem;margin-bottom:2px;}
 .cal-day-label{font-family:var(--ui-font);font-size:0.78rem;color:var(--ink2);margin-bottom:3px;}
@@ -159,9 +127,7 @@
 .ss2-prof-save.dirty{background:var(--accent);color:#fff;border-color:var(--accent);}
 .ss2-prof-rename,.ss2-prof-del{font-family:var(--ui-font);font-size:0.76rem;padding:6px 11px;border-radius:var(--btn-radius);border:1px solid var(--border);background:transparent;color:var(--ink3);cursor:pointer;}
 .cal-day.active{border-color:var(--accent);background:var(--accent-f);}
-.cal-day.party{border-color:#4aab9a;background:rgba(74,171,154,0.1);}
-[data-theme="party"] .cal-day.active{border-color:var(--accent);background:rgba(193,123,58,0.15);}
-[data-theme="party"] .cal-day.party{border-color:#4aab9a;background:rgba(74,171,154,0.15);}
+.cal-day.bake{border-color:#4aab9a;background:rgba(74,171,154,0.12);}
 body{font-family:var(--body-font);background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden;position:relative;transition:background 0.35s ease,color 0.35s ease;padding-bottom:env(safe-area-inset-bottom);}
 [data-theme="artisan"] body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:100;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");}
 [data-theme="pro"] body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:100;opacity:0.02;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");}
@@ -443,7 +409,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v2.1.1 · science-verified · smarter edition</div>
+    <div class="version-badge">v2.2.1 · science-verified · smarter edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -453,26 +419,6 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
       <div class="card-title"><span class="num">1</span> How many pizzas, and when?</div>
       <span class="section-label">target bake time</span>
       <input type="datetime-local" id="targetBake">
-
-      <!-- SMART SCHEDULE -->
-      <div class="smart-schedule-wrap" id="ssWrap">
-        <div class="smart-schedule-toggle" id="ssToggle" onclick="toggleSmartSchedule()">
-          <div class="ss-label">
-            <span class="ss-title">🎉 Smart Schedule</span>
-            <span class="ss-sub">OPTIMIZED FOR A WEEKEND PARTY</span>
-          </div>
-          <div class="ss-switch"></div>
-        </div>
-        <div id="ssStatus" style="font-family:var(--num-font);font-size:0.72rem;color:var(--ink3);padding:4px 2px;letter-spacing:0.03em;display:none;"></div>
-        <div class="ss-prompt" id="ssPrompt">Set your kitchen and fridge temperatures below — we'll handle the timing.</div>
-        <div class="ss-error" id="ssError"></div>
-        <div class="ss-manual" id="ssManual">⟳ MANUAL OVERRIDE — smart schedule off</div>
-        <div class="cal-strip" id="calStrip">
-          <div class="cal-day" id="calDay1"><div class="cal-day-name" id="calDay1Name">—</div><div class="cal-day-task" id="calDay1Task">—</div><div class="cal-day-label" id="calDay1Label">—</div><div class="cal-day-time" id="calDay1Time">—</div></div>
-          <div class="cal-day" id="calDay2"><div class="cal-day-name" id="calDay2Name">—</div><div class="cal-day-task" id="calDay2Task">—</div><div class="cal-day-label" id="calDay2Label">—</div><div class="cal-day-time" id="calDay2Time">—</div></div>
-          <div class="cal-day party" id="calDay3"><div class="cal-day-name" id="calDay3Name">—</div><div class="cal-day-task" id="calDay3Task">🎉</div><div class="cal-day-label" id="calDay3Label">party</div><div class="cal-day-time" id="calDay3Time">—</div></div>
-        </div>
-      </div>
 
       <!-- SMARTER SCHEDULE (BETA) -->
       <div class="smart-schedule-wrap" id="ss2Wrap">
@@ -495,6 +441,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
           </div>
         </div>
         <div class="ss2-temp" id="ss2Temp"></div>
+        <div class="cal-strip ss2-strip" id="ss2Strip"></div>
         <div class="ss2-plan" id="ss2Plan"></div>
         <div class="ss2-drift" id="ss2Drift"></div>
         <div class="ss-error" id="ss2Error"></div>
@@ -844,7 +791,6 @@ var mode='rapid',isAuto=false,flour='Tipo',yeast='IDY',maltOn=false;
 // flour2Type 'none' = single flour. The split is a pure proportional partition of the
 // total flour, so every flour line in the recipe splits the same way and the math can't go invalid.
 var flour2Type='none', flour2Pct=0;
-var smartSchedule=false,ssManualOverride=false;
 // Smarter Schedule (beta) shared state:
 //   ssOverFermentFlag — set by update() ONLY for the hard, temperature-driven case: the
 //     recommended commercial yeast falls below a weighable amount (directOverFerment). This
@@ -873,15 +819,7 @@ document.querySelectorAll('input[type=range],input[type=datetime-local]').forEac
   el.addEventListener('input',function(){
     // Duration sliders trigger manual override
     var durationIds=['bulkSlider','fTimeSlider','bigaRoomHSlider','bigaFridgeHSlider','inocSlider','poolishRoomHSlider','poolishFridgeHSlider'];
-    if(smartSchedule&&durationIds.indexOf(el.id)>=0){
-      ssDisableManual();
-    } else {
-      // Re-run Smart Schedule if bake time changes while active
-      if(smartSchedule&&el.id==='targetBake'){
-        runSmartSchedule();
-      }
-      update();saveState();
-    }
+    update();saveState();
     // Smarter Schedule (beta)
     if(smarterSchedule){
       if(el.id==='targetBake'){
@@ -935,7 +873,7 @@ document.getElementById('poolishPctSlider').addEventListener('input',function(){
 
 // ─── PERSIST STATE ────────────────────────────────────────────────────────────
 function saveState(){
-  try{localStorage.setItem('omarPizzaState',JSON.stringify({mode,isAuto,flour,yeast,maltOn,honeyOn,oven,mixer,useCelsius,theme,smartSchedule,smarterSchedule,yeastModel,flour2Type,flour2Pct,
+  try{localStorage.setItem('omarPizzaState',JSON.stringify({mode,isAuto,flour,yeast,maltOn,honeyOn,oven,mixer,useCelsius,theme,smarterSchedule,yeastModel,flour2Type,flour2Pct,
     hyd:document.getElementById('hydSlider').value,
     count:document.getElementById('countSlider').value,
     size:document.getElementById('sizeSlider').value,
@@ -974,8 +912,7 @@ function loadState(){
       else mixer=s.mixer;
     }
     if(s.useCelsius!==undefined)useCelsius=s.useCelsius;
-    if(s.theme){theme=s.theme;document.documentElement.setAttribute('data-theme',theme);}
-    if(s.smartSchedule!==undefined)smartSchedule=s.smartSchedule;
+    if(s.theme){theme=(s.theme==='party'?'artisan':s.theme);document.documentElement.setAttribute('data-theme',theme);}
     if(s.smarterSchedule!==undefined)smarterSchedule=s.smarterSchedule;
     if(s.yeastModel==='yeasty'||s.yeastModel==='naples')yeastModel=s.yeastModel;
     else yeastModel='naples';
@@ -1001,7 +938,6 @@ function toggleTheme(){
   updateThemeText();saveState();
 }
 function updateThemeText(){
-  if(smartSchedule)return; // party mode sets its own text
   var isPro=theme==='pro';
   document.getElementById('headerEyebrow').textContent=isPro?'a Neapolitan calculator, refined':'✦ a Neapolitan calculator, with feeling ✦';
   document.getElementById('headerSub').textContent=isPro?'precision mode — same warmth, less decoration':'I thought carefully about every gram.';
@@ -1370,20 +1306,9 @@ function setMode(m){
   mode=m;
   if(m==='rapid'){
     document.getElementById('fTimeSlider').value=0;
-    // Turn off Smart Schedule if switching to rapid
-    if(smartSchedule){
-      smartSchedule=false;
-      ssManualOverride=false;
-      theme='artisan';
-      document.documentElement.setAttribute('data-theme','artisan');
-      document.getElementById('themeColor').content='#fdf8f0';
-      updateFloaters();
-    }
   }
   if(m==='sour'){mixer='hand';isAuto=true;}
   if(m==='biga')flour='Tipo';
-  // Re-run Smart Schedule for new mode
-  if(smartSchedule&&m!=='rapid')runSmartSchedule();
   if(smarterSchedule)renderSmarterSchedule();
   renderFlour2Panel();
   snapHyd();update();saveState();
@@ -1522,64 +1447,6 @@ function updateFormulaBtn(){
 }
 
 
-function toggleSmartSchedule(){
-  // If turning ON — validate date first before changing anything
-  if(!smartSchedule){
-    var rawVal=document.getElementById('targetBake').value;
-    if(!rawVal){
-      document.getElementById('ssError').textContent='⚠ Set your bake time first.';
-      document.getElementById('ssError').classList.add('show');
-      return;
-    }
-    var parts=rawVal.split('T');
-    var dp=parts[0].split('-');
-    var tp=(parts[1]||'19:00').split(':');
-    var testDate=new Date(parseInt(dp[0]),parseInt(dp[1])-1,parseInt(dp[2]),parseInt(tp[0]),parseInt(tp[1]),0,0);
-    var dow=testDate.getDay();
-    if(dow!==0&&dow!==6){
-      document.getElementById('ssError').textContent='⚠ Smart Schedule works for weekend parties only — set your bake to a Saturday or Sunday.';
-      document.getElementById('ssError').classList.add('show');
-      document.getElementById('ssPrompt').classList.remove('show');
-      document.getElementById('calStrip').classList.remove('show');
-      return;
-    }
-  }
-
-  smartSchedule=!smartSchedule;
-  ssManualOverride=false;
-  document.getElementById('ssError').classList.remove('show');
-
-  if(smartSchedule){
-    if(mode==='rapid'){mode='biga';}
-    theme='party';
-    document.documentElement.setAttribute('data-theme','party');
-    document.getElementById('themeColor').content='#fef9ee';
-    updateFloaters();
-    runSmartSchedule();
-  } else {
-    theme='artisan';
-    document.documentElement.setAttribute('data-theme','artisan');
-    document.getElementById('themeColor').content='#fdf8f0';
-    updateFloaters();
-    document.getElementById('ssPrompt').classList.remove('show');
-    document.getElementById('calStrip').classList.remove('show');
-    document.getElementById('ssManual').classList.remove('show');
-  }
-  update();saveState();
-}
-
-function ssDisableManual(){
-  // Called when baker nudges a duration slider while Smart Schedule is on
-  if(!smartSchedule)return;
-  smartSchedule=false;
-  ssManualOverride=true;
-  theme='artisan';
-  document.documentElement.setAttribute('data-theme','artisan');
-  document.getElementById('themeColor').content='#fdf8f0';
-  updateFloaters();
-  update();saveState();
-}
-
 // ─── SMARTER SCHEDULE (BETA) — UI ─────────────────────────────────────────────
 var smarterSchedule=false;
 function toggleSmarterSchedule(){
@@ -1592,10 +1459,29 @@ function toggleSmarterSchedule(){
     document.getElementById('ss2Plan').classList.remove('show');
     document.getElementById('ss2Temp').classList.remove('show');
     var d=document.getElementById('ss2Drift'); if(d)d.classList.remove('show');
+    var st=document.getElementById('ss2Strip'); if(st)st.classList.remove('show');
     ssSuggested=null;
   }
   renderProfilePanel();
   saveState();
+}
+// Day-strip overview: collapse the step list into one card per calendar day, headlined by
+// that day's main action (the bake day is highlighted). Reads the same res.steps the list uses.
+function ssDayStrip(steps){
+  var DOW=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  // Strip shows the process milestones: start (build preferment / feed starter / first mix)
+  // → final mix → bake. Transitional steps (biga→fridge, pull biga, ball+fridge, temper)
+  // are skipped here — they live in the detailed list below the strip.
+  var MILE={biga_mix:'make biga',poolish_mix:'make poolish',feed:'feed starter',dough_mix:'mix dough',bake:'bake'};
+  function t12(d){var h=d.getHours(),m=d.getMinutes();var ap=h<12?'am':'pm';var h12=h%12||12;return h12+(m?':'+String(m).padStart(2,'0'):'')+ap;}
+  return steps.filter(function(s){return MILE[s.key];}).map(function(s){
+    return '<div class="cal-day'+(s.key==='bake'?' bake':'')+'">'+
+      '<div class="cal-day-name">'+DOW[s.time.getDay()]+'</div>'+
+      '<div class="cal-day-task">'+s.emoji+'</div>'+
+      '<div class="cal-day-label">'+MILE[s.key]+'</div>'+
+      '<div class="cal-day-time">'+t12(s.time)+'</div>'+
+    '</div>';
+  }).join('');
 }
 function renderSmarterSchedule(){
   if(!smarterSchedule)return;
@@ -1604,6 +1490,7 @@ function renderSmarterSchedule(){
   var errEl=document.getElementById('ss2Error');
   errEl.classList.remove('show','info');
   var driftEl=document.getElementById('ss2Drift'); if(driftEl)driftEl.classList.remove('show');
+  var stripEl=document.getElementById('ss2Strip'); if(stripEl)stripEl.classList.remove('show');
   // rapid has no schedule
   if(mode==='rapid'){
     planEl.classList.remove('show'); tempEl.classList.remove('show');
@@ -1672,6 +1559,7 @@ function renderSmarterSchedule(){
   html+='<div class="ss2-summary">'+Math.round(res.totalSpanHours)+'h total ferment · '+Math.round(res.coldRetardHours)+'h cold retard</div>';
   planEl.innerHTML=html;
   planEl.classList.add('show');
+  if(stripEl){stripEl.innerHTML=ssDayStrip(res.steps); stripEl.classList.add('show');}
   updateDriftLine();
 }
 
@@ -1742,8 +1630,7 @@ function feedDialsFromSchedule(res){
 }
 
 // Beta bow-out: turn Smarter Schedule off and explain why, leaving the dials wherever they
-// are now (the caller restores the pre-toggle snapshot first when relevant). The beta never
-// touched the theme, so — unlike the old Smart Schedule's showSSError — there's nothing to revert.
+// are now (the caller restores the pre-toggle snapshot first when relevant).
 function ssBowOut(msg){
   smarterSchedule=false;
   document.getElementById('ss2Toggle').classList.remove('on');
@@ -1751,6 +1638,7 @@ function ssBowOut(msg){
   document.getElementById('ss2Temp').classList.remove('show');
   var d=document.getElementById('ss2Drift'); if(d)d.classList.remove('show');
   ssSuggested=null;
+  var st=document.getElementById('ss2Strip'); if(st)st.classList.remove('show');
   var e=document.getElementById('ss2Error');
   e.textContent='⚠ '+msg;
   e.classList.remove('info');
@@ -1930,7 +1818,7 @@ function renderProfilePanel(){
 function updateFloaters(){
   var container=document.getElementById('floaters');
   container.innerHTML='';
-  var emojis=smartSchedule?['🎉','🍕','✨','·','∘','✦']:['🍕','🌾','✦','◦','·','∘'];
+  var emojis=['🍕','🌾','✦','◦','·','∘'];
   emojis.forEach(function(em){
     for(var j=0;j<3;j++){
       var el=document.createElement('div');el.className='floater';el.textContent=em;
@@ -1940,197 +1828,11 @@ function updateFloaters(){
   });
 }
 
-function runSmartSchedule(){
-  var rawVal=document.getElementById('targetBake').value;
-  if(!rawVal){showSSError('Set your bake time first.');return;}
-  // Parse datetime-local as local time — avoids UTC interpretation in Safari
-  var parts=rawVal.split('T');
-  var dp=parts[0].split('-');
-  var tp=(parts[1]||'19:00').split(':');
-  var target=new Date(parseInt(dp[0]),parseInt(dp[1])-1,parseInt(dp[2]),parseInt(tp[0]),parseInt(tp[1]),0,0);
-  if(isNaN(target.getTime())){showSSError('Set your bake time first.');return;}
-
-  var dow=target.getDay(); // 0=Sun, 6=Sat
-  if(dow!==0&&dow!==6){showSSError('Smart Schedule works for weekend parties only — set your bake to a Saturday or Sunday.');return;}
-
-  var isSunday=dow===0;
-  var bakeH=target.getHours()+(target.getMinutes()/60);
-
-  // Define key times (24h)
-  var BEDTIME=22;    // 10pm
-  var WAKETIME=7;    // 7am
-  var WORKSTART=9;   // 9am
-  var WORKEND=17;    // 5pm
-  var EVENING_START=18.5; // 6:30pm — after work, dinner, settled
-
-  // Helper: get Date for a specific day offset and hour
-  function dayAt(offsetDays,hour){
-    var d=new Date(target);
-    d.setDate(d.getDate()-offsetDays);
-    d.setHours(Math.floor(hour),Math.round((hour%1)*60),0,0);
-    return d;
-  }
-
-  function fmtTime(d){return d.toLocaleString([],{hour:'2-digit',minute:'2-digit'});}
-  function dayName(d){return d.toLocaleString([],{weekday:'short'}).toUpperCase();}
-
-  var calDay1Name,calDay1Task,calDay1Label,calDay1Time;
-  var calDay2Name,calDay2Task,calDay2Label,calDay2Time;
-  var calDay3Name=dayName(target),calDay3Time=fmtTime(target);
-
-  // ── CONSTRAINTS ──────────────────────────────────────────────────────────
-  var WORK_FREE_FROM=18.0;   // 6pm — available after work on weekdays
-  var WORK_LEAVE_BY=8.5;     // 8:30am — last moment for sourdough feed
-  var BEDTIME=22.0;          // 10pm — no tasks after this
-  var WEEKEND_FREE_FROM=10.0;// 10am — weekends start later
-  var MIX_HOUR=19.0;         // 7pm — standard mix anchor
-  var FRIDGE_HOUR=20.5;      // 8:30pm — balls into fridge anchor
-  var BIGA_MIX_HOUR=19.0;    // 7pm — biga mix anchor
-  var BIGA_FRIDGE_HOUR=21.0; // 9pm — biga into fridge anchor
-
-  // ── CALCULATE tPull using same formula as timeline ────────────────────────
-  var ss_count=+document.getElementById('countSlider').value;
-  var ss_size=+document.getElementById('sizeSlider').value;
-  var ss_rT=+document.getElementById('tempSlider').value;
-  var ss_fT=+document.getElementById('fTempSlider').value;
-  var ss_shapeMins=0; // shape is concurrent with baking — no separate time needed
-  var ss_glide=calcGlide(ss_count*ss_size,ss_count,ss_rT,ss_fT,20);
-  var ss_tPull=new Date(target.getTime()-(ss_shapeMins+ss_glide)*60000);
-
-  // Declare all scheduling variables upfront
-  var ss_t1,ss_t2,ss_t3,ss_t4,ss_fridgeAnchor,ss_rH,ss_fH2,ss_bH,ss_fH;
-
-  // ── FIND VALID FRIDGE ANCHOR ──────────────────────────────────────────────
-  // Try day-1 first, fall back to day-2 if retard < 8h minimum
-  ss_fridgeAnchor=dayAt(1,FRIDGE_HOUR);
-  ss_fH=Math.round((ss_tPull-ss_fridgeAnchor)/3600000);
-  if(ss_fH<8){
-    // Not enough retard time — shift fridge anchor one day earlier
-    ss_fridgeAnchor=dayAt(2,FRIDGE_HOUR);
-    ss_fH=Math.round((ss_tPull-ss_fridgeAnchor)/3600000);
-  }
-  ss_fH=Math.min(72,Math.max(8,ss_fH)); // clamp 8–72h
-
-  // ── MODE-SPECIFIC SCHEDULING ──────────────────────────────────────────────
-  if(mode==='biga'){
-    // Biga mix and fridge: 2 evenings before bake day
-    // If fridge anchor shifted to day-2, biga goes 3 evenings back
-    var ss_bigaOffset=(ss_fridgeAnchor.getDate()===dayAt(2,0).getDate())?3:2;
-    ss_t1=dayAt(ss_bigaOffset,BIGA_MIX_HOUR);    // biga mix 7pm
-    ss_t2=dayAt(ss_bigaOffset,BIGA_FRIDGE_HOUR); // biga fridge 9pm
-    ss_t3=dayAt(ss_bigaOffset-1,MIX_HOUR-0.5);  // pull biga 6:30pm
-    ss_t4=dayAt(ss_bigaOffset-1,MIX_HOUR);       // final mix 7pm
-    ss_rH=Math.round((ss_t2-ss_t1)/3600000*2)/2; // biga room hours
-    ss_fH2=Math.round((ss_t3-ss_t2)/3600000);    // biga fridge hours
-    ss_bH=0.5;                                    // bench rest only
-    setSliderSS('bigaRoomHSlider',ss_rH);
-    setSliderSS('bigaFridgeHSlider',Math.max(0,ss_fH2));
-    setSliderSS('bulkSlider',ss_bH);
-    setSliderSS('fTimeSlider',ss_fH);
-    calDay1Name=dayName(ss_t1);calDay1Task='🍕';calDay1Label='mix biga';calDay1Time=fmtTime(ss_t1);
-    calDay2Name=dayName(ss_t4);calDay2Task='🥣';calDay2Label='mix dough';calDay2Time=fmtTime(ss_t4);
-
-  } else if(mode==='slow'){
-    // Mix evening before bake day
-    ss_t1=dayAt(1,MIX_HOUR);
-    ss_bH=0.75;
-    setSliderSS('bulkSlider',ss_bH);
-    setSliderSS('fTimeSlider',ss_fH);
-    calDay1Name=dayName(ss_t1);calDay1Task='🥣';calDay1Label='mix dough';calDay1Time=fmtTime(ss_t1);
-    calDay2Name=dayName(ss_fridgeAnchor);calDay2Task='🔴';calDay2Label='ball + fridge';calDay2Time=fmtTime(ss_fridgeAnchor);
-
-  } else if(mode==='poolish'){
-    // ── POOLISH SCHEDULE ──────────────────────────────────────────────────────
-    // Two sub-cases based on whether poolish uses cold retard or room temp
-
-    var poolishFH_raw=parseFloat(document.getElementById('poolishFridgeHSlider').value)||0;
-    var isColdPoolish=poolishFH_raw>0;
-
-    if(isColdPoolish||!isSunday){
-      // Cold poolish OR Saturday bake — mirrors biga exactly
-      // Force cold poolish schedule for Saturday (room temp doesn't fit Saturday timing)
-      // Day -2: 7pm mix poolish → 9pm into fridge (2h RT)
-      // Day -1: 7pm pull poolish + mix final dough → 8:30pm bulk + ball + fridge
-      // Day  0: pull + temper → bake
-      var ss_poolishOffset=(ss_fridgeAnchor.getDate()===dayAt(2,0).getDate())?3:2;
-      ss_t1=dayAt(ss_poolishOffset,BIGA_MIX_HOUR);    // 7pm mix poolish
-      ss_t2=dayAt(ss_poolishOffset,BIGA_FRIDGE_HOUR); // 9pm poolish into fridge
-      ss_t3=dayAt(ss_poolishOffset-1,MIX_HOUR);       // 7pm pull poolish + mix final dough
-      var ss_poolishRoomH=Math.round((ss_t2-ss_t1)/3600000*2)/2;  // ~2h
-      var ss_poolishFridgeH=Math.round((ss_t3-ss_t2)/3600000);    // ~22h
-      ss_bH=1.0;
-      setSliderSS('poolishRoomHSlider',ss_poolishRoomH);
-      setSliderSS('poolishFridgeHSlider',Math.max(0,ss_poolishFridgeH));
-      setSliderSS('bulkSlider',ss_bH);
-      setSliderSS('fTimeSlider',ss_fH);
-      calDay1Name=dayName(ss_t1);calDay1Task='🌊';calDay1Label='mix poolish';calDay1Time=fmtTime(ss_t1);
-      calDay2Name=dayName(ss_t3);calDay2Task='🥣';calDay2Label='mix dough';calDay2Time=fmtTime(ss_t3);
-
-    } else {
-      // Room temp poolish — Sunday bake only (Sat morning poolish → Sat evening mix)
-      // Sunday bake: poolish mixed Saturday morning
-      ss_t1=dayAt(1,7.0);   // Sat 7am mix poolish
-      ss_t2=dayAt(1,MIX_HOUR); // Sat 7pm mix final dough (12h later)
-      ss_bH=1.0;
-      setSliderSS('poolishRoomHSlider',12);
-      setSliderSS('poolishFridgeHSlider',0);
-      setSliderSS('bulkSlider',ss_bH);
-      setSliderSS('fTimeSlider',ss_fH);
-      calDay1Name=dayName(ss_t1);calDay1Task='🌊';calDay1Label='mix poolish';calDay1Time=fmtTime(ss_t1);
-      calDay2Name=dayName(ss_t2);calDay2Task='🥣';calDay2Label='mix dough';calDay2Time=fmtTime(ss_t2);
-    }
-
-  } else if(mode==='sour'){
-    // Feed before work, mix evening — same day as fridge anchor
-    var ss_feedDay=(ss_fridgeAnchor.getDate()===dayAt(2,0).getDate())?2:1;
-    ss_t1=dayAt(ss_feedDay,WORK_LEAVE_BY);  // 8:30am feed
-    ss_t2=dayAt(ss_feedDay,MIX_HOUR);       // 7pm mix
-    ss_bH=1.5;
-    setSliderSS('bulkSlider',ss_bH);
-    setSliderSS('fTimeSlider',ss_fH);
-    setSliderSS('inocSlider',15);
-    calDay1Name=dayName(ss_t1);calDay1Task='🍋';calDay1Label='feed starter';calDay1Time=fmtTime(ss_t1);
-    calDay2Name=dayName(ss_t2);calDay2Task='🥣';calDay2Label='mix + ball';calDay2Time=fmtTime(ss_t2);
-  }
-
-  // Update calendar strip
-  document.getElementById('calDay1Name').textContent=calDay1Name;
-  document.getElementById('calDay1Task').textContent=calDay1Task;
-  document.getElementById('calDay1Label').textContent=calDay1Label;
-  document.getElementById('calDay1Time').textContent=calDay1Time;
-  document.getElementById('calDay2Name').textContent=calDay2Name;
-  document.getElementById('calDay2Task').textContent=calDay2Task;
-  document.getElementById('calDay2Label').textContent=calDay2Label;
-  document.getElementById('calDay2Time').textContent=calDay2Time;
-  document.getElementById('calDay3Name').textContent=calDay3Name;
-  document.getElementById('calDay3Time').textContent=fmtTime(target);
-
-  document.getElementById('calStrip').classList.add('show');
-  document.getElementById('ssPrompt').classList.add('show');
-  document.getElementById('ssError').classList.remove('show');
-  document.getElementById('ssManual').classList.remove('show');
-}
-
 function setSliderSS(id,val){
   var sl=document.getElementById(id);
   if(!sl)return;
   sl.value=Math.min(parseFloat(sl.max),Math.max(parseFloat(sl.min),val));
 }
-
-function showSSError(msg){
-  smartSchedule=false;
-  ssManualOverride=false;
-  document.getElementById('ssToggle').classList.remove('on');
-  document.getElementById('ssError').textContent='⚠ '+msg;
-  document.getElementById('ssError').classList.add('show');
-  document.getElementById('ssPrompt').classList.remove('show');
-  document.getElementById('calStrip').classList.remove('show');
-  theme='artisan';
-  document.documentElement.setAttribute('data-theme','artisan');
-  document.getElementById('themeColor').content='#fdf8f0';
-  updateFloaters();
-}
-
 
 function ingRow(emoji,label,grams,dec,note){
   var w=dec?grams.toFixed(dec):Math.round(grams);
@@ -2154,55 +1856,6 @@ function _update(){
   var isRapid=mode==='rapid';
   var isPro=theme==='pro';
 
-  // Smart Schedule toggle — always visible, three states
-  var ssToggleEl=document.getElementById('ssToggle');
-  var ssStatusEl=document.getElementById('ssStatus');
-  var ssIsRapid=mode==='rapid';
-
-  // Check if bake date is a weekend
-  var ssRawVal=document.getElementById('targetBake').value;
-  var ssIsWeekend=false;
-  if(ssRawVal){
-    var ssParts=ssRawVal.split('T');var ssDp=ssParts[0].split('-');var ssTp=(ssParts[1]||'19:00').split(':');
-    var ssTestDate=new Date(parseInt(ssDp[0]),parseInt(ssDp[1])-1,parseInt(ssDp[2]),parseInt(ssTp[0]),parseInt(ssTp[1]),0,0);
-    var ssDow=ssTestDate.getDay();
-    ssIsWeekend=(ssDow===0||ssDow===6);
-  }
-
-  var ssUnlocked=!ssIsRapid&&ssIsWeekend&&!smartSchedule;
-  ssToggleEl.classList.toggle('on',smartSchedule);
-  ssToggleEl.style.opacity=(ssIsRapid||(!ssIsWeekend&&!smartSchedule))?'0.4':'1';
-  ssToggleEl.style.pointerEvents=smartSchedule?'auto':(ssIsRapid||!ssIsWeekend)?'none':'auto';
-  ssToggleEl.style.cursor=(ssIsRapid||(!ssIsWeekend&&!smartSchedule))?'default':'pointer';
-
-  if(smartSchedule){
-    ssStatusEl.style.display='none';
-  } else if(ssIsRapid){
-    ssStatusEl.style.display='block';
-    ssStatusEl.textContent='⚡ switch to slow, sourdough, biga, or poolish to unlock';
-  } else if(!ssIsWeekend){
-    ssStatusEl.style.display='block';
-    ssStatusEl.textContent='📅 set a Saturday or Sunday bake to unlock';
-  } else {
-    ssStatusEl.style.display='none';
-  }
-
-  // Rapid lock when Smart Schedule is on
-  document.getElementById('modeRapid').classList.toggle('locked',smartSchedule);
-
-  // Manual override badge
-  var ssManualEl=document.getElementById('ssManual');
-  ssManualEl.classList.toggle('show',ssManualOverride);
-  if(!smartSchedule&&!ssManualOverride){
-    document.getElementById('ssPrompt').classList.remove('show');
-    document.getElementById('calStrip').classList.remove('show');
-    document.getElementById('ssError').classList.remove('show');
-  }
-
-  // Theme toggle hidden in party mode
-  document.getElementById('themeBtn').style.display=smartSchedule?'none':'flex';
-  document.getElementById('headerEyebrow').textContent=smartSchedule?'🎉 weekend party mode · smart schedule':'✦ a Neapolitan calculator, with feeling ✦';
-  document.getElementById('headerSub').textContent=smartSchedule?'I planned your whole pizza weekend.':'I thought carefully about every gram.';
 
   // Formula toggle button state
   updateFormulaBtn();
@@ -3130,7 +2783,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v2.1.1 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v2.2.1 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
