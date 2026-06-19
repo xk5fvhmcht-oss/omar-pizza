@@ -409,7 +409,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v2.2.1 · science-verified · smarter edition</div>
+    <div class="version-badge">v2.2.2 · science-verified · smarter edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -2258,7 +2258,7 @@ function _update(){
 
   var methodNote='';
   if(isBiga){
-    methodNote='pull biga from fridge · cut into pieces · dissolve yeast in DDT water · add biga pieces to mixer — break down in water · add flour (with malt if using) · hydrate, reserve ~10% water · sprinkle salt over dough · follow with reserved water · finish mixing · bench rest 20–30 min · ball · cold retard';
+    methodNote=(bigaFridgeH>0?'pull biga from fridge · cut into pieces':'biga at room temp, ready · cut into pieces')+' · dissolve yeast in DDT water · add biga pieces to mixer — break down in water · add flour (with malt if using) · hydrate, reserve ~10% water · sprinkle salt over dough · follow with reserved water · finish mixing · bench rest 20–30 min · ball · cold retard';
   } else if(isSour){
     methodNote='feed starter at peak · autolyse flour + most water 30–60 min · add starter + mix · add salt dissolved in reserved water · stretch & fold every 30 min × 3–4 sets · divide · ball · cold retard';
   } else if(autolyseEffective){
@@ -2331,8 +2331,12 @@ function _update(){
     var tBall=new Date(tBench.getTime()+25*60000); // bench rest 20-30 min, use 25
 
     events.push({t:tBigaMix,emoji:'🍕',label:'mix biga',note:`dissolve ${yeastLabel(yeast)} in biga water · add flour · mix until just combined — shaggy is correct · target biga water temp shown in recipe · place in oiled container, cover with perforated film`,nc:'highlight',extra:''});
-    events.push({t:tBigaFridge,emoji:'🌡️',label:'biga to fridge',note:`after ${fmtHours(bigaRoomH)} at room temp — biga goes into fridge · it should show early signs of activity`,nc:'preheat-note',extra:''});
-    events.push({t:tBigaPull,emoji:'🍕',label:'pull biga',note:`biga should be domed, showing centre dip, stringy when pulled · `,nc:'highlight',extra:''});
+    if(bigaFridgeH>0){
+      events.push({t:tBigaFridge,emoji:'🌡️',label:'biga to fridge',note:`after ${fmtHours(bigaRoomH)} at room temp — biga goes into fridge · it should show early signs of activity`,nc:'preheat-note',extra:''});
+      events.push({t:tBigaPull,emoji:'🍕',label:'pull biga',note:`biga should be domed, showing centre dip, stringy when pulled · `,nc:'highlight',extra:''});
+    } else {
+      events.push({t:tBigaPull,emoji:'🍕',label:'biga ready',note:`after ${fmtHours(bigaRoomH)} at room temp — biga should be domed, showing a centre dip, stringy when pulled`,nc:'highlight',extra:''});
+    }
     events.push({t:tFinalMix,emoji:'🥣',label:'mix final dough',note:`dissolve yeast in DDT water · add biga pieces — break down in water · add flour${maltOn?' (with diastatic malt mixed in)':''} · hydrate · sprinkle salt · follow with reserved water · finish mixing`,nc:'highlight',extra:''});
     events.push({t:tBench,emoji:'⏳',label:'bench rest',note:'cover dough · rest 20–30 min · gluten relaxes — the dough goes from elastic and tight to soft and cooperative',nc:'',extra:''});
     events.push({t:tBall,emoji:'🔴',label:'ball',note:'divide and shape into tight balls · pinch seam firmly underneath · place in oiled containers · seal and refrigerate',nc:'',extra:''});
@@ -2783,7 +2787,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v2.2.1 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v2.2.2 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
