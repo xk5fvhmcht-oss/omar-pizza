@@ -58,6 +58,7 @@
 .ss-label{display:flex;flex-direction:column;gap:2px;}
 .ss-title{font-family:var(--label-font);font-size:1rem;color:var(--ink);}
 .ss-sub{font-family:var(--num-font);font-size:0.7rem;color:var(--ink3);letter-spacing:0.04em;}
+.ss-sub.override{color:var(--accent);letter-spacing:0.02em;}
 .ss-switch{width:44px;height:22px;border-radius:11px;background:var(--border);position:relative;transition:background 0.3s;flex-shrink:0;}
 .ss-switch::after{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform 0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
 .smart-schedule-toggle.on .ss-switch{background:var(--accent);}
@@ -400,16 +401,13 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
       <div class="toggle-icon"></div>
       <span id="themeLabel">PROFESSIONAL MODE</span>
     </button>
-    <button class="theme-toggle" onclick="toggleWakeLock()" id="wakeBtn" title="keep screen awake while baking">
-      <span id="wakeLabel">☾ screen sleeps</span>
-    </button>
   </div>
 
   <header class="header">
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v2.2.2 · science-verified · smarter edition</div>
+    <div class="version-badge">v2.3 · science-verified · smarter edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -425,7 +423,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
         <div class="smart-schedule-toggle" id="ss2Toggle" onclick="toggleSmarterSchedule()">
           <div class="ss-label">
             <span class="ss-title">🗓️ Smarter Schedule <span style="font-family:var(--num-font);font-size:0.6rem;color:var(--accent);border:1px solid var(--accent);border-radius:8px;padding:1px 6px;letter-spacing:0.05em;vertical-align:middle;">BETA</span></span>
-            <span class="ss-sub">ANY DAY · PLANS AROUND YOUR WORK & SLEEP</span>
+            <span class="ss-sub" id="ss2Sub">ANY DAY · PLANS AROUND YOUR WORK & SLEEP</span>
           </div>
           <div class="ss-switch"></div>
         </div>
@@ -443,7 +441,6 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
         <div class="ss2-temp" id="ss2Temp"></div>
         <div class="cal-strip ss2-strip" id="ss2Strip"></div>
         <div class="ss2-plan" id="ss2Plan"></div>
-        <div class="ss2-drift" id="ss2Drift"></div>
         <div class="ss-error" id="ss2Error"></div>
       </div>
 
@@ -706,7 +703,10 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="card">
       <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
         <span>The recipe</span>
-        <button id="formulaToggleBtn" onclick="toggleFormula()" style="font-family:var(--num-font);font-size:0.65rem;padding:3px 10px;border-radius:var(--pill-radius);border:1.5px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;letter-spacing:0.04em;transition:all 0.2s;">🍕 Naples</button>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="pill" id="wakeBtn" onclick="toggleWakeLock()" title="keep screen awake while baking" style="font-style:normal;font-size:0.72rem;padding:4px 10px;"><span id="wakeLabel">☾ screen sleeps</span></button>
+          <button id="formulaToggleBtn" onclick="toggleFormula()" style="font-family:var(--num-font);font-size:0.65rem;padding:3px 10px;border-radius:var(--pill-radius);border:1.5px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;letter-spacing:0.04em;transition:all 0.2s;">🍕 Naples</button>
+        </div>
       </div>
       <div id="recipe"></div>
       <div class="ddt-box" id="ddtBox"></div>
@@ -799,6 +799,7 @@ var flour2Type='none', flour2Pct=0;
 //     it's ratio/length-driven, fires at normal temps, and is fine alongside a schedule.
 //   ssSuggested — the dial values the engine last seeded, for drift detection / restore.
 var ssOverFermentFlag=false, ssSuggested=null;
+var SS2_TAGLINE='ANY DAY · PLANS AROUND YOUR WORK & SLEEP';
 // Custom availability profiles (beta). The in-memory library IS the working set; Save commits
 // it to its OWN storage key. 'default' is virtual (uses the engine's defaultWindowsFor), so when
 // it's active the schedule is byte-for-byte identical to shipping. Edits/creates/deletes are
@@ -1458,7 +1459,7 @@ function toggleSmarterSchedule(){
   } else {
     document.getElementById('ss2Plan').classList.remove('show');
     document.getElementById('ss2Temp').classList.remove('show');
-    var d=document.getElementById('ss2Drift'); if(d)d.classList.remove('show');
+    var sub0=document.getElementById('ss2Sub'); if(sub0){sub0.textContent=SS2_TAGLINE; sub0.classList.remove('override');}
     var st=document.getElementById('ss2Strip'); if(st)st.classList.remove('show');
     ssSuggested=null;
   }
@@ -1489,7 +1490,7 @@ function renderSmarterSchedule(){
   var tempEl=document.getElementById('ss2Temp');
   var errEl=document.getElementById('ss2Error');
   errEl.classList.remove('show','info');
-  var driftEl=document.getElementById('ss2Drift'); if(driftEl)driftEl.classList.remove('show');
+  var sub0=document.getElementById('ss2Sub'); if(sub0){sub0.textContent=SS2_TAGLINE; sub0.classList.remove('override');}
   var stripEl=document.getElementById('ss2Strip'); if(stripEl)stripEl.classList.remove('show');
   // rapid has no schedule
   if(mode==='rapid'){
@@ -1636,7 +1637,7 @@ function ssBowOut(msg){
   document.getElementById('ss2Toggle').classList.remove('on');
   document.getElementById('ss2Plan').classList.remove('show');
   document.getElementById('ss2Temp').classList.remove('show');
-  var d=document.getElementById('ss2Drift'); if(d)d.classList.remove('show');
+  var sub0=document.getElementById('ss2Sub'); if(sub0){sub0.textContent=SS2_TAGLINE; sub0.classList.remove('override');}
   ssSuggested=null;
   var st=document.getElementById('ss2Strip'); if(st)st.classList.remove('show');
   var e=document.getElementById('ss2Error');
@@ -1663,22 +1664,23 @@ function refreshSSTempLine(){
 // Drift line: shows only when the baker has nudged a duration dial off the suggested value,
 // and only while a plan is on screen. Disappears on its own once they're back on plan.
 function updateDriftLine(){
-  var d=document.getElementById('ss2Drift');
-  if(!d)return;
+  var sub=document.getElementById('ss2Sub');
+  if(!sub)return;
   var plan=document.getElementById('ss2Plan');
-  if(!(smarterSchedule && ssSuggested && plan && plan.classList.contains('show'))){
-    d.classList.remove('show'); return;
-  }
+  var active = smarterSchedule && ssSuggested && plan && plan.classList.contains('show');
   var drifted=false;
-  Object.keys(ssSuggested).forEach(function(id){
-    var sl=document.getElementById(id);
-    if(sl && Math.abs(parseFloat(sl.value)-parseFloat(ssSuggested[id]))>1e-6) drifted=true;
-  });
+  if(active){
+    Object.keys(ssSuggested).forEach(function(id){
+      var sl=document.getElementById(id);
+      if(sl && Math.abs(parseFloat(sl.value)-parseFloat(ssSuggested[id]))>1e-6) drifted=true;
+    });
+  }
   if(drifted){
-    d.innerHTML='\u270E adjusted from the plan · <span class="ss2-drift-restore" onclick="ssRestoreSuggestion()">restore suggested times</span>';
-    d.classList.add('show');
+    sub.innerHTML='\u270B manual override \u00b7 <span class="ss2-drift-restore" onclick="event.stopPropagation();ssRestoreSuggestion()">restore suggested plan</span>';
+    sub.classList.add('override');
   } else {
-    d.classList.remove('show');
+    sub.textContent=SS2_TAGLINE;
+    sub.classList.remove('override');
   }
 }
 
@@ -2787,7 +2789,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v2.2.2 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v2.3 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>

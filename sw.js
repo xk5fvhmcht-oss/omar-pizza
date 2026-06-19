@@ -1,5 +1,5 @@
 // Omar Pizza — Service Worker v3.0 (network-first for app shell)
-const CACHE = 'omar-pizza-v24';
+const CACHE = 'omar-pizza-v25';
 
 const ASSETS = [
   './',
