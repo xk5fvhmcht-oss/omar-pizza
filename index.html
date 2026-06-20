@@ -407,7 +407,7 @@ input[type=datetime-local]:focus{border-color:var(--accent);}
     <div class="header-eyebrow" id="headerEyebrow">✦ a Neapolitan calculator, with feeling ✦</div>
     <h1>Omar <span>Pizza</span></h1>
     <div class="header-sub" id="headerSub">I thought carefully about every gram.</div>
-    <div class="version-badge">v2.3 · science-verified · smarter edition</div>
+    <div class="version-badge">v2.3.1 · science-verified · smarter edition</div>
   </header>
 
   <div style="display:flex;flex-direction:column;gap:18px;">
@@ -800,6 +800,7 @@ var flour2Type='none', flour2Pct=0;
 //   ssSuggested — the dial values the engine last seeded, for drift detection / restore.
 var ssOverFermentFlag=false, ssSuggested=null;
 var SS2_TAGLINE='ANY DAY · PLANS AROUND YOUR WORK & SLEEP';
+var ssLastRes=null;
 // Custom availability profiles (beta). The in-memory library IS the working set; Save commits
 // it to its OWN storage key. 'default' is virtual (uses the engine's defaultWindowsFor), so when
 // it's active the schedule is byte-for-byte identical to shipping. Edits/creates/deletes are
@@ -835,6 +836,7 @@ document.querySelectorAll('input[type=range],input[type=datetime-local]').forEac
           refreshSSTempLine(); updateDriftLine();
         }
       } else if(durationIds.indexOf(el.id)>=0){
+        renderSSPlan();                                // override → step times follow the dials
         updateDriftLine();                             // baker nudged a dial → reflect drift
       }
     }
@@ -1461,7 +1463,7 @@ function toggleSmarterSchedule(){
     document.getElementById('ss2Temp').classList.remove('show');
     var sub0=document.getElementById('ss2Sub'); if(sub0){sub0.textContent=SS2_TAGLINE; sub0.classList.remove('override');}
     var st=document.getElementById('ss2Strip'); if(st)st.classList.remove('show');
-    ssSuggested=null;
+    ssSuggested=null; ssLastRes=null;
   }
   renderProfilePanel();
   saveState();
@@ -1484,12 +1486,76 @@ function ssDayStrip(steps){
     '</div>';
   }).join('');
 }
+// ── Live timestamps on manual override ──────────────────────────────────────────
+// The schedule isn't re-solved when the baker nudges a dial. Each dial is a gap in the
+// step chain, anchored at the fixed bake time, so changing it shifts every step UPSTREAM
+// of that gap by the delta. Display time = solved_time + shift, where shift sums the
+// (current − suggested) deltas of the dials sitting between that step and the bake. On plan
+// every delta is zero, so the display is identical; off plan it tracks the dials live.
+// Pure function of the solved steps + current dials + ssSuggested — no dependency on the
+// detailed-timeline math (which deliberately leaves sourdough steps un-clocked).
+var SS_SHIFTERS={
+  ball_fridge:['fTimeSlider'],
+  dough_mix:['fTimeSlider','bulkSlider'],
+  pull_biga:['fTimeSlider','bulkSlider'],
+  biga_fridge:['fTimeSlider','bulkSlider','bigaFridgeHSlider'],
+  biga_mix:['fTimeSlider','bulkSlider','bigaFridgeHSlider','bigaRoomHSlider'],
+  poolish_mix:['fTimeSlider','bulkSlider','poolishRoomHSlider','poolishFridgeHSlider'],
+  feed:['fTimeSlider','bulkSlider']
+};
+function ssLiveStepTime(s){
+  if(!ssSuggested) return s.time;
+  var shiftMs=0;
+  (SS_SHIFTERS[s.key]||[]).forEach(function(id){
+    if(ssSuggested[id]==null) return;
+    var sl=document.getElementById(id); if(!sl) return;
+    var dHours=parseFloat(sl.value)-parseFloat(ssSuggested[id]);
+    if(!isNaN(dHours)) shiftMs += -dHours*3600000;
+  });
+  return new Date(s.time.getTime()+shiftMs);
+}
+function ssLiveSteps(){
+  if(!ssLastRes) return null;
+  return ssLastRes.steps.map(function(s){
+    return {key:s.key,label:s.label,emoji:s.emoji,weight:s.weight,time:ssLiveStepTime(s)};
+  });
+}
+function renderSSPlan(){
+  if(!(smarterSchedule && ssLastRes && mode!=='rapid')) return;
+  var planEl=document.getElementById('ss2Plan'), stripEl=document.getElementById('ss2Strip');
+  if(!planEl) return;
+  var steps=ssLiveSteps();
+  var DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  function fmtWhen(d){var h=d.getHours(),m=d.getMinutes();var ap=h<12?'am':'pm';var h12=h%12;if(h12===0)h12=12;var mm=m===0?'':':'+String(m).padStart(2,'0');return DOW[d.getDay()]+' '+h12+mm+ap;}
+  function byKey(k){for(var i=0;i<steps.length;i++)if(steps[i].key===k)return steps[i];return null;}
+  var html='';
+  steps.forEach(function(s){
+    var cls=s.key==='bake'?'party':s.weight;
+    var tag=s.key==='bake'?'the party':(s.weight==='light'?'quick task':'main task');
+    html+='<div class="ss2-step '+cls+'">'+
+      '<span class="ss2-step-emoji">'+s.emoji+'</span>'+
+      '<span class="ss2-step-body">'+
+        '<span class="ss2-step-when">'+fmtWhen(s.time)+'</span>'+
+        '<span class="ss2-step-what">'+s.label+'</span>'+
+      '</span>'+
+      '<span class="ss2-step-tag">'+tag+'</span>'+
+    '</div>';
+  });
+  var bake=byKey('bake'), bf=byKey('ball_fridge'), tmp=byKey('temper');
+  var span=bake?Math.round((bake.time.getTime()-steps[0].time.getTime())/3600000):Math.round(ssLastRes.totalSpanHours);
+  var cold=(bf&&tmp)?Math.round((tmp.time.getTime()-bf.time.getTime())/3600000):Math.round(ssLastRes.coldRetardHours);
+  html+='<div class="ss2-summary">'+span+'h total ferment · '+cold+'h cold retard</div>';
+  planEl.innerHTML=html;
+  planEl.classList.add('show');
+  if(stripEl){stripEl.innerHTML=ssDayStrip(steps); stripEl.classList.add('show');}
+}
 function renderSmarterSchedule(){
   if(!smarterSchedule)return;
   var planEl=document.getElementById('ss2Plan');
   var tempEl=document.getElementById('ss2Temp');
   var errEl=document.getElementById('ss2Error');
   errEl.classList.remove('show','info');
+  ssLastRes=null;
   var sub0=document.getElementById('ss2Sub'); if(sub0){sub0.textContent=SS2_TAGLINE; sub0.classList.remove('override');}
   var stripEl=document.getElementById('ss2Strip'); if(stripEl)stripEl.classList.remove('show');
   // rapid has no schedule
@@ -1536,31 +1602,8 @@ function renderSmarterSchedule(){
   }
   // read-only temperature display (points to the real dials below)
   refreshSSTempLine();
-  // render every step as a row
-  var DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  function fmtWhen(d){
-    var h=d.getHours(), m=d.getMinutes();
-    var ap=h<12?'am':'pm'; var h12=h%12; if(h12===0)h12=12;
-    var mm=m===0?'':':'+String(m).padStart(2,'0');
-    return DOW[d.getDay()]+' '+h12+mm+ap;
-  }
-  var html='';
-  res.steps.forEach(function(s){
-    var cls=s.key==='bake'?'party':s.weight;
-    var tag=s.key==='bake'?'the party':(s.weight==='light'?'quick task':'main task');
-    html+='<div class="ss2-step '+cls+'">'+
-      '<span class="ss2-step-emoji">'+s.emoji+'</span>'+
-      '<span class="ss2-step-body">'+
-        '<span class="ss2-step-when">'+fmtWhen(s.time)+'</span>'+
-        '<span class="ss2-step-what">'+s.label+'</span>'+
-      '</span>'+
-      '<span class="ss2-step-tag">'+tag+'</span>'+
-    '</div>';
-  });
-  html+='<div class="ss2-summary">'+Math.round(res.totalSpanHours)+'h total ferment · '+Math.round(res.coldRetardHours)+'h cold retard</div>';
-  planEl.innerHTML=html;
-  planEl.classList.add('show');
-  if(stripEl){stripEl.innerHTML=ssDayStrip(res.steps); stripEl.classList.add('show');}
+  ssLastRes=res;
+  renderSSPlan();
   updateDriftLine();
 }
 
@@ -1638,7 +1681,7 @@ function ssBowOut(msg){
   document.getElementById('ss2Plan').classList.remove('show');
   document.getElementById('ss2Temp').classList.remove('show');
   var sub0=document.getElementById('ss2Sub'); if(sub0){sub0.textContent=SS2_TAGLINE; sub0.classList.remove('override');}
-  ssSuggested=null;
+  ssSuggested=null; ssLastRes=null;
   var st=document.getElementById('ss2Strip'); if(st)st.classList.remove('show');
   var e=document.getElementById('ss2Error');
   e.textContent='⚠ '+msg;
@@ -2789,7 +2832,7 @@ function printCard(){
     <button class="close-btn" onclick="closePrint()" title="close">✕</button>
     <div class="ey">✦ recipe card</div>
     <h1>Omar <span>Pizza</span></h1>
-    <div class="meta">Neapolitan · ${tFmt} · v2.3 · science-verified</div>
+    <div class="meta">Neapolitan · ${tFmt} · v2.3.1 · science-verified</div>
     <div class="params">
       <span class="param">${count} balls</span>
       <span class="param">${size} each</span>
